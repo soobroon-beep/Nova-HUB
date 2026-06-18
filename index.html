@@ -45,7 +45,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 /* SIDEBAR */
 #sidebar{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;transition:var(--trans);z-index:100}
 .logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;font-size:1.2rem;font-weight:700;letter-spacing:.5px}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 .nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:0 20px 8px;font-weight:600}
 .nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:var(--trans);font-size:.9rem;color:var(--text2);border-left:3px solid transparent;margin:1px 0}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
@@ -261,7 +261,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 <nav id="sidebar">
   <div class="logo">
     <div class="logo-icon">
-      <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="brainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#00f0ff" />
@@ -289,7 +289,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
   <div class="nav-item" data-view="diary"><span class="nav-icon">📖</span> Diario</div>
   <div class="nav-item" data-view="habits"><span class="nav-icon">🔥</span> Hábitos</div>
   <div class="nav-section" style="margin-top:20px">Herramientas</div>
-  <div class="nav-item" data-view="briefing"><span class="nav-icon" style="font-size:1.3rem;">🌅</span> Daily Briefing</div>
+  <div class="nav-item" data-view="briefing"><span class="nav-icon" style="font-size:1.6rem; margin-right: 5px;">🌅</span> Daily Briefing</div>
   <div class="nav-item" data-view="ai"><span class="nav-icon">✦</span> IA Asistente</div>
   <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span> Ajustes</div>
   <div class="sidebar-bottom">
@@ -517,6 +517,7 @@ const state = {
   settings: JSON.parse(localStorage.getItem('nn_settings') || JSON.stringify({
     username: 'Víctor',
     accentColor: '#7c6af7',
+    geminiApiKey: '',
     firebaseApiKey: '',
     firebaseProjectId: '',
     autoSync: false,
@@ -1168,7 +1169,7 @@ const renderBriefingView = () => {
       const res = await fetch('/api/briefing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location })
+        body: JSON.stringify({ location, apiKey: state.settings.geminiApiKey })
       });
       const data = await res.json();
       if(data.error) {
@@ -1193,6 +1194,13 @@ const renderSettingsView=()=>{
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
+    <div class="settings-section"><h3>🔑 API Inteligencia Artificial</h3>
+      <div class="settings-row"><div><div class="settings-label">Gemini API Key</div><div class="settings-sub">Para IA Asistente y Daily Briefing</div></div><input type="password" id="sGeminiKey" class="settings-input" value="${state.settings.geminiApiKey||''}"/></div>
+      <div class="settings-row"><button class="btn btn-primary btn-sm" id="saveApiKeys">Guardar API</button></div>
+    </div>
+    <div class="settings-section"><h3>🔔 Notificaciones</h3>
+      <div class="settings-row"><div><div class="settings-label">Permitir Notificaciones</div><div class="settings-sub">Para recordatorios y eventos</div></div><button class="btn btn-ghost btn-sm" id="btnReqNotif">Activar Notificaciones</button></div>
+    </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h}"></div>`).join('')}</div></div></div>
     <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div></div></div>
     <div class="settings-row"><div>Sincronización Automática</div><label class="toggle-sw"><input type="checkbox" id="sFbAutoSync" ${state.settings.autoSync?'checked':''}><span class="slider"></span></label></div>
@@ -1203,6 +1211,12 @@ const renderSettingsView=()=>{
     </div>
   </div>`;
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
+  document.getElementById('saveApiKeys').addEventListener('click',()=>{ state.settings.geminiApiKey=document.getElementById('sGeminiKey').value.trim(); save(); toast('✅ API Keys Guardadas'); });
+  document.getElementById('btnReqNotif').addEventListener('click',()=>{
+    if (window.Notification) {
+      Notification.requestPermission().then(p => { if(p==='granted') toast('✅ Notificaciones activadas'); else toast('⚠️ Permiso denegado'); });
+    }
+  });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('sFbAutoSync').addEventListener('change',e=>{ state.settings.autoSync=e.target.checked; fb.autoSync=e.target.checked; save(); });
   document.getElementById('fbLoginBtn')?.addEventListener('click', async () => { await fb.login(); });
