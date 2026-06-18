@@ -1132,7 +1132,7 @@ const getDashboardHTML=()=>`
   <div style="display:flex;flex-direction:column;gap:24px">
     <div class="notes-section"><div class="sec-header"><div class="sec-title"><span>🗒️</span> Notas Recientes</div><div class="sec-action" id="addNoteBtn">+ Nueva nota</div></div><div class="notes-masonry" id="notesMasonry"></div></div>
     <div class="projects-card" id="dashHabits" style="padding:0; overflow:hidden;"></div>
-    <div class="projects-card" id="dashDiary"><div class="sec-header" style="padding: 22px 22px 0 22px;"><div class="sec-title"><span>📖</span> Diario Emocional</div><div class="sec-action" style="cursor:pointer" onclick="document.querySelector('[data-view=\'diary\']').click()">Ir al Diario</div></div><div id="dashDiaryContent"></div></div>
+    <div class="projects-card" id="dashDiary"><div class="sec-header" style="padding: 22px 22px 0 22px;"><div class="sec-title"><span>📖</span> Diario Emocional</div><div class="sec-action" style="cursor:pointer" id="dashDiaryNavBtn">Ir al Diario</div></div><div id="dashDiaryContent"></div></div>
     <div class="ai-card"><div class="ai-icon">✦</div><div class="ai-text"><h3>IA Asistente</h3><p>Desglosa proyectos en tareas, resume notas, optimiza tu día. Tu copiloto personal está listo.</p><button class="ai-btn" data-view="ai">Abrir Asistente</button></div></div>
   </div>
   <div style="display:flex;flex-direction:column;gap:24px">
@@ -1149,7 +1149,7 @@ const renderDashReminders = () => {
 const renderDashHabits = () => {
   const c = document.getElementById('dashHabits'); if(!c) return;
   const todayStr=new Date().toISOString().split('T')[0];
-  let hHTML = `<div class="sec-header" style="padding: 22px 22px 10px 22px;"><div class="sec-title"><span>🔥</span> Seguimiento de Hábitos</div><div class="sec-action" style="cursor:pointer" onclick="document.querySelector('[data-view=\\'habits\\']').click()">Ver Todos</div></div>`;
+  let hHTML = `<div class="sec-header" style="padding: 22px 22px 10px 22px;"><div class="sec-title"><span>🔥</span> Seguimiento de Hábitos</div><div class="sec-action" style="cursor:pointer" id="dashHabitsNavBtn">Ver Todos</div></div>`;
   if(!state.habits || !state.habits.length) {
     hHTML += '<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px">No hay hábitos configurados.</div>';
   } else {
@@ -1162,6 +1162,7 @@ const renderDashHabits = () => {
     }).join('') + '</div>';
   }
   c.innerHTML = hHTML;
+  c.querySelector('#dashHabitsNavBtn')?.addEventListener('click', () => navTo('habits'));
   c.querySelectorAll('.dash-hab-check').forEach(btn => {
     btn.addEventListener('click', e => {
       const h = state.habits.find(x=>x.id==btn.dataset.hid);
@@ -1206,6 +1207,8 @@ const renderDashboard=()=>{
     openModal('reminderModal');
   });
   document.querySelectorAll('[data-view]').forEach(el=>{ if(!el.classList.contains('nav-item')) el.addEventListener('click',()=>{ if(el.dataset.view==='ai') renderAIView(); }); });
+  document.getElementById('dashDiaryNavBtn')?.addEventListener('click', () => navTo('diary'));
+  document.getElementById('dashHabitsNavBtn')?.addEventListener('click', () => navTo('habits'));
   document.getElementById('calPrev')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()-1);renderCalendar();});
   document.getElementById('calNext')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()+1);renderCalendar();});
   renderCalendar();renderNotes();renderProjects();updateStats(); renderDashReminders(); renderDashDiary(); renderDashHabits();
@@ -1553,6 +1556,16 @@ const briefingEntryHTML = (entry, expanded = true) => {
   </div>`;
 };
 
+// ── Función helper de navegación (sin onclick inline) ──────────────────────
+const navTo = (view) => {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.querySelector(`.nav-item[data-view="${view}"]`);
+  if (navEl) navEl.classList.add('active');
+  rerenderView(view);
+  closeSidebar();
+  document.getElementById('content').scrollTop = 0;
+};
+
 // ── Vista principal del Briefing ──────────────
 const renderBriefingView = () => {
   const content = document.getElementById('content');
@@ -1562,21 +1575,30 @@ const renderBriefingView = () => {
   const apiKey = state.settings.aiApiKey || '';
   const history = state.briefingHistory || [];
 
+  const noKeyHTML = !apiKey ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:12px">✦</div>
+      <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Activa el Daily Briefing</div>
+      <div style="font-size:.88rem;color:var(--text2);margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">Conecta tu API key de Claude, ChatGPT o Gemini para recibir cada día: clima, mercados crypto, noticias globales, novedades tech y resumen de tu agenda.</div>
+      <button id="briefingGoSettingsBtn" class="btn btn-primary">Ir a Ajustes →</button>
+    </div>` : '';
+
+  const historyHTML = history.length === 0 && apiKey ? `
+    <div style="text-align:center;padding:40px;color:var(--text3)">
+      <div style="font-size:2rem;margin-bottom:12px">🗞️</div>
+      <div style="font-weight:600;margin-bottom:6px">Sin briefings aún</div>
+      <div style="font-size:.85rem">Pulsa "Generar Briefing" para crear el primero.</div>
+    </div>` : history.map((e, i) => briefingEntryHTML(e, i === 0)).join('');
+
   content.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px">🗞️ Daily Briefing</div>
       ${apiKey
         ? `<button id="genBriefingBtn" class="btn btn-primary" style="display:flex;align-items:center;gap:8px">✦ Generar Briefing</button>`
-        : `<button class="btn btn-ghost btn-sm" onclick="document.querySelector('[data-view=settings]').click()">⚙️ Configurar API key</button>`}
+        : `<button id="briefingGoSettingsBtn2" class="btn btn-ghost btn-sm">⚙️ Configurar API key</button>`}
     </div>
 
-    ${!apiKey ? `
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center">
-        <div style="font-size:2.5rem;margin-bottom:12px">✦</div>
-        <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Activa el Daily Briefing</div>
-        <div style="font-size:.88rem;color:var(--text2);margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">Conecta tu API key de Claude, ChatGPT o Gemini para recibir cada día: clima, mercados crypto, noticias globales, novedades tech y resumen de tu agenda.</div>
-        <button class="btn btn-primary" onclick="document.querySelector('[data-view=settings]').click()">Ir a Ajustes →</button>
-      </div>` : ''}
+    ${noKeyHTML}
 
     <div id="briefingLoadingArea" style="display:none;background:var(--bg2);border:1px solid rgba(124,106,247,.2);border-radius:16px;padding:28px 22px;margin-bottom:16px;text-align:center">
       <div style="font-size:1.5rem;animation:pulse 1.2s infinite;margin-bottom:10px">✦</div>
@@ -1584,16 +1606,11 @@ const renderBriefingView = () => {
       <div style="font-size:.8rem;color:var(--text2)" id="briefingLoadStep">Obteniendo ubicación y datos de mercado</div>
     </div>
 
-    <div id="briefingHistoryList">
-      ${history.length === 0 && apiKey ? `
-        <div style="text-align:center;padding:40px;color:var(--text3)">
-          <div style="font-size:2rem;margin-bottom:12px">🗞️</div>
-          <div style="font-weight:600;margin-bottom:6px">Sin briefings aún</div>
-          <div style="font-size:.85rem">Pulsa "Generar Briefing" para crear el primero.</div>
-        </div>` :
-        history.map((e, i) => briefingEntryHTML(e, i === 0)).join('')
-      }
-    </div>`;
+    <div id="briefingHistoryList">${historyHTML}</div>`;
+
+  // Listeners — sin onclick inline
+  document.getElementById('briefingGoSettingsBtn')?.addEventListener('click', () => navTo('settings'));
+  document.getElementById('briefingGoSettingsBtn2')?.addEventListener('click', () => navTo('settings'));
 
   document.getElementById('genBriefingBtn')?.addEventListener('click', async () => {
     const btn = document.getElementById('genBriefingBtn');
