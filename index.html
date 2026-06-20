@@ -571,7 +571,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getMessaging, getToken as fcmGetToken, onMessage, isSupported as fcmIsSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAACWtwcJayD3q_LIC7gL6QoY1H7dfaEjY",
@@ -592,8 +593,23 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
 });
 
-window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot };
+window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove, fcmGetToken, getMessaging: () => window._fcmMessaging || null };
 window.onAuthStateChanged = onAuthStateChanged;
+
+// Firebase Cloud Messaging: solo se activa si el navegador lo soporta
+// (Safari/iOS en algunos casos no lo soporta vía web).
+fcmIsSupported().then(supported => {
+  if (!supported) { console.warn('[NOVA HUB] Este navegador no soporta FCM'); return; }
+  window._fcmMessaging = getMessaging(app);
+  // Notificación recibida con la app ABIERTA en primer plano
+  onMessage(window._fcmMessaging, (payload) => {
+    const title = payload.notification?.title || payload.data?.title || 'NOVA HUB';
+    const body = payload.notification?.body || payload.data?.body || '';
+    if (window.toast) window.toast('🔔 ' + title + (body ? ': ' + body : ''));
+  });
+  if (window.onFcmReady) window.onFcmReady();
+}).catch(e => console.warn('[NOVA HUB] fcmIsSupported error', e));
+
 </script>
 <script>
 // ══════════════════════════════════════════════
@@ -897,6 +913,8 @@ const autoConnectFirebase = () => {
           await fb.pullAll();
           // 2) Luego arrancar listener tiempo real
           fb.startRealtimeSync();
+          // 3) Si ya habías activado notificaciones, renueva el token push de este dispositivo
+          if (state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted') registerFcmToken();
           if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
         } else {
           fb.stopRealtimeSync();
@@ -919,16 +937,68 @@ const autoConnectFirebase = () => {
 // ══════════════════════════════════════════════
 // NOTIFICATIONS
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// NOTIFICATIONS (local + push real vía FCM)
+// ══════════════════════════════════════════════
+const FCM_VAPID_KEY = "BOojSSVOrTa_6yT68qxn2UmiXqvITyEFTfw2VzehCWdjqr2WmhOESUc6blhQmIbxz4Ijq1LWDGY9q4Xe3wteS6g";
+
+// Registra (o renueva) el token de este dispositivo en Firestore para que
+// el job de GitHub Actions pueda enviarle notificaciones push aunque la
+// app esté cerrada.
+const registerFcmToken = async () => {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const messaging = window.fbSDK.getMessaging();
+    if (!messaging) { console.warn('[NOVA HUB] FCM no disponible en este navegador'); return; }
+    if (!fb.enabled || !fb.uid) { console.warn('[NOVA HUB] Inicia sesión con Google para activar push'); return; }
+
+    // SW dedicado a Cloud Messaging, en un scope propio para no chocar con sw.js.
+    // Scope RELATIVO (no absoluto): el sitio vive en una subcarpeta (/Nova-HUB/),
+    // y un SW solo puede controlar scopes dentro de la carpeta donde vive su script.
+    const swReg = await navigator.serviceWorker.register('firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
+    const token = await window.fbSDK.fcmGetToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if (!token) { console.warn('[NOVA HUB] No se obtuvo token FCM'); return; }
+
+    const ref = window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid);
+    await window.fbSDK.setDoc(ref, { fcmTokens: window.fbSDK.arrayUnion(token) }, { merge: true });
+    console.log('[NOVA HUB] Token FCM registrado ✓');
+  } catch (e) {
+    console.error('[NOVA HUB] Error registrando token FCM', e);
+    toast('⚠️ No se pudo activar el push real: ' + (e.code || e.message || ''));
+  }
+};
+
+// Quita el token de este dispositivo de Firestore (no recibe más push).
+const unregisterFcmToken = async () => {
+  try {
+    const messaging = window.fbSDK.getMessaging();
+    if (!messaging || !fb.enabled || !fb.uid) return;
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const reg = regs.find(r => r.scope.includes('firebase-cloud-messaging-push-scope'));
+    if (!reg) return;
+    const token = await window.fbSDK.fcmGetToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg }).catch(() => null);
+    if (token) {
+      const ref = window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid);
+      await window.fbSDK.setDoc(ref, { fcmTokens: window.fbSDK.arrayRemove(token) }, { merge: true });
+    }
+  } catch (e) { console.warn('[NOVA HUB] unregisterFcmToken', e); }
+};
+
 const enableNotifications = async () => {
   if (!window.Notification) { toast('⚠️ Tu navegador no soporta notificaciones'); return false; }
-  if (Notification.permission === 'granted') { state.settings.notificationsEnabled = true; save(); return true; }
+  if (Notification.permission === 'granted') {
+    state.settings.notificationsEnabled = true; save();
+    registerFcmToken();
+    return true;
+  }
   if (Notification.permission === 'denied') { toast('⚠️ Bloqueadas en el navegador. Habilítalas desde los ajustes del sitio.'); state.settings.notificationsEnabled = false; save(); return false; }
   const perm = await Notification.requestPermission();
   state.settings.notificationsEnabled = perm === 'granted';
   save();
+  if (state.settings.notificationsEnabled) registerFcmToken();
   return state.settings.notificationsEnabled;
 };
-const disableNotifications = () => { state.settings.notificationsEnabled = false; save(); };
+const disableNotifications = () => { state.settings.notificationsEnabled = false; save(); unregisterFcmToken(); };
 const initNotifications = () => {
   setInterval(() => {
     const now = new Date(); let changed = false;
@@ -940,6 +1010,10 @@ const initNotifications = () => {
     });
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
   }, 30000);
+  // Si el SDK de FCM tarda en cargar, registra el token en cuanto esté listo
+  window.onFcmReady = () => {
+    if (state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted' && fb.enabled) registerFcmToken();
+  };
 };
 
 // ══════════════════════════════════════════════
