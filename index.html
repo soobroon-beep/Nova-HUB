@@ -20,6 +20,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NOVA HUB">
 <meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block" />
 <style>
 :root {
   --bg: rgba(15, 15, 26, 0.4);
@@ -141,6 +144,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .note-card .note-title{font-size:.95rem;font-weight:700;margin-bottom:6px;line-height:1.3}
 .note-card .note-body{font-size:.85rem;color:var(--text2);line-height:1.5;white-space:pre-wrap}
 .note-card .note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+
+/* PROYECTOS — masonry estilo Keep, igual que notas */
+.proj-masonry{column-width:300px;column-gap:20px}
 .note-tag{font-size:.7rem;padding:3px 8px;border-radius:20px;background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
 
 /* PROJECTS */
@@ -158,8 +164,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .progress-bar{height:6px;background:var(--border);border-radius:10px;overflow:hidden}
 .progress-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 1s ease}
 .proj-footer{display:flex;justify-content:space-between;margin-top:6px;font-size:.72rem;color:var(--text3)}
-.proj-full-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px;transition:var(--trans)}
+.proj-full-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px;transition:var(--trans);position:relative;break-inside:avoid;margin-bottom:20px}
 .proj-full-card:hover{border-color:rgba(124,106,247,.4)}
+.proj-full-card.pinned::before{content:'📌';position:absolute;top:14px;right:14px;font-size:.85rem}
+.proj-icon-badge{width:38px;height:38px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c,var(--accent))}
+.proj-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.proj-card-info{display:flex;gap:10px;align-items:flex-start;min-width:0;flex:1}
+.proj-card-info-text{min-width:0}
+.proj-card-title{font-size:1.1rem;font-weight:700;word-break:break-word}
+.proj-card-desc{font-size:.85rem;color:var(--text2);margin-top:4px;word-break:break-word}
+.proj-card-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.proj-card-actions .btn{padding:4px 8px;font-size:.75rem;display:flex;align-items:center;gap:3px}
+.proj-card-actions .btn-icon{font-size:.95rem;line-height:1}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:1.3rem;line-height:1;vertical-align:middle;user-select:none}
+.icon-picker-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-height:170px;overflow-y:auto;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px}
+.icon-pick{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:8px;cursor:pointer;color:var(--text2);transition:var(--trans);border:1px solid transparent}
+.icon-pick:hover{background:var(--bg2);color:var(--text)}
+.icon-pick.active{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border-color:transparent}
 .task-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;margin-bottom:4px;transition:background .15s}
 .task-row:hover{background:var(--bg3)}
 
@@ -268,6 +289,27 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
   .habits-table-header{display:none}
 }
 
+/* ── NOTAS Y PROYECTOS: estilo Keep, 2 columnas en móvil ── */
+@media(max-width:700px){
+  .notes-masonry,.proj-masonry{column-count:2;column-width:auto;column-gap:10px}
+  .note-card{padding:12px;margin-bottom:10px;border-radius:12px}
+  .note-card .note-title{font-size:.85rem;margin-bottom:4px}
+  .note-card .note-body{font-size:.78rem;line-height:1.4}
+  .note-card .note-tags{margin-top:8px;gap:4px}
+  .proj-full-card{padding:14px;margin-bottom:10px;border-radius:12px}
+  .proj-card-title{font-size:.92rem}
+  .proj-card-desc{font-size:.74rem}
+  .proj-icon-badge{width:28px;height:28px}
+  .proj-icon-badge .material-symbols-outlined{font-size:1rem}
+  .proj-card-actions{gap:2px}
+  .proj-card-actions .btn-label{display:none}
+  .proj-card-actions .btn{padding:4px 5px}
+  .pin-proj-btn,.edit-proj-btn,.del-proj-btn{font-size:.85rem!important;padding:3px!important}
+  .proj-full-card .task-row{padding:6px 8px!important}
+  .proj-full-card .task-row label{font-size:.76rem!important;gap:6px!important}
+  .proj-full-card .progress-bar{margin-bottom:12px!important}
+}
+
 /* NUEVAS CLASES PARA DIARIO Y RECORDATORIOS */
 .blur-content { filter: blur(6px); transition: filter 0.3s; user-select: none; }
 .blur-content:hover { filter: blur(0); }
@@ -331,24 +373,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <nav id="sidebar">
   <div class="logo">
-    <div class="logo-icon">
-      <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="brainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#00f0ff" />
-            <stop offset="100%" stop-color="#7c6af7" />
-          </linearGradient>
-        </defs>
-        <path fill="none" stroke="url(#brainGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="
-          M 48,15 L 43,15 C 23,15 13,30 18,45 L 13,50 C 3,60 13,80 28,85 L 38,85 L 38,92 
-          M 52,15 L 57,15 C 77,15 87,30 82,45 L 87,50 C 97,60 87,80 72,85 L 62,85 L 62,92"/>
-        <circle cx="28" cy="85" r="5.5" fill="#00f0ff"/>
-        <circle cx="72" cy="85" r="5.5" fill="#00f0ff"/>
-        <path fill="none" stroke="#00f0ff" stroke-width="6" d="M 43,35 L 33,35 L 28,45 M 57,35 L 67,35 L 72,45" />
-        <circle cx="28" cy="45" r="4.5" fill="#00f0ff"/>
-        <circle cx="72" cy="45" r="4.5" fill="#00f0ff"/>
-      </svg>
-    </div>
     <span id="appTitle">NOVA HUB</span>
   </div>
   <div class="nav-section">Principal</div>
@@ -456,6 +480,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
     <h3 id="projModalTitle">🚀 Nuevo Proyecto</h3>
     <input type="hidden" id="projId"/>
     <div class="field"><label>Nombre</label><input id="projName" placeholder="Nombre del proyecto…"/></div>
+    <div class="field">
+      <label>Icono</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div class="proj-icon-badge" id="projIconPreview"><span class="material-symbols-outlined" id="projIconPreviewIcon">rocket_launch</span></div>
+        <div style="font-size:.78rem;color:var(--text3)">Elige un ícono para tu proyecto</div>
+      </div>
+      <div class="icon-picker-grid" id="projIconPicker"></div>
+      <input type="hidden" id="projIcon" value="rocket_launch"/>
+    </div>
     <div class="field"><label>Descripción</label><textarea id="projDesc" rows="3" placeholder="¿De qué trata?…"></textarea></div>
     <div style="display:flex;gap:10px">
       <div class="field" style="flex:1"><label>Estado</label>
@@ -571,8 +604,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { getMessaging, getToken as fcmGetToken, onMessage, isSupported as fcmIsSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAACWtwcJayD3q_LIC7gL6QoY1H7dfaEjY",
@@ -593,23 +625,8 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
 });
 
-window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove, fcmGetToken, getMessaging: () => window._fcmMessaging || null };
+window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot };
 window.onAuthStateChanged = onAuthStateChanged;
-
-// Firebase Cloud Messaging: solo se activa si el navegador lo soporta
-// (Safari/iOS en algunos casos no lo soporta vía web).
-fcmIsSupported().then(supported => {
-  if (!supported) { console.warn('[NOVA HUB] Este navegador no soporta FCM'); return; }
-  window._fcmMessaging = getMessaging(app);
-  // Notificación recibida con la app ABIERTA en primer plano
-  onMessage(window._fcmMessaging, (payload) => {
-    const title = payload.notification?.title || payload.data?.title || 'NOVA HUB';
-    const body = payload.notification?.body || payload.data?.body || '';
-    if (window.toast) window.toast('🔔 ' + title + (body ? ': ' + body : ''));
-  });
-  if (window.onFcmReady) window.onFcmReady();
-}).catch(e => console.warn('[NOVA HUB] fcmIsSupported error', e));
-
 </script>
 <script>
 // ══════════════════════════════════════════════
@@ -913,9 +930,6 @@ const autoConnectFirebase = () => {
           await fb.pullAll();
           // 2) Luego arrancar listener tiempo real
           fb.startRealtimeSync();
-          // 3) Si ya habías activado notificaciones, renueva el token push de este dispositivo
-          //    (maybeRegisterFcm espera a que el SDK de FCM también esté listo, evita condición de carrera)
-          maybeRegisterFcm();
           if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
         } else {
           fb.stopRealtimeSync();
@@ -938,80 +952,43 @@ const autoConnectFirebase = () => {
 // ══════════════════════════════════════════════
 // NOTIFICATIONS
 // ══════════════════════════════════════════════
-// ══════════════════════════════════════════════
-// NOTIFICATIONS (local + push real vía FCM)
-// ══════════════════════════════════════════════
-const FCM_VAPID_KEY = "BOojSSVOrTa_6yT68qxn2UmiXqvITyEFTfw2VzehCWdjqr2WmhOESUc6blhQmIbxz4Ijq1LWDGY9q4Xe3wteS6g";
-let _fcmSupported = false; // se vuelve true cuando fcmIsSupported() resuelve en el script module
-
-// Registra (o renueva) el token de este dispositivo en Firestore para que
-// el job de GitHub Actions pueda enviarle notificaciones push aunque la
-// app esté cerrada. SIEMPRE deja rastro visible (toast) de qué pasó.
-const registerFcmToken = async () => {
-  try {
-    if (!('serviceWorker' in navigator)) { toast('⚠️ Este navegador no soporta service workers'); return; }
-    const messaging = window.fbSDK.getMessaging();
-    if (!messaging) { toast('⚠️ Este navegador no soporta push (FCM)'); return; }
-    if (!fb.enabled || !fb.uid) { toast('⚠️ Inicia sesión con Google primero para activar el push'); return; }
-
-    // SW dedicado a Cloud Messaging, en un scope propio para no chocar con sw.js.
-    // Scope RELATIVO (no absoluto): el sitio vive en una subcarpeta (/Nova-HUB/),
-    // y un SW solo puede controlar scopes dentro de la carpeta donde vive su script.
-    const swReg = await navigator.serviceWorker.register('firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
-    await navigator.serviceWorker.ready;
-    const token = await window.fbSDK.fcmGetToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
-    if (!token) { toast('⚠️ No se pudo obtener el token push'); return; }
-
-    const ref = window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid);
-    await window.fbSDK.setDoc(ref, { fcmTokens: window.fbSDK.arrayUnion(token) }, { merge: true });
-    console.log('[NOVA HUB] Token FCM registrado ✓', token.slice(0, 20) + '…');
-    toast('✅ Push real activado en este dispositivo');
-  } catch (e) {
-    console.error('[NOVA HUB] Error registrando token FCM', e);
-    toast('⚠️ No se pudo activar el push real: ' + (e.code || e.message || ''));
-  }
-};
-
-// Se llama cada vez que cambia una de las dos condiciones necesarias
-// (login con Google listo / SDK de FCM listo). Solo dispara el registro
-// cuando AMBAS ya están listas — evita la condición de carrera entre las dos.
-const maybeRegisterFcm = () => {
-  if (_fcmSupported && fb.enabled && fb.uid && state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted') {
-    registerFcmToken();
-  }
-};
-
-// Quita el token de este dispositivo de Firestore (no recibe más push).
-const unregisterFcmToken = async () => {
-  try {
-    const messaging = window.fbSDK.getMessaging();
-    if (!messaging || !fb.enabled || !fb.uid) return;
-    const regs = await navigator.serviceWorker.getRegistrations();
-    const reg = regs.find(r => r.scope.includes('firebase-cloud-messaging-push-scope'));
-    if (!reg) return;
-    const token = await window.fbSDK.fcmGetToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg }).catch(() => null);
-    if (token) {
-      const ref = window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid);
-      await window.fbSDK.setDoc(ref, { fcmTokens: window.fbSDK.arrayRemove(token) }, { merge: true });
-    }
-  } catch (e) { console.warn('[NOVA HUB] unregisterFcmToken', e); }
-};
-
 const enableNotifications = async () => {
   if (!window.Notification) { toast('⚠️ Tu navegador no soporta notificaciones'); return false; }
-  if (Notification.permission === 'granted') {
-    state.settings.notificationsEnabled = true; save();
-    maybeRegisterFcm();
-    return true;
-  }
+  if (Notification.permission === 'granted') { state.settings.notificationsEnabled = true; save(); return true; }
   if (Notification.permission === 'denied') { toast('⚠️ Bloqueadas en el navegador. Habilítalas desde los ajustes del sitio.'); state.settings.notificationsEnabled = false; save(); return false; }
   const perm = await Notification.requestPermission();
   state.settings.notificationsEnabled = perm === 'granted';
   save();
-  if (state.settings.notificationsEnabled) maybeRegisterFcm();
   return state.settings.notificationsEnabled;
 };
-const disableNotifications = () => { state.settings.notificationsEnabled = false; save(); unregisterFcmToken(); };
+const disableNotifications = () => { state.settings.notificationsEnabled = false; save(); };
+
+// Notificaciones de inicio/fin de bloques de horario
+const scheduleNotifState = { notified: new Set(), day: new Date().toDateString() };
+const checkScheduleNotifications = () => {
+  if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
+  if (typeof state.routines === 'undefined' || !state.routines.length) return;
+  const now = new Date();
+  const todayStr = now.toDateString();
+  if (todayStr !== scheduleNotifState.day) { scheduleNotifState.notified.clear(); scheduleNotifState.day = todayStr; }
+  const dow = now.getDay();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  state.routines.forEach(b => {
+    if (typeof blockRepeatsToday !== 'function' || !blockRepeatsToday(b, dow)) return;
+    const startMin = timeToMin(b.start), endMin = timeToMin(b.end);
+    const startKey = b.id + '-start-' + todayStr, endKey = b.id + '-end-' + todayStr;
+    if (nowMin === startMin && !scheduleNotifState.notified.has(startKey)) {
+      scheduleNotifState.notified.add(startKey);
+      new Notification('▶️ NOVA HUB', { body: `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})` });
+      toast('▶️ Comienza: ' + b.title);
+    }
+    if (nowMin === endMin && !scheduleNotifState.notified.has(endKey)) {
+      scheduleNotifState.notified.add(endKey);
+      new Notification('⏹️ NOVA HUB', { body: `Terminó tu bloque "${b.title}"` });
+      toast('⏹️ Terminó: ' + b.title);
+    }
+  });
+};
 const initNotifications = () => {
   setInterval(() => {
     const now = new Date(); let changed = false;
@@ -1022,9 +999,8 @@ const initNotifications = () => {
       }
     });
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
+    checkScheduleNotifications();
   }, 30000);
-  // Si el SDK de FCM tarda en cargar, registra el token en cuanto esté listo
-  window.onFcmReady = () => { _fcmSupported = true; maybeRegisterFcm(); };
 };
 
 // ══════════════════════════════════════════════
@@ -1115,15 +1091,33 @@ const renderNotes=()=>{
     el.addEventListener('click',()=>{ const idx=state.notes.findIndex(x=>x.id===n.id); if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; save(); renderNotes(); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');} }); c.appendChild(el);
   });
 };
+// ══════════════════════════════════════════════
+// ICON PICKER (proyectos)
+// ══════════════════════════════════════════════
+const PROJECT_ICONS = ['rocket_launch','work','school','fitness_center','code','palette','music_note','photo_camera','menu_book','restaurant','flight','home','savings','favorite','lightbulb','build','shopping_cart','pets','sports_esports','brush','terminal','language','medical_services','eco','celebration','directions_car','business_center','science','theater_comedy','star'];
+const renderIconPicker = (selected) => {
+  const grid = document.getElementById('projIconPicker'); if(!grid) return;
+  const sel = selected || 'rocket_launch';
+  grid.innerHTML = PROJECT_ICONS.map(ic=>`<div class="icon-pick${ic===sel?' active':''}" data-icon="${ic}" title="${ic}"><span class="material-symbols-outlined">${ic}</span></div>`).join('');
+  document.getElementById('projIcon').value = sel;
+  document.getElementById('projIconPreviewIcon').textContent = sel;
+  grid.querySelectorAll('.icon-pick').forEach(el=>el.addEventListener('click',()=>{
+    document.getElementById('projIcon').value = el.dataset.icon;
+    document.getElementById('projIconPreviewIcon').textContent = el.dataset.icon;
+    grid.querySelectorAll('.icon-pick').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+  }));
+};
+
 const renderProjects=()=>{
   const c=document.getElementById('projectsList'); if(!c) return; c.innerHTML='';
   const statProjects=document.getElementById('statProjects'); if(statProjects) statProjects.textContent=state.projects.filter(p=>p.status==='active').length;
   if(!state.projects.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px">Sin proyectos.</div>'; return; }
-  state.projects.forEach(p=>{
+  [...state.projects].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(p=>{
     const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
     const badges={active:'badge-active',pause:'badge-pause',idea:'badge-idea'}, labels={active:'Activo',pause:'Pausado',idea:'Idea'};
     const el=document.createElement('div'); el.className='project-item';
-    el.innerHTML=`<div class="proj-top"><div class="proj-name">${p.name}</div><span class="proj-badge ${badges[p.status]}">${labels[p.status]}</span></div><div class="proj-desc">${p.desc||''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="proj-footer"><span>${p.tasks?.length||0} tareas</span><span>${pct}%</span></div>`;
+    el.innerHTML=`<div class="proj-top"><div class="proj-name" style="display:flex;align-items:center;gap:8px"><span class="material-symbols-outlined" style="font-size:1.05rem;color:${p.color||'var(--accent)'}">${p.icon||'rocket_launch'}</span>${p.name}${p.pinned?' 📌':''}</div><span class="proj-badge ${badges[p.status]}">${labels[p.status]}</span></div><div class="proj-desc">${p.desc||''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="proj-footer"><span>${p.tasks?.length||0} tareas</span><span>${pct}%</span></div>`;
     c.appendChild(el);
   });
 };
@@ -1173,12 +1167,13 @@ document.getElementById('projCancel')?.addEventListener('click',()=>closeModal('
 document.getElementById('projSave')?.addEventListener('click',()=>{
   const n=document.getElementById('projName').value.trim(); if(!n){toast('⚠️ Agrega un nombre');return;}
   const c=document.getElementById('projColor').value;
+  const ic=document.getElementById('projIcon').value || 'rocket_launch';
   const pId=document.getElementById('projId').value;
   if(pId) {
     const p = state.projects.find(x=>x.id==pId);
-    if(p) { p.name=n; p.desc=document.getElementById('projDesc').value.trim(); p.status=document.getElementById('projStatus').value; p.color=c; }
+    if(p) { p.name=n; p.desc=document.getElementById('projDesc').value.trim(); p.status=document.getElementById('projStatus').value; p.color=c; p.icon=ic; }
   } else {
-    state.projects.unshift({id:Date.now(),name:n,desc:document.getElementById('projDesc').value.trim(),status:document.getElementById('projStatus').value,color:c,tasks:[],createdAt:new Date().toISOString()});
+    state.projects.unshift({id:Date.now(),name:n,desc:document.getElementById('projDesc').value.trim(),status:document.getElementById('projStatus').value,color:c,icon:ic,pinned:false,tasks:[],createdAt:new Date().toISOString()});
   }
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='projects') renderProjectsView(); else renderProjects(); 
   closeModal('projModal'); document.getElementById('projName').value=''; document.getElementById('projDesc').value=''; document.getElementById('projId').value=''; toast('✅ Guardado');
@@ -1342,6 +1337,7 @@ const renderDashboard=()=>{
     document.getElementById('projId').value = '';
     document.getElementById('projName').value = '';
     document.getElementById('projDesc').value = '';
+    renderIconPicker('rocket_launch');
     openModal('projModal');
   });
   document.getElementById('addReminderBtnDash')?.addEventListener('click',()=>{
@@ -1964,7 +1960,7 @@ const renderSettingsView=()=>{
       <div class="settings-row">
         <div>
           <div class="settings-label">Activar notificaciones</div>
-          <div class="settings-sub">${!window.Notification ? 'Tu navegador no soporta notificaciones push.' : Notification.permission==='denied' ? 'Bloqueadas por el navegador. Habilítalas en los ajustes del sitio para activarlas aquí.' : 'Recibe un aviso cuando llegue la hora de tus recordatorios.'}</div>
+          <div class="settings-sub">${!window.Notification ? 'Tu navegador no soporta notificaciones push.' : Notification.permission==='denied' ? 'Bloqueadas por el navegador. Habilítalas en los ajustes del sitio para activarlas aquí.' : 'Recibe un aviso cuando llegue la hora de tus recordatorios y cuando inicie o termine un bloque de tu horario.'}</div>
         </div>
         <label class="toggle-sw"><input type="checkbox" id="notifToggle" ${(window.Notification && Notification.permission==='granted' && state.settings.notificationsEnabled)?'checked':''} ${(!window.Notification || Notification.permission==='denied')?'disabled':''}/><span class="slider"></span></label>
       </div>
@@ -2029,27 +2025,38 @@ const renderProjectsView=()=>{
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>🚀</span> Proyectos</div>
     <button class="btn btn-primary" id="newProjBtn">+ Proyecto</button>
   </div>
-  <div id="projFullList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;align-items:start"></div>`;
-  
-  document.getElementById('newProjBtn').addEventListener('click',()=>openModal('projModal'));
+  <div id="projFullList" class="proj-masonry"></div>`;
+
+  document.getElementById('newProjBtn').addEventListener('click',()=>{
+    document.getElementById('projModalTitle').textContent = '🚀 Nuevo Proyecto';
+    document.getElementById('projId').value = '';
+    document.getElementById('projName').value = '';
+    document.getElementById('projDesc').value = '';
+    renderIconPicker('rocket_launch');
+    openModal('projModal');
+  });
   const list=document.getElementById('projFullList');
   if(!state.projects.length){
-    list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1">Aún no tienes proyectos. Crea uno para empezar.</div>';
+    list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">Aún no tienes proyectos. Crea uno para empezar.</div>';
     return;
   }
-  
-    state.projects.forEach(p=>{
+
+  [...state.projects].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(p=>{
     const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
-    const el=document.createElement('div'); el.className='proj-full-card';
+    const el=document.createElement('div'); el.className='proj-full-card'+(p.pinned?' pinned':'');
     el.style.borderTop = `4px solid ${p.color||'var(--accent)'}`;
     el.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-        <div>
-          <div style="font-size:1.1rem;font-weight:700">${p.name}</div>
-          <div style="font-size:.85rem;color:var(--text2);margin-top:4px">${p.desc||'Sin descripción'}</div>
+      <div class="proj-card-head">
+        <div class="proj-card-info">
+          <div class="proj-icon-badge" style="--c:${p.color||'var(--accent)'}"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
+          <div class="proj-card-info-text">
+            <div class="proj-card-title">${p.name}</div>
+            <div class="proj-card-desc">${p.desc||'Sin descripción'}</div>
+          </div>
         </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn-ghost btn-sm btn" data-pid="${p.id}" id="addTaskBtn-${p.id}" style="padding:4px 8px;font-size:0.75rem">+ Tarea</button>
+        <div class="proj-card-actions">
+          <button class="btn-ghost btn-sm btn" data-pid="${p.id}" id="addTaskBtn-${p.id}"><span class="btn-icon">＋</span><span class="btn-label">Tarea</span></button>
+          <button class="pin-proj-btn btn-ghost btn-sm btn" style="border:none;color:${p.pinned?'var(--accent2)':'var(--text2)'};opacity:${p.pinned?'1':'0.5'};font-size:1rem;padding:4px" data-pid="${p.id}" title="${p.pinned?'Desfijar':'Fijar'}">📌</button>
           <button class="edit-proj-btn btn-ghost btn-sm btn" style="border:none;color:var(--text2);opacity:0.5;font-size:1rem;padding:4px" data-pid="${p.id}">✏️</button>
           <button class="del-proj-btn btn-ghost btn-sm btn" style="border:none;color:var(--red);opacity:0.5;font-size:1rem;padding:4px" data-pid="${p.id}">🗑</button>
         </div>
@@ -2070,17 +2077,16 @@ const renderProjectsView=()=>{
       document.getElementById('projDesc').value = p.desc||'';
       document.getElementById('projStatus').value = p.status;
       document.getElementById('projColor').value = p.color || 'var(--accent)';
+      renderIconPicker(p.icon || 'rocket_launch');
       document.getElementById('projModalTitle').textContent = '✏️ Editar Proyecto';
       openModal('projModal');
     }
   }));
-  document.getElementById('newProjBtn').addEventListener('click',()=>{
-    document.getElementById('projModalTitle').textContent = '🚀 Nuevo Proyecto';
-    document.getElementById('projId').value = '';
-    document.getElementById('projName').value = '';
-    document.getElementById('projDesc').value = '';
-    openModal('projModal');
-  });
+
+  document.querySelectorAll('.pin-proj-btn').forEach(b=>b.addEventListener('click',e=>{
+    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
+    if(p){ p.pinned=!p.pinned; save(); renderProjectsView(); toast(p.pinned?'📌 Proyecto fijado':'Proyecto desfijado'); }
+  }));
 
   document.querySelectorAll('.task-check').forEach(c=>c.addEventListener('change',e=>{
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
@@ -2088,7 +2094,7 @@ const renderProjectsView=()=>{
   }));
   document.querySelectorAll('.del-task-btn').forEach(b=>b.addEventListener('click',e=>{
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks.splice(e.target.dataset.idx,1); save(); renderProjectsView(); updateStats(); }
+    if(p && confirm('¿Eliminar esta tarea?')) { p.tasks.splice(e.target.dataset.idx,1); save(); renderProjectsView(); updateStats(); }
   }));
   document.querySelectorAll('[id^=addTaskBtn-]').forEach(b=>b.addEventListener('click',e=>{
     const title=prompt('Nueva tarea:');
