@@ -128,6 +128,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .cal-day.today{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:700}
 .cal-day.other-month{color:var(--text3);opacity:.4}
 .cal-day.has-event::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--green)}
+.cal-day.selected:not(.today){box-shadow:0 0 0 2px var(--accent) inset;color:var(--accent2);font-weight:700}
+.cal-day.selected.today{box-shadow:0 0 0 2px var(--text);}
 .events-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
 .event-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--c,var(--accent));transition:var(--trans)}
 .event-item:hover{transform:translateX(3px)}
@@ -385,6 +387,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .sched-now-line::before{content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--red)}
 .sched-now-label{position:absolute;left:-52px;top:-7px;width:46px;text-align:right;padding-right:6px;font-size:.6rem;color:var(--red);font-weight:700;background:var(--bg2)}
 .sched-empty{text-align:center;color:var(--text3);font-size:.85rem;padding:30px 10px;line-height:1.6}
+.sched-block.sched-event{border-left-style:dashed}
+.sched-daynav button{width:auto;padding:0 10px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.sched-daynav button.sched-arrow{width:28px;padding:0}
 
 /* ── DAILY BRIEFING MOBILE-FIRST ── */
 .briefing-section{padding:16px 0;border-bottom:1px solid var(--border)}
@@ -532,6 +537,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeModal('habitModal')">Cancelar</button>
       <button class="btn btn-primary" id="habitSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <h3>✚ Nueva Tarea</h3>
+    <input type="hidden" id="taskProjId"/>
+    <div class="field"><label>Título de la tarea</label><input id="taskTitle" placeholder="Ej. Diseñar referencia para cliente…"/></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Cancelar</button>
+      <button class="btn btn-primary" id="taskSave">Guardar</button>
     </div>
   </div>
 </div>
@@ -1283,6 +1300,12 @@ const disableNotifications = async () => {
 
 // Notificaciones de inicio/fin de bloques de horario
 const scheduleNotifState = { notified: new Set(), day: new Date().toDateString() };
+// Ventana de tolerancia: en móvil, cuando la app/pestaña está en segundo plano o la
+// pantalla se bloquea, el navegador retrasa los temporizadores (a veces varios minutos).
+// Si solo comparamos "minuto exacto === minuto exacto" esa comprobación se puede saltar
+// por completo y la notificación nunca llega. Con una ventana de tolerancia, en cuanto
+// el temporizador vuelve a correr (aunque sea tarde) sigue detectando el bloque pendiente.
+const SCHED_NOTIF_GRACE_MIN = 5;
 const checkScheduleNotifications = () => {
   if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
   if (typeof state.routines === 'undefined' || !state.routines.length) return;
@@ -1295,12 +1318,12 @@ const checkScheduleNotifications = () => {
     if (typeof blockRepeatsToday !== 'function' || !blockRepeatsToday(b, dow)) return;
     const startMin = timeToMin(b.start), endMin = timeToMin(b.end);
     const startKey = b.id + '-start-' + todayStr, endKey = b.id + '-end-' + todayStr;
-    if (nowMin === startMin && !scheduleNotifState.notified.has(startKey)) {
+    if (nowMin >= startMin && nowMin <= startMin + SCHED_NOTIF_GRACE_MIN && !scheduleNotifState.notified.has(startKey)) {
       scheduleNotifState.notified.add(startKey);
       new Notification('▶️ NOVA HUB', { body: `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})` });
       toast('▶️ Comienza: ' + b.title);
     }
-    if (nowMin === endMin && !scheduleNotifState.notified.has(endKey)) {
+    if (nowMin >= endMin && nowMin <= endMin + SCHED_NOTIF_GRACE_MIN && !scheduleNotifState.notified.has(endKey)) {
       scheduleNotifState.notified.add(endKey);
       new Notification('⏹️ NOVA HUB', { body: `Terminó tu bloque "${b.title}"` });
       toast('⏹️ Terminó: ' + b.title);
@@ -1308,7 +1331,7 @@ const checkScheduleNotifications = () => {
   });
 };
 const initNotifications = () => {
-  setInterval(() => {
+  const tick = () => {
     const now = new Date(); let changed = false;
     state.reminders.forEach(r => {
       if (!r.notified && new Date(r.datetime) <= now) {
@@ -1318,7 +1341,12 @@ const initNotifications = () => {
     });
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
     checkScheduleNotifications();
-  }, 30000);
+  };
+  setInterval(tick, 20000);
+  // Si el dispositivo bloqueó/pausó los temporizadores en segundo plano, al volver a la
+  // app revisamos de inmediato en vez de esperar al próximo intervalo de 20s.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+  tick();
 };
 
 // ══════════════════════════════════════════════
@@ -1385,23 +1413,23 @@ const renderCalendar = () => {
   for(let i=1;i<=remaining;i++){ const el=document.createElement('div'); el.className='cal-day other-month'; el.textContent=i; grid.appendChild(el); }
   renderTodayEvents();
 };
+let selectedScheduleDate = null; // 'YYYY-MM-DD' — null = hoy
+const dateToStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const todayDateStr = () => dateToStr(new Date());
+const getSelectedDate = () => selectedScheduleDate || todayDateStr();
 const selectDay=(y,m,d)=>{
-  const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  const dayEvents=state.events.filter(e=>e.date===dateStr).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
-  const routines=(state.routines||[]).filter(r=>{
-    const dow=new Date(dateStr+'T12:00:00').getDay();
-    return !r.repeatDays || r.repeatDays.includes(dow);
-  });
-  const info=[
-    `📅 ${dateStr}`,
-    '',
-    'EVENTOS:',
-    ...(dayEvents.length?dayEvents.map(e=>`• ${e.start||''} ${e.title}`):['Sin eventos']),
-    '',
-    'HORARIO:',
-    ...(routines.length?routines.map(r=>`• ${r.start} - ${r.end} ${r.title}`):['Sin bloques'])
-  ].join('\n');
-  alert(info);
+  selectedScheduleDate = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const activeView = document.querySelector('.nav-item.active')?.dataset.view;
+  if(activeView !== 'calendar'){
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelector('.nav-item[data-view="calendar"]')?.classList.add('active');
+    closeSidebar(); document.getElementById('content').scrollTop = 0;
+    renderCalendarView();
+  } else {
+    renderScheduleTimeline();
+    markSelectedDayCell();
+    document.getElementById('scheduleList')?.scrollIntoView?.({behavior:'smooth', block:'nearest'});
+  }
 };
 const renderTodayEvents=()=>{
   const today=new Date().toISOString().split('T')[0], todayEvs=state.events.filter(e=>e.date===today).sort((a,b)=>a.start.localeCompare(b.start));
@@ -1538,6 +1566,23 @@ document.getElementById('habitSave')?.addEventListener('click',()=>{
   save(); renderHabitsView(); updateStats(); closeModal('habitModal'); document.getElementById('habitName').value=''; document.getElementById('habitId').value=''; toast('✅ Guardado');
 });
 
+const saveNewTask = () => {
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title){ toast('⚠️ Escribe el nombre de la tarea'); return; }
+  const pid = document.getElementById('taskProjId').value;
+  const p = state.projects.find(x=>x.id==pid);
+  if(!p){ toast('⚠️ No se encontró el proyecto'); closeModal('taskModal'); return; }
+  p.tasks = p.tasks||[]; p.tasks.push({title,done:false});
+  save();
+  if(document.querySelector('.nav-item.active')?.dataset.view==='projects') renderProjectsView(); else renderProjects();
+  updateStats();
+  closeModal('taskModal'); document.getElementById('taskTitle').value=''; document.getElementById('taskProjId').value='';
+  toast('✅ Tarea agregada');
+};
+document.getElementById('taskSave')?.addEventListener('click', saveNewTask);
+document.getElementById('taskTitle')?.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); saveNewTask(); } });
+
+
 document.getElementById('blockSave')?.addEventListener('click',()=>{
   const t=document.getElementById('blockTitle').value.trim(); if(!t){toast('⚠️ Agrega un título');return;}
   const repeatDays=getBlockDayPills(); if(!repeatDays.length){toast('⚠️ Selecciona al menos un día');return;}
@@ -1560,6 +1605,7 @@ document.querySelectorAll('.nav-item,[data-view]').forEach(el=>{
     const v=el.dataset.view; if(!v) return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.nav-item[data-view="${v}"]`)?.classList.add('active');
+    if (v === 'calendar') selectedScheduleDate = null;
     rerenderView(v);
     closeSidebar();
     document.getElementById('content').scrollTop = 0;
@@ -2491,10 +2537,11 @@ const renderProjectsView=()=>{
     if(p && confirm('¿Eliminar esta tarea?')) { const idx=Number(e.target.dataset.idx); const t=p.tasks[idx]; addToTrash('task', t, {projectId:p.id, idx}); p.tasks.splice(idx,1); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
   }));
   document.querySelectorAll('[id^=addTaskBtn-]').forEach(b=>b.addEventListener('click',e=>{
-    const title=prompt('Nueva tarea:');
-    if(!title) return;
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks=p.tasks||[]; p.tasks.push({title,done:false}); save(); renderProjectsView(); updateStats(); }
+    const pid = e.currentTarget.dataset.pid;
+    document.getElementById('taskProjId').value = pid;
+    document.getElementById('taskTitle').value = '';
+    openModal('taskModal');
+    setTimeout(()=>document.getElementById('taskTitle')?.focus(), 50);
   }));
   document.querySelectorAll('.del-proj-btn').forEach(b=>b.addEventListener('click',e=>{
     if(confirm('¿Eliminar proyecto y sus tareas?')){ const p=state.projects.find(x=>x.id==e.target.dataset.pid); if(p) addToTrash('project', p); state.projects=state.projects.filter(x=>x.id!=e.target.dataset.pid); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
@@ -2605,9 +2652,20 @@ const renderCalendarView=()=>{
     </div>
     
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px"><span>⏳</span> Mi Horario de Hoy</div>
-        <button class="btn btn-ghost btn-sm" id="newBlockBtn" style="padding:4px 8px">+ Bloque</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px"><span>⏳</span> Mi Horario</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="newEventBtnSched" style="padding:4px 8px">+ Evento</button>
+          <button class="btn btn-ghost btn-sm" id="newBlockBtn" style="padding:4px 8px">+ Bloque</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div class="cal-nav sched-daynav">
+          <button class="sched-arrow" id="schedPrevDay" title="Día anterior">‹</button>
+          <button id="schedToday">Hoy</button>
+          <button class="sched-arrow" id="schedNextDay" title="Día siguiente">›</button>
+        </div>
+        <div style="font-size:.84rem;font-weight:700;color:var(--text)" id="schedDateLabel"></div>
       </div>
       <div id="scheduleList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
@@ -2618,7 +2676,14 @@ const renderCalendarView=()=>{
     document.getElementById('evModalTitle').textContent = '📅 Nuevo Evento';
     document.getElementById('evId').value = '';
     ['evTitle','evStart','evEnd'].forEach(id=>document.getElementById(id).value='');
-    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=new Date().toISOString().split('T')[0]; 
+    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=getSelectedDate(); 
+    openModal('eventModal');
+  });
+  document.getElementById('newEventBtnSched').addEventListener('click',()=>{
+    document.getElementById('evModalTitle').textContent = '📅 Nuevo Evento';
+    document.getElementById('evId').value = '';
+    ['evTitle','evStart','evEnd'].forEach(id=>document.getElementById(id).value='');
+    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=getSelectedDate();
     openModal('eventModal');
   });
   document.getElementById('newBlockBtn').addEventListener('click',()=>{
@@ -2628,9 +2693,13 @@ const renderCalendarView=()=>{
     document.getElementById('blockStart').value = '09:00';
     document.getElementById('blockEnd').value = '10:00';
     document.getElementById('blockColor').value = 'var(--accent)';
-    setBlockDayPills(null);
+    const dow = new Date(getSelectedDate()+'T12:00:00').getDay();
+    setBlockDayPills([dow]);
     openModal('blockModal');
   });
+  document.getElementById('schedPrevDay').addEventListener('click',()=>navScheduleDay(-1));
+  document.getElementById('schedNextDay').addEventListener('click',()=>navScheduleDay(1));
+  document.getElementById('schedToday').addEventListener('click',goToToday);
   document.getElementById('calPrevFull')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()-1);renderCalendarView();});
   document.getElementById('calNextFull')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()+1);renderCalendarView();});
 
@@ -2691,10 +2760,11 @@ const renderCalendarView=()=>{
   }
   
   renderScheduleTimeline();
+  markSelectedDayCell();
 };
 
 // ══════════════════════════════════════════════
-// MI HORARIO — VISTA DE BLOQUES POR DÍA (timeline)
+// MI HORARIO — VISTA DE BLOQUES POR DÍA (timeline tipo Google Calendar)
 // ══════════════════════════════════════════════
 const DAY_LETTERS = ['D','L','M','X','J','V','S']; // index = JS getDay() (0=Domingo)
 const DAY_DEFS = [{l:'L',v:1},{l:'M',v:2},{l:'X',v:3},{l:'J',v:4},{l:'V',v:5},{l:'S',v:6},{l:'D',v:0}];
@@ -2711,21 +2781,74 @@ const setBlockDayPills = days => {
 };
 const getBlockDayPills = () => Array.from(document.querySelectorAll('#blockDayPills .day-pill.active')).map(p=>parseInt(p.dataset.day));
 
+const fmtScheduleDateLabel = dateStr => {
+  const d = new Date(dateStr+'T12:00:00');
+  let label = d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+  label = label.charAt(0).toUpperCase()+label.slice(1);
+  if(dateStr === todayDateStr()) return 'Hoy · '+label;
+  const tmr = new Date(); tmr.setDate(tmr.getDate()+1);
+  if(dateStr === dateToStr(tmr)) return 'Mañana · '+label;
+  const yst = new Date(); yst.setDate(yst.getDate()-1);
+  if(dateStr === dateToStr(yst)) return 'Ayer · '+label;
+  return label;
+};
+const markSelectedDayCell = () => {
+  const grid = document.getElementById('calGridFull'); if(!grid) return;
+  grid.querySelectorAll('.cal-day').forEach(el=>el.classList.remove('selected'));
+  const d = new Date(getSelectedDate()+'T12:00:00');
+  if(d.getMonth()===state.calDate.getMonth() && d.getFullYear()===state.calDate.getFullYear()){
+    grid.querySelectorAll('.cal-day:not(.other-month)').forEach(c=>{ if(parseInt(c.textContent)===d.getDate()) c.classList.add('selected'); });
+  }
+};
+const navScheduleDay = delta => {
+  const d = new Date(getSelectedDate()+'T12:00:00');
+  d.setDate(d.getDate()+delta);
+  selectedScheduleDate = dateToStr(d);
+  if(d.getMonth() !== state.calDate.getMonth() || d.getFullYear() !== state.calDate.getFullYear()){
+    state.calDate = new Date(d.getFullYear(), d.getMonth(), 1);
+    renderCalendarView();
+  } else {
+    renderScheduleTimeline();
+    markSelectedDayCell();
+  }
+};
+const goToToday = () => {
+  selectedScheduleDate = null;
+  const d = new Date();
+  if(d.getMonth() !== state.calDate.getMonth() || d.getFullYear() !== state.calDate.getFullYear()){
+    state.calDate = new Date(d.getFullYear(), d.getMonth(), 1);
+    renderCalendarView();
+  } else {
+    renderScheduleTimeline();
+    markSelectedDayCell();
+  }
+};
+
 const renderScheduleTimeline = () => {
   const wrap = document.getElementById('scheduleList');
   if(!wrap) return;
-  const dow = new Date().getDay();
-  const todayBlocks = [...(state.routines||[])].filter(b=>blockRepeatsToday(b, dow)).sort((a,b)=>a.start.localeCompare(b.start));
+  const dateStr = getSelectedDate();
+  const lbl = document.getElementById('schedDateLabel');
+  if(lbl) lbl.textContent = fmtScheduleDateLabel(dateStr);
 
-  if(!todayBlocks.length){
-    wrap.innerHTML = '<div class="sched-empty">No tienes bloques para hoy.<br>Crea uno con «+ Bloque».</div>';
+  const dow = new Date(dateStr+'T12:00:00').getDay();
+  const dayBlocks = [...(state.routines||[])].filter(b=>blockRepeatsToday(b, dow)).map(b=>({
+    kind:'block', id:b.id, title:b.title, start:b.start, end:b.end, color:b.color
+  }));
+  const dayEvents = (state.events||[]).filter(e=>e.date===dateStr).map(e=>({
+    kind:'event', id:e.id, title:e.title, start:e.start||'00:00', end:e.end||e.start||'00:00', color:e.color
+  }));
+  const items = [...dayBlocks, ...dayEvents];
+
+  if(!items.length){
+    wrap.innerHTML = '<div class="sched-empty">Nada programado para este día.<br>Crea un bloque o evento con los botones de arriba.</div>';
     return;
   }
 
   let startHour = 6, endHour = 22;
-  todayBlocks.forEach(b=>{
+  items.forEach(b=>{
     const sh = Math.floor(timeToMin(b.start)/60);
-    const eh = Math.ceil(timeToMin(b.end)/60);
+    const eh = Math.ceil(timeToMin(b.end||b.start)/60);
     if(sh < startHour) startHour = sh;
     if(eh > endHour) endHour = eh;
   });
@@ -2741,45 +2864,78 @@ const renderScheduleTimeline = () => {
     if(h<endHour) gridHtml += `<div class="sched-hour-label" style="top:${top-7}px">${String(h).padStart(2,'0')}:00</div>`;
   }
 
+  // Asigna columnas a items que se solapan en el tiempo (estilo Google Calendar)
+  const sorted = [...items].sort((a,b)=>timeToMin(a.start)-timeToMin(b.start));
+  const columns = [];
+  const placed = sorted.map(it=>{
+    const s = timeToMin(it.start), e = Math.max(s+15, timeToMin(it.end||it.start));
+    let col = columns.findIndex(c=>c.end <= s);
+    if(col===-1){ col = columns.length; columns.push({end:e}); } else columns[col].end = e;
+    return {...it, _s:s, _e:e, _col:col};
+  });
+  const maxCols = columns.length || 1;
+
   let blocksHtml = '';
-  todayBlocks.forEach(b=>{
-    const top = (timeToMin(b.start)-rangeStartMin)/60*SCHED_HOUR_H;
-    const height = Math.max(30, (timeToMin(b.end)-timeToMin(b.start))/60*SCHED_HOUR_H - 4);
+  placed.forEach(b=>{
+    const top = (b._s-rangeStartMin)/60*SCHED_HOUR_H;
+    const height = Math.max(30, (b._e-b._s)/60*SCHED_HOUR_H - 4);
+    const widthPct = 100/maxCols, leftPct = b._col*widthPct;
+    const isEvent = b.kind==='event';
     blocksHtml += `
-      <div class="sched-block" style="top:${top}px;height:${height}px;--c:${b.color||'var(--accent)'}" data-bid="${b.id}">
-        <button class="sb-del" data-bid="${b.id}" title="Eliminar">✕</button>
-        <div class="sb-title">${b.title}</div>
-        <div class="sb-time">${b.start} – ${b.end}</div>
-        <div class="sb-days">${scheduleDaysLabel(b)}</div>
+      <div class="sched-block${isEvent?' sched-event':''}" style="top:${top}px;height:${height}px;left:calc(${leftPct}% + 2px);width:calc(${widthPct}% - 6px);--c:${b.color||'var(--accent)'}" data-bid="${b.id}" data-kind="${b.kind}">
+        <button class="sb-del" data-bid="${b.id}" data-kind="${b.kind}" title="Eliminar">✕</button>
+        <div class="sb-title">${isEvent?'📅 ':''}${b.title}</div>
+        <div class="sb-time">${b.start}${b.end&&b.end!==b.start?' – '+b.end:''}</div>
+        ${!isEvent?`<div class="sb-days">${scheduleDaysLabel(state.routines.find(r=>r.id==b.id)||{})}</div>`:''}
       </div>`;
   });
 
   let nowHtml = '';
-  const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
-  if(nowMin >= rangeStartMin && nowMin <= endHour*60){
-    const top = (nowMin-rangeStartMin)/60*SCHED_HOUR_H;
-    nowHtml = `<div class="sched-now-line" style="top:${top}px"><span class="sched-now-label">Ahora</span></div>`;
+  if(dateStr === todayDateStr()){
+    const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
+    if(nowMin >= rangeStartMin && nowMin <= endHour*60){
+      const top = (nowMin-rangeStartMin)/60*SCHED_HOUR_H;
+      nowHtml = `<div class="sched-now-line" style="top:${top}px"><span class="sched-now-label">Ahora</span></div>`;
+    }
   }
 
   wrap.innerHTML = `<div class="sched-wrap"><div class="sched-track" style="height:${trackHeight}px">${gridHtml}${blocksHtml}${nowHtml}</div></div>`;
 
   document.querySelectorAll('.sched-block').forEach(el => el.addEventListener('click', e => {
     if(e.target.closest('.sb-del')) return;
-    const b = state.routines.find(x=>x.id==el.dataset.bid);
-    if(b){
-      document.getElementById('blockId').value = b.id;
-      document.getElementById('blockTitle').value = b.title;
-      document.getElementById('blockStart').value = b.start;
-      document.getElementById('blockEnd').value = b.end;
-      document.getElementById('blockColor').value = b.color || 'var(--accent)';
-      setBlockDayPills(b.repeatDays);
-      document.getElementById('blockModalTitle').textContent = '✏️ Editar Bloque';
-      openModal('blockModal');
+    if(el.dataset.kind === 'event'){
+      const ev = state.events.find(x=>x.id==el.dataset.bid);
+      if(ev){
+        document.getElementById('evId').value = ev.id;
+        document.getElementById('evTitle').value = ev.title;
+        document.getElementById('evDate').value = ev.date;
+        document.getElementById('evStart').value = ev.start;
+        document.getElementById('evEnd').value = ev.end;
+        document.getElementById('evColor').value = ev.color || 'var(--accent)';
+        document.getElementById('evModalTitle').textContent = '✏️ Editar Evento';
+        openModal('eventModal');
+      }
+    } else {
+      const b = state.routines.find(x=>x.id==el.dataset.bid);
+      if(b){
+        document.getElementById('blockId').value = b.id;
+        document.getElementById('blockTitle').value = b.title;
+        document.getElementById('blockStart').value = b.start;
+        document.getElementById('blockEnd').value = b.end;
+        document.getElementById('blockColor').value = b.color || 'var(--accent)';
+        setBlockDayPills(b.repeatDays);
+        document.getElementById('blockModalTitle').textContent = '✏️ Editar Bloque';
+        openModal('blockModal');
+      }
     }
   }));
   document.querySelectorAll('.sb-del').forEach(btn => btn.addEventListener('click', e => {
     e.stopPropagation();
-    if(confirm('¿Eliminar bloque?')){ const rt=state.routines.find(x=>x.id==btn.dataset.bid); if(rt) addToTrash('routine', rt); state.routines = state.routines.filter(x=>x.id != btn.dataset.bid); save(); renderScheduleTimeline(); toast('🗑️ Movido a la papelera'); }
+    if(btn.dataset.kind === 'event'){
+      if(confirm('¿Eliminar evento?')){ const ev=state.events.find(x=>x.id==btn.dataset.bid); if(ev) addToTrash('event', ev); state.events = state.events.filter(x=>x.id != btn.dataset.bid); save(); renderCalendarView(); toast('🗑️ Movido a la papelera'); }
+    } else {
+      if(confirm('¿Eliminar bloque?')){ const rt=state.routines.find(x=>x.id==btn.dataset.bid); if(rt) addToTrash('routine', rt); state.routines = state.routines.filter(x=>x.id != btn.dataset.bid); save(); renderScheduleTimeline(); toast('🗑️ Movido a la papelera'); }
+    }
   }));
 };
 
