@@ -34,6 +34,7 @@ async function run() {
     const tokens = Array.isArray(data.fcmTokens) ? data.fcmTokens : [];
 
     const due = reminders.filter(r => !r.notified && r.datetime && new Date(r.datetime).getTime() <= now);
+    console.log(`Usuario ${userDoc.id}: ${reminders.length} recordatorio(s) total, ${due.length} vencido(s), ${tokens.length} token(s) FCM registrado(s).`);
     if (!due.length) continue;
 
     if (!tokens.length) {
