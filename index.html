@@ -813,6 +813,8 @@ const save = () => {
 // ══════════════════════════════════════════════
 let _suppressNextCardClick = false;
 const LONGPRESS_MS = 380, LONGPRESS_CANCEL_PX = 10;
+let _dragTouchActive = false;
+document.addEventListener('touchmove', (e) => { if (_dragTouchActive) e.preventDefault(); }, { passive: false });
 
 function getScrollParent(el) {
   let node = el.parentElement;
@@ -896,6 +898,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       onDrop(cards().map(el => el.getAttribute(idAttr)));
     }
     dragEl = null; dragging = false; started = false; scrolling = false; scrollParent = null; pointerId = null;
+    _dragTouchActive = false;
   };
 
   container.addEventListener('pointerdown', (e) => {
@@ -913,6 +916,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     // así el gesto queda bajo control del JS (long-press = arrastrar,
     // mover antes de tiempo = scroll manual emulado más abajo).
     card.style.touchAction = 'none';
+    _dragTouchActive = true;
     clearPress();
     pressTimer = setTimeout(() => {
       if (!dragEl) return;
@@ -929,7 +933,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointermove', onMove);
   container.addEventListener('pointerup', () => { if (dragEl) finish(); });
   container.addEventListener('pointercancel', () => { if (dragEl) finish(); });
-  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; } });
+  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; _dragTouchActive = false; } });
 }
 
 // ══════════════════════════════════════════════
@@ -1584,13 +1588,24 @@ let topbarLastScroll = 0;
 (() => {
   const topbar = document.getElementById('topbar');
   const contentEl = document.getElementById('content');
+  let baseline = 0, hidden = false;
+  const HIDE_THRESHOLD = 28; // px netos de scroll hacia abajo antes de ocultar
+  const SHOW_THRESHOLD = 28; // px netos de scroll hacia arriba antes de mostrar
   contentEl.addEventListener('scroll', () => {
-    if (window.innerWidth > 900) { topbar.classList.remove('hide-topbar'); topbarLastScroll = contentEl.scrollTop; return; }
+    if (window.innerWidth > 900) { topbar.classList.remove('hide-topbar'); hidden = false; baseline = contentEl.scrollTop; topbarLastScroll = contentEl.scrollTop; return; }
     const current = contentEl.scrollTop;
-    if (current <= 8) topbar.classList.remove('hide-topbar');
-    else if (current > topbarLastScroll + 4) topbar.classList.add('hide-topbar');
-    else if (current < topbarLastScroll - 4) topbar.classList.remove('hide-topbar');
     topbarLastScroll = current;
+    if (current <= 8) {
+      if (hidden) { topbar.classList.remove('hide-topbar'); hidden = false; }
+      baseline = current;
+      return;
+    }
+    const delta = current - baseline;
+    if (!hidden && delta > HIDE_THRESHOLD) {
+      topbar.classList.add('hide-topbar'); hidden = true; baseline = current;
+    } else if (hidden && delta < -SHOW_THRESHOLD) {
+      topbar.classList.remove('hide-topbar'); hidden = false; baseline = current;
+    }
   }, { passive: true });
   window.addEventListener('resize', () => { if (window.innerWidth > 900) topbar.classList.remove('hide-topbar'); });
 })();
