@@ -914,7 +914,8 @@ const autoConnectFirebase = () => {
           // 2) Luego arrancar listener tiempo real
           fb.startRealtimeSync();
           // 3) Si ya habías activado notificaciones, renueva el token push de este dispositivo
-          if (state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted') registerFcmToken();
+          //    (maybeRegisterFcm espera a que el SDK de FCM también esté listo, evita condición de carrera)
+          maybeRegisterFcm();
           if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
         } else {
           fb.stopRealtimeSync();
@@ -941,30 +942,42 @@ const autoConnectFirebase = () => {
 // NOTIFICATIONS (local + push real vía FCM)
 // ══════════════════════════════════════════════
 const FCM_VAPID_KEY = "BOojSSVOrTa_6yT68qxn2UmiXqvITyEFTfw2VzehCWdjqr2WmhOESUc6blhQmIbxz4Ijq1LWDGY9q4Xe3wteS6g";
+let _fcmSupported = false; // se vuelve true cuando fcmIsSupported() resuelve en el script module
 
 // Registra (o renueva) el token de este dispositivo en Firestore para que
 // el job de GitHub Actions pueda enviarle notificaciones push aunque la
-// app esté cerrada.
+// app esté cerrada. SIEMPRE deja rastro visible (toast) de qué pasó.
 const registerFcmToken = async () => {
   try {
-    if (!('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator)) { toast('⚠️ Este navegador no soporta service workers'); return; }
     const messaging = window.fbSDK.getMessaging();
-    if (!messaging) { console.warn('[NOVA HUB] FCM no disponible en este navegador'); return; }
-    if (!fb.enabled || !fb.uid) { console.warn('[NOVA HUB] Inicia sesión con Google para activar push'); return; }
+    if (!messaging) { toast('⚠️ Este navegador no soporta push (FCM)'); return; }
+    if (!fb.enabled || !fb.uid) { toast('⚠️ Inicia sesión con Google primero para activar el push'); return; }
 
     // SW dedicado a Cloud Messaging, en un scope propio para no chocar con sw.js.
     // Scope RELATIVO (no absoluto): el sitio vive en una subcarpeta (/Nova-HUB/),
     // y un SW solo puede controlar scopes dentro de la carpeta donde vive su script.
     const swReg = await navigator.serviceWorker.register('firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
+    await navigator.serviceWorker.ready;
     const token = await window.fbSDK.fcmGetToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
-    if (!token) { console.warn('[NOVA HUB] No se obtuvo token FCM'); return; }
+    if (!token) { toast('⚠️ No se pudo obtener el token push'); return; }
 
     const ref = window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid);
     await window.fbSDK.setDoc(ref, { fcmTokens: window.fbSDK.arrayUnion(token) }, { merge: true });
-    console.log('[NOVA HUB] Token FCM registrado ✓');
+    console.log('[NOVA HUB] Token FCM registrado ✓', token.slice(0, 20) + '…');
+    toast('✅ Push real activado en este dispositivo');
   } catch (e) {
     console.error('[NOVA HUB] Error registrando token FCM', e);
     toast('⚠️ No se pudo activar el push real: ' + (e.code || e.message || ''));
+  }
+};
+
+// Se llama cada vez que cambia una de las dos condiciones necesarias
+// (login con Google listo / SDK de FCM listo). Solo dispara el registro
+// cuando AMBAS ya están listas — evita la condición de carrera entre las dos.
+const maybeRegisterFcm = () => {
+  if (_fcmSupported && fb.enabled && fb.uid && state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted') {
+    registerFcmToken();
   }
 };
 
@@ -988,14 +1001,14 @@ const enableNotifications = async () => {
   if (!window.Notification) { toast('⚠️ Tu navegador no soporta notificaciones'); return false; }
   if (Notification.permission === 'granted') {
     state.settings.notificationsEnabled = true; save();
-    registerFcmToken();
+    maybeRegisterFcm();
     return true;
   }
   if (Notification.permission === 'denied') { toast('⚠️ Bloqueadas en el navegador. Habilítalas desde los ajustes del sitio.'); state.settings.notificationsEnabled = false; save(); return false; }
   const perm = await Notification.requestPermission();
   state.settings.notificationsEnabled = perm === 'granted';
   save();
-  if (state.settings.notificationsEnabled) registerFcmToken();
+  if (state.settings.notificationsEnabled) maybeRegisterFcm();
   return state.settings.notificationsEnabled;
 };
 const disableNotifications = () => { state.settings.notificationsEnabled = false; save(); unregisterFcmToken(); };
@@ -1011,9 +1024,7 @@ const initNotifications = () => {
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
   }, 30000);
   // Si el SDK de FCM tarda en cargar, registra el token en cuanto esté listo
-  window.onFcmReady = () => {
-    if (state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted' && fb.enabled) registerFcmToken();
-  };
+  window.onFcmReady = () => { _fcmSupported = true; maybeRegisterFcm(); };
 };
 
 // ══════════════════════════════════════════════
