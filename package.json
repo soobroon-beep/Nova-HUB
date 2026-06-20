@@ -1,0 +1,12 @@
+{
+  "name": "nova-hub-reminders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Job que revisa recordatorios vencidos y envía push real vía FCM",
+  "scripts": {
+    "check-reminders": "node scripts/check-reminders.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}
