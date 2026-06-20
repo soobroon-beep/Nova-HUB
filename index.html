@@ -604,7 +604,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAACWtwcJayD3q_LIC7gL6QoY1H7dfaEjY",
@@ -621,9 +621,21 @@ const auth = getAuth(app);
 // Firestore con caché local persistente (IndexedDB): las lecturas y escrituras
 // quedan guardadas en el dispositivo y se sincronizan solas con tu cuenta
 // en cuanto vuelve la conexión a internet.
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
-});
+// Si IndexedDB no está disponible (p. ej. Navegación Privada de Safari en
+// iPad/iPhone), initializeFirestore con caché persistente lanza un error y
+// antes eso dejaba TODA la app de Firebase rota (ni el login funcionaba).
+// Con este try/catch, en ese caso usamos Firestore normal (sin caché
+// offline) y el inicio de sesión y la sincronización en línea siguen
+// funcionando igual.
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
+  });
+} catch (e) {
+  console.warn('[NOVA HUB] Caché persistente no disponible, usando Firestore en línea:', e.code || e.message);
+  db = getFirestore(app);
+}
 
 window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot };
 window.onAuthStateChanged = onAuthStateChanged;
@@ -632,6 +644,16 @@ window.onAuthStateChanged = onAuthStateChanged;
 // ══════════════════════════════════════════════
 // STATE & PERSIST
 // ══════════════════════════════════════════════
+// Identificador único de ESTE dispositivo/navegador (no de la cuenta).
+// Se usa para distinguir "esto lo escribí yo mismo" de "esto lo escribió
+// otro dispositivo con la misma cuenta" — el _uid de Firebase Auth es el
+// mismo en todos tus dispositivos, así que no sirve para esa distinción.
+const DEVICE_ID = (() => {
+  let id = localStorage.getItem('nn_device_id');
+  if (!id) { id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10); localStorage.setItem('nn_device_id', id); }
+  return id;
+})();
+
 const state = {
   notes:    JSON.parse(localStorage.getItem('nn_notes')    || '[]'),
   events:   JSON.parse(localStorage.getItem('nn_events')   || '[]'),
@@ -731,13 +753,27 @@ const fb = {
        setSyncStatus('error', 'Requiere nueva pestaña');
        return;
     }
+    if (!window.fbSDK) {
+      toast('⏳ Firebase aún está cargando, intenta de nuevo en un momento.');
+      return;
+    }
     const provider = new window.fbSDK.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // Desde iPadOS 13, Safari en iPad se identifica como si fuera una Mac
+    // de escritorio (sin "iPad" en el user-agent), así que el chequeo viejo
+    // no detectaba iPads. Un iPad "disfrazado" de Mac sí tiene pantalla
+    // táctil (maxTouchPoints > 1); una Mac real no.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    // Safari (incluyendo macOS) bloquea o rompe muy seguido el inicio de
+    // sesión por ventana emergente (popup) debido a su protección contra
+    // rastreo (ITP), así que para cualquier Safari usamos redirección, que
+    // es mucho más confiable.
+    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
     try {
       setSyncStatus('syncing', 'Iniciando sesión…');
-      if (isStandalone || isIOS) {
+      if (isStandalone || isIOS || isSafari) {
         await window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider);
         return;
       }
@@ -757,6 +793,8 @@ const fb = {
       toast('⚠️ Popup bloqueado. Probando redirección…');
       const provider = new window.fbSDK.GoogleAuthProvider();
       window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider).catch(e2 => this._handleAuthError(e2));
+    } else if (e.code === 'auth/web-storage-unsupported' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      toast('⚠️ Activa las cookies y desactiva la Navegación Privada en Safari para poder iniciar sesión.');
     } else {
       toast('⚠️ Error al iniciar sesión: ' + (e.code || e.message || 'desconocido'));
     }
@@ -788,6 +826,7 @@ const fb = {
         settings:  state.settings,
         _at:       Date.now(),
         _uid:      this.uid,
+        _deviceId: DEVICE_ID,
       }, { merge: true });
       // Con caché persistente, setDoc() resuelve aunque no haya internet:
       // el cambio queda guardado en IndexedDB y Firestore lo sube solo al reconectar.
@@ -836,8 +875,11 @@ const fb = {
       if (snap.metadata.fromCache) return;
       if (!snap.exists()) return;
       const data = snap.data();
-      // Ignorar si fue escrito por este dispositivo hace menos de 5 s
-      if (data._uid === this.uid && data._at && (Date.now() - data._at) < 5000) return;
+      // Ignorar solo si lo escribió ESTE MISMO dispositivo hace menos de 8 s
+      // (antes comparaba por _uid, que es igual en todos tus dispositivos
+      // con la misma cuenta, así que bloqueaba también los cambios reales
+      // que llegaban desde tu otro dispositivo).
+      if (data._deviceId === DEVICE_ID && data._at && (Date.now() - data._at) < 8000) return;
       applyRemoteData(data);
       setSyncStatus('connected', 'En vivo ✓');
       toast('🔄 Actualizado desde otro dispositivo');
@@ -916,6 +958,7 @@ function applyRemoteData(data) {
 // Firebase se conecta automáticamente cuando onAuthStateChanged detecta la sesión
 const autoConnectFirebase = () => {
   fb.init();
+  let waitAttempts = 0;
   const wait = () => {
     if (window.fbSDK && window.onAuthStateChanged) {
       window.fbSDK.getRedirectResult(window.fbSDK.auth).catch(e => fb._handleAuthError(e));
@@ -941,8 +984,10 @@ const autoConnectFirebase = () => {
           if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
         }
       });
-    } else {
+    } else if (waitAttempts++ < 100) {
       setTimeout(wait, 100);
+    } else {
+      setSyncStatus('error', 'No se pudo cargar Firebase');
     }
   };
   wait();
