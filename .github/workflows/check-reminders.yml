@@ -1,4 +1,4 @@
-name: Revisar recordatorios y enviar push
+name: Revisar recordatorios y horario, enviar push
 
 on:
   schedule:
@@ -21,7 +21,7 @@ jobs:
       - name: Instalar dependencias
         run: npm install --omit=dev
 
-      - name: Revisar recordatorios y enviar push
+      - name: Revisar recordatorios y horario, enviar push
         run: node scripts/check-reminders.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
