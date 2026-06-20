@@ -814,6 +814,16 @@ const save = () => {
 let _suppressNextCardClick = false;
 const LONGPRESS_MS = 380, LONGPRESS_CANCEL_PX = 10;
 
+function getScrollParent(el) {
+  let node = el.parentElement;
+  while (node) {
+    const cs = getComputedStyle(node);
+    if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
+    node = node.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
 function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   if (!container || container._reorderBound) return;
   container._reorderBound = true;
@@ -821,6 +831,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
 
   let dragEl = null, pointerId = null, startX = 0, startY = 0;
   let grabOffX = 0, grabOffY = 0, pressTimer = null, dragging = false, started = false;
+  let scrolling = false, scrollParent = null, lastY = 0;
 
   const cards = () => [...container.querySelectorAll(`:scope > [${idAttr}]`)];
 
@@ -835,20 +846,39 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
 
   const onMove = (e) => {
     if (!dragEl) return;
-    const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    if (!dragging) {
-      if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl = null; }
+
+    if (dragging) {
+      e.preventDefault();
+      positionDrag(e.clientX, e.clientY);
+      const under = document.elementFromPoint(e.clientX, e.clientY)?.closest(`[${idAttr}]`);
+      if (under && under !== dragEl && under.parentElement === container) {
+        const list = cards();
+        const di = list.indexOf(dragEl), ti = list.indexOf(under);
+        if (di < 0 || ti < 0) return;
+        if (di < ti) container.insertBefore(dragEl, under.nextSibling);
+        else container.insertBefore(dragEl, under);
+      }
       return;
     }
-    e.preventDefault();
-    positionDrag(e.clientX, e.clientY);
-    const under = document.elementFromPoint(e.clientX, e.clientY)?.closest(`[${idAttr}]`);
-    if (under && under !== dragEl && under.parentElement === container) {
-      const list = cards();
-      const di = list.indexOf(dragEl), ti = list.indexOf(under);
-      if (di < 0 || ti < 0) return;
-      if (di < ti) container.insertBefore(dragEl, under.nextSibling);
-      else container.insertBefore(dragEl, under);
+
+    const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
+    if (!scrolling) {
+      if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) {
+        // El usuario movió el dedo antes de que se cumpliera el long-press:
+        // cancelamos el "modo arrastre" y pasamos a hacer scroll manual,
+        // ya que touch-action:none bloqueó el scroll nativo del navegador.
+        clearPress();
+        dragEl.classList.remove('reorder-pending');
+        scrolling = true;
+      } else {
+        return;
+      }
+    }
+
+    if (scrollParent) {
+      e.preventDefault();
+      scrollParent.scrollTop += (lastY - e.clientY);
+      lastY = e.clientY;
     }
   };
 
@@ -860,13 +890,12 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       dragEl.style.touchAction = '';
     }
     container.classList.remove('reorder-mode-active');
-    container.style.touchAction = '';
     if (dragging && started) {
       _suppressNextCardClick = true;
       setTimeout(() => { _suppressNextCardClick = false; }, 300);
       onDrop(cards().map(el => el.getAttribute(idAttr)));
     }
-    dragEl = null; dragging = false; started = false; pointerId = null;
+    dragEl = null; dragging = false; started = false; scrolling = false; scrollParent = null; pointerId = null;
   };
 
   container.addEventListener('pointerdown', (e) => {
@@ -874,10 +903,16 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     const card = e.target.closest(`[${idAttr}]`);
     if (!card || e.target.closest('button,input,textarea,a,select')) return;
     dragEl = card; pointerId = e.pointerId; startX = e.clientX; startY = e.clientY;
-    dragging = false; started = false;
+    dragging = false; started = false; scrolling = false;
+    lastY = e.clientY;
+    scrollParent = getScrollParent(container);
     const r = card.getBoundingClientRect();
     grabOffX = e.clientX - r.left; grabOffY = e.clientY - r.top;
     card.classList.add('reorder-pending');
+    // Desactivamos el paneo nativo del navegador desde el primer toque,
+    // así el gesto queda bajo control del JS (long-press = arrastrar,
+    // mover antes de tiempo = scroll manual emulado más abajo).
+    card.style.touchAction = 'none';
     clearPress();
     pressTimer = setTimeout(() => {
       if (!dragEl) return;
@@ -886,8 +921,6 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       dragEl.classList.remove('reorder-pending');
       dragEl.classList.add('reorder-grab');
       container.classList.add('reorder-mode-active');
-      dragEl.style.touchAction = 'none';
-      container.style.touchAction = 'none';
       if (navigator.vibrate) navigator.vibrate(12);
       positionDrag(startX, startY);
     }, LONGPRESS_MS);
@@ -896,7 +929,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointermove', onMove);
   container.addEventListener('pointerup', () => { if (dragEl) finish(); });
   container.addEventListener('pointercancel', () => { if (dragEl) finish(); });
-  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl = null; } });
+  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; } });
 }
 
 // ══════════════════════════════════════════════
