@@ -693,6 +693,9 @@ const state = {
 };
 if(state.settings.photoURL === undefined) state.settings.photoURL = '';
 if(state.settings.notificationsEnabled === undefined) state.settings.notificationsEnabled = false;
+const DEFAULT_DASH_WIDGETS = { briefing:true, stats:true, notes:true, habits:true, diary:true, ai:true, calendar:true, reminders:true, projects:true };
+state.settings.dashboardWidgets = { ...DEFAULT_DASH_WIDGETS, ...(state.settings.dashboardWidgets || {}) };
+const WIDGET_LABELS = { briefing:{icon:'🗞️',label:'Daily Briefing'}, stats:{icon:'📊',label:'Tarjetas de estadísticas'}, notes:{icon:'🗒️',label:'Notas recientes'}, habits:{icon:'🔥',label:'Seguimiento de hábitos'}, diary:{icon:'📖',label:'Diario emocional'}, ai:{icon:'✦',label:'Tarjeta de IA Asistente'}, calendar:{icon:'📅',label:'Calendario'}, reminders:{icon:'⏰',label:'Recordatorios'}, projects:{icon:'🚀',label:'Proyectos'} };
 
 const updateXPUI = () => {
   const levelDisplay = document.getElementById('userLevelDisplay');
@@ -1398,22 +1401,25 @@ let topbarLastScroll = 0;
 })();
 const updateStats=()=>{ const el=document.getElementById('statTasks'); if(el) el.textContent=state.projects.reduce((a,p)=>a+(p.tasks?.filter(t=>!t.done).length||0),0); };
 
-const getDashboardHTML=()=>`
-<div id="dailyBriefingCard" style="background:var(--bg2);border:1px solid rgba(124,106,247,.22);border-radius:var(--card-r);overflow:hidden;min-height:80px"></div>
-<div class="stats-row"><div class="stat-card" style="--c:var(--accent)"><div class="label">Tareas hoy</div><div class="value" id="statTasks">0</div><div class="sub">pendientes</div><div class="icon">✅</div></div><div class="stat-card" style="--c:var(--green)"><div class="label">Proyectos</div><div class="value" id="statProjects">0</div><div class="sub">activos</div><div class="icon">🚀</div></div><div class="stat-card" style="--c:var(--yellow)"><div class="label">Notas</div><div class="value" id="statNotes">0</div><div class="sub">guardadas</div><div class="icon">🗒️</div></div><div class="stat-card" style="--c:var(--pink)"><div class="label">Hábitos</div><div class="value" id="statHabits">${(state.habits||[]).filter(h=>(h.logs||[]).includes(new Date().toISOString().split('T')[0])).length}/${(state.habits||[]).length}</div><div class="sub">completados hoy</div><div class="icon">🔥</div></div></div>
+const getDashboardHTML=()=>{
+  const W = state.settings.dashboardWidgets || DEFAULT_DASH_WIDGETS;
+  return `
+${W.briefing ? `<div id="dailyBriefingCard" style="background:var(--bg2);border:1px solid rgba(124,106,247,.22);border-radius:var(--card-r);overflow:hidden;min-height:80px"></div>` : ''}
+${W.stats ? `<div class="stats-row"><div class="stat-card" style="--c:var(--accent)"><div class="label">Tareas hoy</div><div class="value" id="statTasks">0</div><div class="sub">pendientes</div><div class="icon">✅</div></div><div class="stat-card" style="--c:var(--green)"><div class="label">Proyectos</div><div class="value" id="statProjects">0</div><div class="sub">activos</div><div class="icon">🚀</div></div><div class="stat-card" style="--c:var(--yellow)"><div class="label">Notas</div><div class="value" id="statNotes">0</div><div class="sub">guardadas</div><div class="icon">🗒️</div></div><div class="stat-card" style="--c:var(--pink)"><div class="label">Hábitos</div><div class="value" id="statHabits">${(state.habits||[]).filter(h=>(h.logs||[]).includes(new Date().toISOString().split('T')[0])).length}/${(state.habits||[]).length}</div><div class="sub">completados hoy</div><div class="icon">🔥</div></div></div>` : ''}
 <div class="dash-grid">
   <div style="display:flex;flex-direction:column;gap:24px">
-    <div class="notes-section"><div class="sec-header"><div class="sec-title"><span>🗒️</span> Notas Recientes</div><div class="sec-action" id="addNoteBtn">+ Nueva nota</div></div><div class="notes-masonry" id="notesMasonry"></div></div>
-    <div class="projects-card" id="dashHabits" style="padding:0; overflow:hidden;"></div>
-    <div class="projects-card" id="dashDiary"><div class="sec-header" style="padding: 22px 22px 0 22px;"><div class="sec-title"><span>📖</span> Diario Emocional</div><div class="sec-action" id="dashDiaryNav" style="cursor:pointer">Ir al Diario</div></div><div id="dashDiaryContent"></div></div>
-    <div class="ai-card"><div class="ai-icon">✦</div><div class="ai-text"><h3>IA Asistente</h3><p>Desglosa proyectos en tareas, resume notas, optimiza tu día. Tu copiloto personal está listo.</p><button class="ai-btn" data-view="ai">Abrir Asistente</button></div></div>
+    ${W.notes ? `<div class="notes-section"><div class="sec-header"><div class="sec-title"><span>🗒️</span> Notas Recientes</div><div class="sec-action" id="addNoteBtn">+ Nueva nota</div></div><div class="notes-masonry" id="notesMasonry"></div></div>` : ''}
+    ${W.habits ? `<div class="projects-card" id="dashHabits" style="padding:0; overflow:hidden;"></div>` : ''}
+    ${W.diary ? `<div class="projects-card" id="dashDiary"><div class="sec-header" style="padding: 22px 22px 0 22px;"><div class="sec-title"><span>📖</span> Diario Emocional</div><div class="sec-action" id="dashDiaryNav" style="cursor:pointer">Ir al Diario</div></div><div id="dashDiaryContent"></div></div>` : ''}
+    ${W.ai ? `<div class="ai-card"><div class="ai-icon">✦</div><div class="ai-text"><h3>IA Asistente</h3><p>Desglosa proyectos en tareas, resume notas, optimiza tu día. Tu copiloto personal está listo.</p><button class="ai-btn" data-view="ai">Abrir Asistente</button></div></div>` : ''}
   </div>
   <div style="display:flex;flex-direction:column;gap:24px">
-    <div class="cal-card"><div class="sec-header"><div class="sec-title"><span>📅</span> Calendario</div><div style="display:flex;gap:14px"><div class="sec-action" id="addBlockBtnDash">+ Horario</div><div class="sec-action" id="addEventBtn">+ Evento</div></div></div><div class="cal-header"><div class="cal-month" id="calMonth"></div><div class="cal-nav"><button id="calPrev">‹</button><button id="calNext">›</button></div></div><div class="cal-days-header"><div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div></div><div class="cal-grid" id="calGrid"></div><div class="events-list" id="eventsList"></div></div>
-    <div class="projects-card" id="dashReminders"><div class="sec-header"><div class="sec-title"><span>⏰</span> Recordatorios</div><div class="sec-action" id="addReminderBtnDash">+ Recordatorio</div></div><div id="dashRemindersList"></div></div>
-    <div class="projects-card"><div class="sec-header"><div class="sec-title"><span>🚀</span> Proyectos</div><div class="sec-action" id="addProjectBtn">+ Proyecto</div></div><div id="projectsList"></div></div>
+    ${W.calendar ? `<div class="cal-card"><div class="sec-header"><div class="sec-title"><span>📅</span> Calendario</div><div style="display:flex;gap:14px"><div class="sec-action" id="addBlockBtnDash">+ Horario</div><div class="sec-action" id="addEventBtn">+ Evento</div></div></div><div class="cal-header"><div class="cal-month" id="calMonth"></div><div class="cal-nav"><button id="calPrev">‹</button><button id="calNext">›</button></div></div><div class="cal-days-header"><div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div></div><div class="cal-grid" id="calGrid"></div><div class="events-list" id="eventsList"></div></div>` : ''}
+    ${W.reminders ? `<div class="projects-card" id="dashReminders"><div class="sec-header"><div class="sec-title"><span>⏰</span> Recordatorios</div><div class="sec-action" id="addReminderBtnDash">+ Recordatorio</div></div><div id="dashRemindersList"></div></div>` : ''}
+    ${W.projects ? `<div class="projects-card"><div class="sec-header"><div class="sec-title"><span>🚀</span> Proyectos</div><div class="sec-action" id="addProjectBtn">+ Proyecto</div></div><div id="projectsList"></div></div>` : ''}
   </div>
-</div>`;
+</div>${(!W.notes && !W.habits && !W.diary && !W.ai && !W.calendar && !W.reminders && !W.projects) ? '<div style="text-align:center;padding:60px;color:var(--text3)">Activaste todos los widgets como ocultos. Ve a Ajustes → Widgets del Dashboard para mostrar al menos uno.</div>' : ''}`;
+};
 const renderDashReminders = () => {
   const list = document.getElementById('dashRemindersList'); if(!list) return;
   const sorted = state.reminders.filter(r => !r.notified || new Date(r.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).slice(0,5);
@@ -2095,6 +2101,15 @@ const renderSettingsView=()=>{
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h}"></div>`).join('')}</div></div></div>
+    <div class="settings-section"><h3>🧩 Widgets del Dashboard</h3>
+      <div class="settings-row" style="border-bottom:none;padding-bottom:14px"><div class="settings-sub" style="margin-top:0">Elige qué tarjetas se muestran en tu pantalla de Inicio. El orden no cambia, solo se ocultan las que apagues.</div></div>
+      ${Object.keys(WIDGET_LABELS).map(key=>`
+        <div class="settings-row">
+          <div class="settings-label" style="display:flex;align-items:center;gap:8px"><span>${WIDGET_LABELS[key].icon}</span> ${WIDGET_LABELS[key].label}</div>
+          <label class="toggle-sw"><input type="checkbox" class="widgetToggle" data-widget="${key}" ${state.settings.dashboardWidgets[key]?'checked':''}/><span class="slider"></span></label>
+        </div>
+      `).join('')}
+    </div>
     <div class="settings-section"><h3>🔔 Notificaciones</h3>
       <div class="settings-row">
         <div>
@@ -2154,6 +2169,11 @@ const renderSettingsView=()=>{
   });
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
+  document.querySelectorAll('.widgetToggle').forEach(cb=>cb.addEventListener('change',e=>{
+    state.settings.dashboardWidgets[e.target.dataset.widget] = e.target.checked;
+    save();
+    toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
+  }));
   document.getElementById('notifToggle')?.addEventListener('change', async e => {
     if(e.target.checked){
       const ok = await enableNotifications();
