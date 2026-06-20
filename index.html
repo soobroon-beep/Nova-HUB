@@ -90,7 +90,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* CONTENT */
-#content{flex:1;overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:24px}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px;display:flex;flex-direction:column;gap:24px}
 #content::-webkit-scrollbar{width:5px}
 #content::-webkit-scrollbar-track{background:transparent}
 #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
@@ -814,7 +814,16 @@ const save = () => {
 let _suppressNextCardClick = false;
 const LONGPRESS_MS = 380, LONGPRESS_CANCEL_PX = 10;
 let _dragTouchActive = false;
-document.addEventListener('touchmove', (e) => { if (_dragTouchActive) e.preventDefault(); }, { passive: false });
+const _dragBlockTouchMove = (e) => e.preventDefault();
+// El listener bloqueador de scroll solo se conecta MIENTRAS se sostiene
+// una tarjeta (ver _setDragTouchActive abajo), para no afectar el
+// rendimiento del scroll normal del resto de la app.
+function _setDragTouchActive(active) {
+  if (active === _dragTouchActive) return;
+  _dragTouchActive = active;
+  if (active) document.addEventListener('touchmove', _dragBlockTouchMove, { passive: false });
+  else document.removeEventListener('touchmove', _dragBlockTouchMove);
+}
 
 function getScrollParent(el) {
   let node = el.parentElement;
@@ -898,7 +907,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       onDrop(cards().map(el => el.getAttribute(idAttr)));
     }
     dragEl = null; dragging = false; started = false; scrolling = false; scrollParent = null; pointerId = null;
-    _dragTouchActive = false;
+    _setDragTouchActive(false);
   };
 
   container.addEventListener('pointerdown', (e) => {
@@ -916,7 +925,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     // así el gesto queda bajo control del JS (long-press = arrastrar,
     // mover antes de tiempo = scroll manual emulado más abajo).
     card.style.touchAction = 'none';
-    _dragTouchActive = true;
+    _setDragTouchActive(true);
     clearPress();
     pressTimer = setTimeout(() => {
       if (!dragEl) return;
@@ -933,7 +942,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointermove', onMove);
   container.addEventListener('pointerup', () => { if (dragEl) finish(); });
   container.addEventListener('pointercancel', () => { if (dragEl) finish(); });
-  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; _dragTouchActive = false; } });
+  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; _setDragTouchActive(false); } });
 }
 
 // ══════════════════════════════════════════════
@@ -2900,8 +2909,8 @@ initNotifications();
   const canvas = document.getElementById('psBg');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  let w, h, time = 0;
-  
+  let w, h, time = 0, lastFrame = 0;
+
   function resize() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
@@ -2909,7 +2918,26 @@ initNotifications();
   window.addEventListener('resize', resize);
   resize();
 
-  function draw() {
+  // Pausamos el fondo animado mientras el usuario hace scroll: así el
+  // navegador no tiene que repintar gradientes a pantalla completa al
+  // mismo tiempo que mueve el contenido, y el scroll se siente fluido.
+  let isScrolling = false, scrollEndTimer = null;
+  document.getElementById('content')?.addEventListener('scroll', () => {
+    isScrolling = true;
+    clearTimeout(scrollEndTimer);
+    scrollEndTimer = setTimeout(() => { isScrolling = false; }, 150);
+  }, { passive: true });
+
+  function draw(now) {
+    requestAnimationFrame(draw);
+
+    const mobile = w <= 900;
+    const frameInterval = mobile ? 1000 / 26 : 1000 / 60; // limita fps, más en móvil
+    if (now - lastFrame < frameInterval) return;
+    lastFrame = now;
+
+    if (isScrolling) return; // congelado mientras se hace scroll
+
     time += 0.003;
     ctx.clearRect(0, 0, w, h);
     
@@ -2925,12 +2953,13 @@ initNotifications();
 
     ctx.globalCompositeOperation = theme === 'light' ? 'multiply' : 'screen';
     
-    // Draw flowing gradient orbs
-    const orbs = [
+    // Draw flowing gradient orbs (menos orbes en móvil: son lo más costoso de pintar)
+    const allOrbs = [
       { x: Math.sin(time*0.5)*0.3+0.5, y: Math.cos(time*0.4)*0.3+0.5, r: 0.6, cL: 'rgba(124,106,247,0.4)', cD: 'rgba(124,106,247,0.15)' },
       { x: Math.cos(time*0.3)*0.4+0.5, y: Math.sin(time*0.6)*0.4+0.5, r: 0.7, cL: 'rgba(56,189,248,0.3)', cD: 'rgba(56,189,248,0.1)' },
       { x: Math.sin(time*0.7)*0.2+0.5, y: Math.cos(time*0.5)*0.2+0.5, r: 0.5, cL: 'rgba(236,72,153,0.3)', cD: 'rgba(236,72,153,0.08)' }
     ];
+    const orbs = mobile ? allOrbs.slice(0, 2) : allOrbs;
 
     orbs.forEach(orb => {
       const cx = orb.x * w;
@@ -2947,9 +2976,10 @@ initNotifications();
       ctx.fill();
     });
 
-    // Subtle particles floating upwards
+    // Subtle particles floating upwards (menos partículas en móvil)
     ctx.globalCompositeOperation = 'source-over';
-    for (let i = 0; i < 60; i++) {
+    const particleCount = mobile ? 26 : 60;
+    for (let i = 0; i < particleCount; i++) {
        const px = (Math.sin(time * 0.1 + i * 34.5) * w + w/2) % w;
        let finalX = px < 0 ? px + w : px;
        const py = (h + 100) - ((time * 40 + i * 80) % (h + 200));
@@ -2961,9 +2991,8 @@ initNotifications();
     }
     
     ctx.restore();
-    requestAnimationFrame(draw);
   }
-  draw();
+  requestAnimationFrame(draw);
 })();
 </script>
 
