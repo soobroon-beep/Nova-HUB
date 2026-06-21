@@ -128,8 +128,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .cal-day.today{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:700}
 .cal-day.other-month{color:var(--text3);opacity:.4}
 .cal-day.has-event::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--green)}
-.cal-day.selected:not(.today){box-shadow:0 0 0 2px var(--accent) inset;color:var(--accent2);font-weight:700}
-.cal-day.selected.today{box-shadow:0 0 0 2px var(--text);}
 .events-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
 .event-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--c,var(--accent));transition:var(--trans)}
 .event-item:hover{transform:translateX(3px)}
@@ -200,6 +198,32 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .ai-text p{font-size:.82rem;color:var(--text2);line-height:1.4}
 .ai-btn{margin-top:12px;padding:8px 18px;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;border-radius:8px;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--trans)}
 .ai-btn:hover{opacity:.85;transform:translateY(-1px)}
+
+/* QUICK ADD IA — botón ✨ que se despliega en barra de texto/voz */
+.quickadd-wrap{display:flex}
+.qa-trigger{width:44px;height:44px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--trans);box-shadow:0 4px 14px rgba(124,106,247,.3)}
+.qa-trigger:hover{transform:scale(1.06);box-shadow:0 6px 18px rgba(124,106,247,.4)}
+.qa-trigger .material-symbols-outlined{font-size:1.3rem}
+.quickadd-card{display:flex;align-items:flex-end;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:6px 6px 6px 16px;transition:var(--trans);width:100%;animation:qaExpand .22s cubic-bezier(.4,0,.2,1)}
+@keyframes qaExpand{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.quickadd-card:focus-within{border-color:rgba(124,106,247,.45);box-shadow:0 0 0 3px rgba(124,106,247,.1)}
+.quickadd-card textarea{flex:1;background:transparent;border:none;color:var(--text);font-size:.87rem;outline:none;resize:none;font-family:inherit;line-height:1.5;max-height:110px;padding:9px 0}
+.quickadd-card textarea::placeholder{color:var(--text3)}
+.qa-icon-btn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:var(--trans);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qa-icon-btn .material-symbols-outlined{font-size:1.15rem}
+.qa-mic-btn:hover{color:var(--accent2);background:var(--bg3)}
+.qa-mic-btn.qa-listening{color:#fff;background:var(--red);animation:qaPulse 1.2s ease-in-out infinite}
+.qa-send-btn{color:var(--text2);background:var(--bg3)}
+.qa-send-btn:not(:disabled):hover{color:#fff;background:var(--accent)}
+.qa-send-btn:disabled{opacity:.4;cursor:default}
+.qa-send-btn.qa-loading .material-symbols-outlined{animation:qaSpin .8s linear infinite}
+.qa-close-btn:hover{color:var(--red);background:var(--bg3)}
+@keyframes qaPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+@keyframes qaSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.qa-reasoning{font-size:.78rem;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:14px;line-height:1.4}
+.qa-type-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.qa-type-pill{padding:6px 12px;border-radius:20px;font-size:.76rem;font-weight:600;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;transition:var(--trans)}
+.qa-type-pill.active{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border-color:transparent}
 
 /* ── AI CHAT VIEW ── */
 #aiChatWrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
@@ -387,9 +411,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .sched-now-line::before{content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--red)}
 .sched-now-label{position:absolute;left:-52px;top:-7px;width:46px;text-align:right;padding-right:6px;font-size:.6rem;color:var(--red);font-weight:700;background:var(--bg2)}
 .sched-empty{text-align:center;color:var(--text3);font-size:.85rem;padding:30px 10px;line-height:1.6}
-.sched-block.sched-event{border-left-style:dashed}
-.sched-daynav button{width:auto;padding:0 10px;font-size:.72rem;font-weight:700;white-space:nowrap}
-.sched-daynav button.sched-arrow{width:28px;padding:0}
 
 /* ── DAILY BRIEFING MOBILE-FIRST ── */
 .briefing-section{padding:16px 0;border-bottom:1px solid var(--border)}
@@ -541,18 +562,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
   </div>
 </div>
 
-<div class="modal-overlay" id="taskModal">
-  <div class="modal">
-    <h3>✚ Nueva Tarea</h3>
-    <input type="hidden" id="taskProjId"/>
-    <div class="field"><label>Título de la tarea</label><input id="taskTitle" placeholder="Ej. Diseñar referencia para cliente…"/></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Cancelar</button>
-      <button class="btn btn-primary" id="taskSave">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="blockModal">
   <div class="modal">
     <h3 id="blockModalTitle">⏳ Nuevo Bloque de Horario</h3>
@@ -601,6 +610,39 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
     <div class="modal-btns">
       <button class="btn btn-ghost" id="remCancel">Cancelar</button>
       <button class="btn btn-primary" id="remSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="quickAddResultModal">
+  <div class="modal">
+    <h3>✨ La IA detectó esto</h3>
+    <div class="qa-reasoning" id="qaReasoning"></div>
+    <div class="field">
+      <label>Tipo</label>
+      <div class="qa-type-row" id="qaTypeRow">
+        <div class="qa-type-pill" data-type="note">🗒️ Nota</div>
+        <div class="qa-type-pill" data-type="reminder">⏰ Recordatorio</div>
+        <div class="qa-type-pill" data-type="task">🚀 Tarea</div>
+        <div class="qa-type-pill" data-type="event">📅 Evento</div>
+      </div>
+      <input type="hidden" id="qaType" value="note"/>
+    </div>
+    <div class="field"><label>Título</label><input id="qaTitle" placeholder="Título…"/></div>
+    <div class="field" id="qaDescField"><label>Detalles</label><textarea id="qaDesc" rows="2" placeholder="Detalles opcionales…"></textarea></div>
+    <div class="field" id="qaDateTimeField"><label>Fecha y hora</label><input id="qaDateTime" type="datetime-local"/></div>
+    <div class="field" id="qaDateField">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label>Fecha</label><input id="qaDate" type="date"/></div>
+        <div style="flex:1"><label>Inicio</label><input id="qaStart" type="time"/></div>
+        <div style="flex:1"><label>Fin</label><input id="qaEnd" type="time"/></div>
+      </div>
+    </div>
+    <div class="field" id="qaProjectField"><label>Proyecto</label><select id="qaProject"></select></div>
+    <div class="field"><label>Etiquetas (separadas por coma)</label><input id="qaTags" placeholder="idea, trabajo…"/></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="qaCancel">Cancelar</button>
+      <button class="btn btn-primary" id="qaSave">Guardar</button>
     </div>
   </div>
 </div>
@@ -1300,12 +1342,6 @@ const disableNotifications = async () => {
 
 // Notificaciones de inicio/fin de bloques de horario
 const scheduleNotifState = { notified: new Set(), day: new Date().toDateString() };
-// Ventana de tolerancia: en móvil, cuando la app/pestaña está en segundo plano o la
-// pantalla se bloquea, el navegador retrasa los temporizadores (a veces varios minutos).
-// Si solo comparamos "minuto exacto === minuto exacto" esa comprobación se puede saltar
-// por completo y la notificación nunca llega. Con una ventana de tolerancia, en cuanto
-// el temporizador vuelve a correr (aunque sea tarde) sigue detectando el bloque pendiente.
-const SCHED_NOTIF_GRACE_MIN = 5;
 const checkScheduleNotifications = () => {
   if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
   if (typeof state.routines === 'undefined' || !state.routines.length) return;
@@ -1318,12 +1354,12 @@ const checkScheduleNotifications = () => {
     if (typeof blockRepeatsToday !== 'function' || !blockRepeatsToday(b, dow)) return;
     const startMin = timeToMin(b.start), endMin = timeToMin(b.end);
     const startKey = b.id + '-start-' + todayStr, endKey = b.id + '-end-' + todayStr;
-    if (nowMin >= startMin && nowMin <= startMin + SCHED_NOTIF_GRACE_MIN && !scheduleNotifState.notified.has(startKey)) {
+    if (nowMin === startMin && !scheduleNotifState.notified.has(startKey)) {
       scheduleNotifState.notified.add(startKey);
       new Notification('▶️ NOVA HUB', { body: `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})` });
       toast('▶️ Comienza: ' + b.title);
     }
-    if (nowMin >= endMin && nowMin <= endMin + SCHED_NOTIF_GRACE_MIN && !scheduleNotifState.notified.has(endKey)) {
+    if (nowMin === endMin && !scheduleNotifState.notified.has(endKey)) {
       scheduleNotifState.notified.add(endKey);
       new Notification('⏹️ NOVA HUB', { body: `Terminó tu bloque "${b.title}"` });
       toast('⏹️ Terminó: ' + b.title);
@@ -1331,7 +1367,7 @@ const checkScheduleNotifications = () => {
   });
 };
 const initNotifications = () => {
-  const tick = () => {
+  setInterval(() => {
     const now = new Date(); let changed = false;
     state.reminders.forEach(r => {
       if (!r.notified && new Date(r.datetime) <= now) {
@@ -1341,12 +1377,7 @@ const initNotifications = () => {
     });
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
     checkScheduleNotifications();
-  };
-  setInterval(tick, 20000);
-  // Si el dispositivo bloqueó/pausó los temporizadores en segundo plano, al volver a la
-  // app revisamos de inmediato en vez de esperar al próximo intervalo de 20s.
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
-  tick();
+  }, 30000);
 };
 
 // ══════════════════════════════════════════════
@@ -1413,23 +1444,23 @@ const renderCalendar = () => {
   for(let i=1;i<=remaining;i++){ const el=document.createElement('div'); el.className='cal-day other-month'; el.textContent=i; grid.appendChild(el); }
   renderTodayEvents();
 };
-let selectedScheduleDate = null; // 'YYYY-MM-DD' — null = hoy
-const dateToStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const todayDateStr = () => dateToStr(new Date());
-const getSelectedDate = () => selectedScheduleDate || todayDateStr();
 const selectDay=(y,m,d)=>{
-  selectedScheduleDate = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  const activeView = document.querySelector('.nav-item.active')?.dataset.view;
-  if(activeView !== 'calendar'){
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.querySelector('.nav-item[data-view="calendar"]')?.classList.add('active');
-    closeSidebar(); document.getElementById('content').scrollTop = 0;
-    renderCalendarView();
-  } else {
-    renderScheduleTimeline();
-    markSelectedDayCell();
-    document.getElementById('scheduleList')?.scrollIntoView?.({behavior:'smooth', block:'nearest'});
-  }
+  const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const dayEvents=state.events.filter(e=>e.date===dateStr).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const routines=(state.routines||[]).filter(r=>{
+    const dow=new Date(dateStr+'T12:00:00').getDay();
+    return !r.repeatDays || r.repeatDays.includes(dow);
+  });
+  const info=[
+    `📅 ${dateStr}`,
+    '',
+    'EVENTOS:',
+    ...(dayEvents.length?dayEvents.map(e=>`• ${e.start||''} ${e.title}`):['Sin eventos']),
+    '',
+    'HORARIO:',
+    ...(routines.length?routines.map(r=>`• ${r.start} - ${r.end} ${r.title}`):['Sin bloques'])
+  ].join('\n');
+  alert(info);
 };
 const renderTodayEvents=()=>{
   const today=new Date().toISOString().split('T')[0], todayEvs=state.events.filter(e=>e.date===today).sort((a,b)=>a.start.localeCompare(b.start));
@@ -1566,23 +1597,6 @@ document.getElementById('habitSave')?.addEventListener('click',()=>{
   save(); renderHabitsView(); updateStats(); closeModal('habitModal'); document.getElementById('habitName').value=''; document.getElementById('habitId').value=''; toast('✅ Guardado');
 });
 
-const saveNewTask = () => {
-  const title = document.getElementById('taskTitle').value.trim();
-  if(!title){ toast('⚠️ Escribe el nombre de la tarea'); return; }
-  const pid = document.getElementById('taskProjId').value;
-  const p = state.projects.find(x=>x.id==pid);
-  if(!p){ toast('⚠️ No se encontró el proyecto'); closeModal('taskModal'); return; }
-  p.tasks = p.tasks||[]; p.tasks.push({title,done:false});
-  save();
-  if(document.querySelector('.nav-item.active')?.dataset.view==='projects') renderProjectsView(); else renderProjects();
-  updateStats();
-  closeModal('taskModal'); document.getElementById('taskTitle').value=''; document.getElementById('taskProjId').value='';
-  toast('✅ Tarea agregada');
-};
-document.getElementById('taskSave')?.addEventListener('click', saveNewTask);
-document.getElementById('taskTitle')?.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); saveNewTask(); } });
-
-
 document.getElementById('blockSave')?.addEventListener('click',()=>{
   const t=document.getElementById('blockTitle').value.trim(); if(!t){toast('⚠️ Agrega un título');return;}
   const repeatDays=getBlockDayPills(); if(!repeatDays.length){toast('⚠️ Selecciona al menos un día');return;}
@@ -1596,6 +1610,51 @@ document.getElementById('blockSave')?.addEventListener('click',()=>{
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='calendar') renderCalendarView(); closeModal('blockModal'); document.getElementById('blockTitle').value=''; document.getElementById('blockId').value=''; toast('✅ Guardado');
 });
 
+document.getElementById('qaTypeRow')?.addEventListener('click', e=>{
+  const pill = e.target.closest('.qa-type-pill'); if(!pill) return;
+  setQaType(pill.dataset.type);
+  if(pill.dataset.type==='task') populateQaProjects(document.getElementById('qaProject').value==='__general__' ? null : document.getElementById('qaProject').value);
+});
+document.getElementById('qaCancel')?.addEventListener('click',()=>closeModal('quickAddResultModal'));
+document.getElementById('qaSave')?.addEventListener('click',()=>{
+  const type = document.getElementById('qaType').value;
+  const title = document.getElementById('qaTitle').value.trim();
+  if(!title){ toast('⚠️ Agrega un título'); return; }
+  const desc = document.getElementById('qaDesc').value.trim();
+  const tags = document.getElementById('qaTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(type==='note'){
+    state.notes.unshift({id:Date.now(),title,body:desc,tags,color:'#7c6af7',pinned:false,createdAt:new Date().toISOString()});
+  } else if(type==='reminder'){
+    const dt=document.getElementById('qaDateTime').value;
+    if(!dt){ toast('⚠️ Falta la fecha y hora del recordatorio'); return; }
+    state.reminders.push({id:Date.now(),title,desc,datetime:dt,color:'#7c6af7',tags,notified:false});
+  } else if(type==='event'){
+    const date=document.getElementById('qaDate').value, start=document.getElementById('qaStart').value, end=document.getElementById('qaEnd').value;
+    if(!date){ toast('⚠️ Falta la fecha del evento'); return; }
+    state.events.push({id:Date.now(),title,date,start,end,color:'#7c6af7'});
+  } else if(type==='task'){
+    const pid=document.getElementById('qaProject').value;
+    let proj;
+    if(pid==='__general__'){
+      proj = state.projects.find(p=>p.name==='Tareas Generales');
+      if(!proj){ proj = {id:Date.now(),name:'Tareas Generales',desc:'Tareas rápidas agregadas con IA sin proyecto asignado',status:'active',color:'#7c6af7',icon:'checklist',pinned:false,tasks:[],createdAt:new Date().toISOString()}; state.projects.unshift(proj); }
+    } else {
+      proj = state.projects.find(p=>p.id==pid);
+    }
+    if(!proj){ toast('⚠️ Selecciona un proyecto'); return; }
+    proj.tasks = proj.tasks||[]; proj.tasks.push({title,done:false});
+  }
+  save(); closeModal('quickAddResultModal');
+  const cv=document.querySelector('.nav-item.active')?.dataset.view;
+  if(cv==='dashboard'||!cv) renderDashboard();
+  else if(cv==='notes' && type==='note') renderNotesView();
+  else if(cv==='reminders' && type==='reminder') renderRemindersView();
+  else if(cv==='projects' && type==='task') renderProjectsView();
+  else if(cv==='calendar' && type==='event') renderCalendarView();
+  updateStats();
+  toast('✅ Guardado con IA');
+});
+
 
 // ══════════════════════════════════════════════
 // NAV & VIEWS (Dashboard, Reminders, Diary, Settings)
@@ -1605,7 +1664,6 @@ document.querySelectorAll('.nav-item,[data-view]').forEach(el=>{
     const v=el.dataset.view; if(!v) return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.nav-item[data-view="${v}"]`)?.classList.add('active');
-    if (v === 'calendar') selectedScheduleDate = null;
     rerenderView(v);
     closeSidebar();
     document.getElementById('content').scrollTop = 0;
@@ -1652,6 +1710,15 @@ const updateStats=()=>{ const el=document.getElementById('statTasks'); if(el) el
 const getDashboardHTML=()=>{
   const W = state.settings.dashboardWidgets || DEFAULT_DASH_WIDGETS;
   return `
+<div class="quickadd-wrap" id="quickAddWrap">
+  <button class="qa-trigger" id="quickAddTrigger" type="button" title="Agregar con IA"><span class="material-symbols-outlined">auto_awesome</span></button>
+  <div class="quickadd-card" id="quickAddCard" style="display:none">
+    <textarea id="quickAddInput" rows="1" placeholder="Escribe o dicta: nota, recordatorio, tarea o evento…"></textarea>
+    <button class="qa-icon-btn qa-mic-btn" id="quickAddMicBtn" type="button" title="Dictar por voz"><span class="material-symbols-outlined">mic</span></button>
+    <button class="qa-icon-btn qa-send-btn" id="quickAddSendBtn" type="button" title="Analizar con IA"><span class="material-symbols-outlined">arrow_upward</span></button>
+    <button class="qa-icon-btn qa-close-btn" id="quickAddCloseBtn" type="button" title="Cerrar"><span class="material-symbols-outlined">close</span></button>
+  </div>
+</div>
 ${W.briefing ? `<div id="dailyBriefingCard" style="background:var(--bg2);border:1px solid rgba(124,106,247,.22);border-radius:var(--card-r);overflow:hidden;min-height:80px"></div>` : ''}
 ${W.stats ? `<div class="stats-row"><div class="stat-card" style="--c:var(--accent)"><div class="label">Tareas hoy</div><div class="value" id="statTasks">0</div><div class="sub">pendientes</div><div class="icon">✅</div></div><div class="stat-card" style="--c:var(--green)"><div class="label">Proyectos</div><div class="value" id="statProjects">0</div><div class="sub">activos</div><div class="icon">🚀</div></div><div class="stat-card" style="--c:var(--yellow)"><div class="label">Notas</div><div class="value" id="statNotes">0</div><div class="sub">guardadas</div><div class="icon">🗒️</div></div><div class="stat-card" style="--c:var(--pink)"><div class="label">Hábitos</div><div class="value" id="statHabits">${(state.habits||[]).filter(h=>(h.logs||[]).includes(new Date().toISOString().split('T')[0])).length}/${(state.habits||[]).length}</div><div class="sub">completados hoy</div><div class="icon">🔥</div></div></div>` : ''}
 <div class="dash-grid">
@@ -1710,8 +1777,134 @@ const renderDashDiary = () => {
   const today = state.diary.filter(d=>new Date(d.id).toLocaleDateString()===new Date().toLocaleDateString());
   c.innerHTML = today.length ? `<div class="diary-card" style="margin-bottom:0;padding:14px"><div style="font-size:1.5rem;margin-bottom:6px">${today[today.length-1].mood}</div><div class="${state.settings.diaryLocked?'blur-content':''}" style="font-size:.85rem;color:var(--text2)">${today[today.length-1].content}</div></div>` : '<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:10px">¿Cómo te sientes hoy?</div>';
 };
+// ══════════════════════════════════════════════
+// AGREGAR CON IA (Quick Add) — clasifica texto/voz y lo guarda donde va
+// ══════════════════════════════════════════════
+const quickAddBuildSystemPrompt = () => {
+  const now = new Date();
+  const fecha = now.toLocaleString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const projectsInfo = state.projects.map(p=>({id:p.id, name:p.name}));
+  return `Eres un clasificador inteligente para NOVA HUB, la app de productividad personal de Víctor "Payi" (tatuador y trader). El usuario te manda un texto corto (escrito o dictado por voz, a veces informal o con errores de transcripción). Tu trabajo es decidir qué TIPO de elemento es y extraer los datos para guardarlo automáticamente.
+
+Fecha y hora actual: ${fecha} (zona horaria America/Mexico_City). Usa esto para resolver fechas relativas como "mañana", "el viernes", "en 2 horas", "esta noche", etc.
+
+Tipos posibles:
+- "reminder": algo que el usuario debe recordar en una fecha/hora concreta o relativa (ej. "recuérdame llamar al cliente mañana a las 10am").
+- "event": una cita o evento de agenda con fecha y opcionalmente horario (ej. "sesión de tatuaje el sábado a las 4pm con Carlos", "junta el lunes").
+- "task": una tarea de trabajo o de un proyecto, sin necesidad de fecha exacta (ej. "agregar el diseño del dragón al proyecto de tatuajes", "revisar el bot de señales").
+- "note": una idea, dato, referencia o pensamiento para guardar, sin acción ni fecha urgente (ej. "idea para diseño: koi con olas en estilo neo-japonés").
+
+Proyectos existentes del usuario (usa su "id" EXACTO tal como aparece aquí si el texto se relaciona claramente con alguno; si no aplica claramente a ninguno, usa null):
+${JSON.stringify(projectsInfo)}
+
+Responde ÚNICAMENTE con un JSON válido (sin texto extra, sin markdown, sin backticks \`\`\`), exactamente con esta forma:
+{"type":"reminder|event|task|note","title":"título corto y claro","desc":"detalles opcionales o cadena vacía","datetime":"YYYY-MM-DDTHH:MM o cadena vacía (solo para reminder)","date":"YYYY-MM-DD o cadena vacía (solo para event)","start":"HH:MM o cadena vacía (solo para event)","end":"HH:MM o cadena vacía (solo para event)","projectId":numero_o_null,"tags":["tag1","tag2"],"reasoning":"una frase breve en español explicando por qué elegiste ese tipo"}`;
+};
+
+const updateQaFieldsVisibility = type => {
+  const show=(id,on)=>{ const el=document.getElementById(id); if(el) el.style.display=on?'':'none'; };
+  show('qaDescField', type==='note' || type==='reminder');
+  show('qaDateTimeField', type==='reminder');
+  show('qaDateField', type==='event');
+  show('qaProjectField', type==='task');
+};
+
+const populateQaProjects = selectedId => {
+  const sel=document.getElementById('qaProject'); if(!sel) return;
+  sel.innerHTML = `<option value="__general__">📥 Tareas Generales</option>` + state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  sel.value = (selectedId!=null && state.projects.find(p=>p.id==selectedId)) ? String(selectedId) : '__general__';
+};
+
+const setQaType = type => {
+  document.getElementById('qaType').value = type;
+  document.querySelectorAll('#qaTypeRow .qa-type-pill').forEach(p=>p.classList.toggle('active', p.dataset.type===type));
+  updateQaFieldsVisibility(type);
+};
+
+const openQuickAddResult = (data, originalText) => {
+  const type = ['note','reminder','task','event'].includes(data.type) ? data.type : 'note';
+  document.getElementById('qaTitle').value = data.title || originalText.slice(0,80);
+  document.getElementById('qaDesc').value = data.desc || '';
+  document.getElementById('qaDateTime').value = data.datetime || '';
+  document.getElementById('qaDate').value = data.date || '';
+  document.getElementById('qaStart').value = data.start || '';
+  document.getElementById('qaEnd').value = data.end || '';
+  document.getElementById('qaTags').value = (data.tags||[]).join(', ');
+  populateQaProjects(data.projectId);
+  document.getElementById('qaReasoning').textContent = data.reasoning ? `💡 ${data.reasoning}` : '💡 Revisa y ajusta antes de guardar si algo no quedó como esperabas.';
+  setQaType(type);
+  openModal('quickAddResultModal');
+};
+
+let _qaRecognition = null;
+const setupQuickAdd = () => {
+  const trigger = document.getElementById('quickAddTrigger');
+  const card = document.getElementById('quickAddCard');
+  const input = document.getElementById('quickAddInput');
+  const sendBtn = document.getElementById('quickAddSendBtn');
+  const micBtn = document.getElementById('quickAddMicBtn');
+  const closeBtn = document.getElementById('quickAddCloseBtn');
+  if(!trigger || !card || !input || !sendBtn || !micBtn || !closeBtn) return;
+
+  const openBar = () => { trigger.style.display='none'; card.style.display='flex'; input.focus(); };
+  const closeBar = () => {
+    if(micBtn.dataset.listening==='1' && _qaRecognition){ try{ _qaRecognition.stop(); }catch(e){} }
+    card.style.display='none'; trigger.style.display='flex'; input.value=''; input.style.height='auto';
+  };
+  trigger.addEventListener('click', openBar);
+  closeBtn.addEventListener('click', closeBar);
+
+  const autosize = () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,120)+'px'; };
+  input.addEventListener('input', autosize);
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); runQuickAdd(); }
+    else if(e.key==='Escape'){ closeBar(); }
+  });
+
+  sendBtn.addEventListener('click', runQuickAdd);
+
+  async function runQuickAdd(){
+    const text = input.value.trim();
+    if(!text){ toast('⚠️ Escribe o dicta algo primero'); return; }
+    if(!(state.settings.aiApiKey||'')){ showAuthSetupModal('⚙️ Configura tu IA','Para usar "Agregar con IA" necesitas configurar tu proveedor y API key en Ajustes → IA Asistente.'); return; }
+    const icon = sendBtn.querySelector('.material-symbols-outlined');
+    sendBtn.disabled = true; sendBtn.classList.add('qa-loading'); if(icon) icon.textContent='progress_activity';
+    try {
+      const raw = await callAI(text, quickAddBuildSystemPrompt());
+      const clean = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+      const jsonStart = clean.indexOf('{'), jsonEnd = clean.lastIndexOf('}');
+      const data = JSON.parse(jsonStart>=0 ? clean.slice(jsonStart, jsonEnd+1) : clean);
+      openQuickAddResult(data, text);
+      closeBar();
+    } catch(e) {
+      toast('⚠️ No se pudo analizar: ' + (e.message==='no_key' ? 'configura tu API key en Ajustes' : 'intenta de nuevo'));
+    } finally {
+      sendBtn.disabled = false; sendBtn.classList.remove('qa-loading'); if(icon) icon.textContent='arrow_upward';
+    }
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ micBtn.style.opacity='.35'; micBtn.title='Dictado por voz no disponible en este navegador'; return; }
+  micBtn.addEventListener('click', () => {
+    if(micBtn.dataset.listening==='1') return;
+    const micIcon = micBtn.querySelector('.material-symbols-outlined');
+    _qaRecognition = new SR();
+    _qaRecognition.lang='es-MX'; _qaRecognition.continuous=false; _qaRecognition.interimResults=false;
+    micBtn.dataset.listening='1'; micBtn.classList.add('qa-listening'); if(micIcon) micIcon.textContent='stop_circle';
+    try { _qaRecognition.start(); } catch(e) { micBtn.dataset.listening='0'; micBtn.classList.remove('qa-listening'); if(micIcon) micIcon.textContent='mic'; return; }
+    _qaRecognition.onresult = e => {
+      const transcript = e.results[0][0].transcript;
+      input.value = (input.value.trim() ? input.value.trim()+' ' : '') + transcript;
+      autosize();
+    };
+    _qaRecognition.onerror = () => toast('⚠️ No se pudo escuchar, intenta de nuevo');
+    _qaRecognition.onend = () => { micBtn.dataset.listening='0'; micBtn.classList.remove('qa-listening'); if(micIcon) micIcon.textContent='mic'; };
+  });
+};
+
 const renderDashboard=()=>{
   document.getElementById('content').innerHTML = getDashboardHTML();
+  setupQuickAdd();
   document.getElementById('addNoteBtn')?.addEventListener('click',()=>{
     document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
     document.getElementById('noteId').value = '';
@@ -2537,11 +2730,10 @@ const renderProjectsView=()=>{
     if(p && confirm('¿Eliminar esta tarea?')) { const idx=Number(e.target.dataset.idx); const t=p.tasks[idx]; addToTrash('task', t, {projectId:p.id, idx}); p.tasks.splice(idx,1); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
   }));
   document.querySelectorAll('[id^=addTaskBtn-]').forEach(b=>b.addEventListener('click',e=>{
-    const pid = e.currentTarget.dataset.pid;
-    document.getElementById('taskProjId').value = pid;
-    document.getElementById('taskTitle').value = '';
-    openModal('taskModal');
-    setTimeout(()=>document.getElementById('taskTitle')?.focus(), 50);
+    const title=prompt('Nueva tarea:');
+    if(!title) return;
+    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
+    if(p) { p.tasks=p.tasks||[]; p.tasks.push({title,done:false}); save(); renderProjectsView(); updateStats(); }
   }));
   document.querySelectorAll('.del-proj-btn').forEach(b=>b.addEventListener('click',e=>{
     if(confirm('¿Eliminar proyecto y sus tareas?')){ const p=state.projects.find(x=>x.id==e.target.dataset.pid); if(p) addToTrash('project', p); state.projects=state.projects.filter(x=>x.id!=e.target.dataset.pid); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
@@ -2652,20 +2844,9 @@ const renderCalendarView=()=>{
     </div>
     
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px"><span>⏳</span> Mi Horario</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" id="newEventBtnSched" style="padding:4px 8px">+ Evento</button>
-          <button class="btn btn-ghost btn-sm" id="newBlockBtn" style="padding:4px 8px">+ Bloque</button>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <div class="cal-nav sched-daynav">
-          <button class="sched-arrow" id="schedPrevDay" title="Día anterior">‹</button>
-          <button id="schedToday">Hoy</button>
-          <button class="sched-arrow" id="schedNextDay" title="Día siguiente">›</button>
-        </div>
-        <div style="font-size:.84rem;font-weight:700;color:var(--text)" id="schedDateLabel"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px"><span>⏳</span> Mi Horario de Hoy</div>
+        <button class="btn btn-ghost btn-sm" id="newBlockBtn" style="padding:4px 8px">+ Bloque</button>
       </div>
       <div id="scheduleList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
@@ -2676,14 +2857,7 @@ const renderCalendarView=()=>{
     document.getElementById('evModalTitle').textContent = '📅 Nuevo Evento';
     document.getElementById('evId').value = '';
     ['evTitle','evStart','evEnd'].forEach(id=>document.getElementById(id).value='');
-    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=getSelectedDate(); 
-    openModal('eventModal');
-  });
-  document.getElementById('newEventBtnSched').addEventListener('click',()=>{
-    document.getElementById('evModalTitle').textContent = '📅 Nuevo Evento';
-    document.getElementById('evId').value = '';
-    ['evTitle','evStart','evEnd'].forEach(id=>document.getElementById(id).value='');
-    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=getSelectedDate();
+    const evDate=document.getElementById('evDate'); if(evDate) evDate.value=new Date().toISOString().split('T')[0]; 
     openModal('eventModal');
   });
   document.getElementById('newBlockBtn').addEventListener('click',()=>{
@@ -2693,13 +2867,9 @@ const renderCalendarView=()=>{
     document.getElementById('blockStart').value = '09:00';
     document.getElementById('blockEnd').value = '10:00';
     document.getElementById('blockColor').value = 'var(--accent)';
-    const dow = new Date(getSelectedDate()+'T12:00:00').getDay();
-    setBlockDayPills([dow]);
+    setBlockDayPills(null);
     openModal('blockModal');
   });
-  document.getElementById('schedPrevDay').addEventListener('click',()=>navScheduleDay(-1));
-  document.getElementById('schedNextDay').addEventListener('click',()=>navScheduleDay(1));
-  document.getElementById('schedToday').addEventListener('click',goToToday);
   document.getElementById('calPrevFull')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()-1);renderCalendarView();});
   document.getElementById('calNextFull')?.addEventListener('click',()=>{state.calDate.setMonth(state.calDate.getMonth()+1);renderCalendarView();});
 
@@ -2760,11 +2930,10 @@ const renderCalendarView=()=>{
   }
   
   renderScheduleTimeline();
-  markSelectedDayCell();
 };
 
 // ══════════════════════════════════════════════
-// MI HORARIO — VISTA DE BLOQUES POR DÍA (timeline tipo Google Calendar)
+// MI HORARIO — VISTA DE BLOQUES POR DÍA (timeline)
 // ══════════════════════════════════════════════
 const DAY_LETTERS = ['D','L','M','X','J','V','S']; // index = JS getDay() (0=Domingo)
 const DAY_DEFS = [{l:'L',v:1},{l:'M',v:2},{l:'X',v:3},{l:'J',v:4},{l:'V',v:5},{l:'S',v:6},{l:'D',v:0}];
@@ -2781,74 +2950,21 @@ const setBlockDayPills = days => {
 };
 const getBlockDayPills = () => Array.from(document.querySelectorAll('#blockDayPills .day-pill.active')).map(p=>parseInt(p.dataset.day));
 
-const fmtScheduleDateLabel = dateStr => {
-  const d = new Date(dateStr+'T12:00:00');
-  let label = d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
-  label = label.charAt(0).toUpperCase()+label.slice(1);
-  if(dateStr === todayDateStr()) return 'Hoy · '+label;
-  const tmr = new Date(); tmr.setDate(tmr.getDate()+1);
-  if(dateStr === dateToStr(tmr)) return 'Mañana · '+label;
-  const yst = new Date(); yst.setDate(yst.getDate()-1);
-  if(dateStr === dateToStr(yst)) return 'Ayer · '+label;
-  return label;
-};
-const markSelectedDayCell = () => {
-  const grid = document.getElementById('calGridFull'); if(!grid) return;
-  grid.querySelectorAll('.cal-day').forEach(el=>el.classList.remove('selected'));
-  const d = new Date(getSelectedDate()+'T12:00:00');
-  if(d.getMonth()===state.calDate.getMonth() && d.getFullYear()===state.calDate.getFullYear()){
-    grid.querySelectorAll('.cal-day:not(.other-month)').forEach(c=>{ if(parseInt(c.textContent)===d.getDate()) c.classList.add('selected'); });
-  }
-};
-const navScheduleDay = delta => {
-  const d = new Date(getSelectedDate()+'T12:00:00');
-  d.setDate(d.getDate()+delta);
-  selectedScheduleDate = dateToStr(d);
-  if(d.getMonth() !== state.calDate.getMonth() || d.getFullYear() !== state.calDate.getFullYear()){
-    state.calDate = new Date(d.getFullYear(), d.getMonth(), 1);
-    renderCalendarView();
-  } else {
-    renderScheduleTimeline();
-    markSelectedDayCell();
-  }
-};
-const goToToday = () => {
-  selectedScheduleDate = null;
-  const d = new Date();
-  if(d.getMonth() !== state.calDate.getMonth() || d.getFullYear() !== state.calDate.getFullYear()){
-    state.calDate = new Date(d.getFullYear(), d.getMonth(), 1);
-    renderCalendarView();
-  } else {
-    renderScheduleTimeline();
-    markSelectedDayCell();
-  }
-};
-
 const renderScheduleTimeline = () => {
   const wrap = document.getElementById('scheduleList');
   if(!wrap) return;
-  const dateStr = getSelectedDate();
-  const lbl = document.getElementById('schedDateLabel');
-  if(lbl) lbl.textContent = fmtScheduleDateLabel(dateStr);
+  const dow = new Date().getDay();
+  const todayBlocks = [...(state.routines||[])].filter(b=>blockRepeatsToday(b, dow)).sort((a,b)=>a.start.localeCompare(b.start));
 
-  const dow = new Date(dateStr+'T12:00:00').getDay();
-  const dayBlocks = [...(state.routines||[])].filter(b=>blockRepeatsToday(b, dow)).map(b=>({
-    kind:'block', id:b.id, title:b.title, start:b.start, end:b.end, color:b.color
-  }));
-  const dayEvents = (state.events||[]).filter(e=>e.date===dateStr).map(e=>({
-    kind:'event', id:e.id, title:e.title, start:e.start||'00:00', end:e.end||e.start||'00:00', color:e.color
-  }));
-  const items = [...dayBlocks, ...dayEvents];
-
-  if(!items.length){
-    wrap.innerHTML = '<div class="sched-empty">Nada programado para este día.<br>Crea un bloque o evento con los botones de arriba.</div>';
+  if(!todayBlocks.length){
+    wrap.innerHTML = '<div class="sched-empty">No tienes bloques para hoy.<br>Crea uno con «+ Bloque».</div>';
     return;
   }
 
   let startHour = 6, endHour = 22;
-  items.forEach(b=>{
+  todayBlocks.forEach(b=>{
     const sh = Math.floor(timeToMin(b.start)/60);
-    const eh = Math.ceil(timeToMin(b.end||b.start)/60);
+    const eh = Math.ceil(timeToMin(b.end)/60);
     if(sh < startHour) startHour = sh;
     if(eh > endHour) endHour = eh;
   });
@@ -2864,78 +2980,45 @@ const renderScheduleTimeline = () => {
     if(h<endHour) gridHtml += `<div class="sched-hour-label" style="top:${top-7}px">${String(h).padStart(2,'0')}:00</div>`;
   }
 
-  // Asigna columnas a items que se solapan en el tiempo (estilo Google Calendar)
-  const sorted = [...items].sort((a,b)=>timeToMin(a.start)-timeToMin(b.start));
-  const columns = [];
-  const placed = sorted.map(it=>{
-    const s = timeToMin(it.start), e = Math.max(s+15, timeToMin(it.end||it.start));
-    let col = columns.findIndex(c=>c.end <= s);
-    if(col===-1){ col = columns.length; columns.push({end:e}); } else columns[col].end = e;
-    return {...it, _s:s, _e:e, _col:col};
-  });
-  const maxCols = columns.length || 1;
-
   let blocksHtml = '';
-  placed.forEach(b=>{
-    const top = (b._s-rangeStartMin)/60*SCHED_HOUR_H;
-    const height = Math.max(30, (b._e-b._s)/60*SCHED_HOUR_H - 4);
-    const widthPct = 100/maxCols, leftPct = b._col*widthPct;
-    const isEvent = b.kind==='event';
+  todayBlocks.forEach(b=>{
+    const top = (timeToMin(b.start)-rangeStartMin)/60*SCHED_HOUR_H;
+    const height = Math.max(30, (timeToMin(b.end)-timeToMin(b.start))/60*SCHED_HOUR_H - 4);
     blocksHtml += `
-      <div class="sched-block${isEvent?' sched-event':''}" style="top:${top}px;height:${height}px;left:calc(${leftPct}% + 2px);width:calc(${widthPct}% - 6px);--c:${b.color||'var(--accent)'}" data-bid="${b.id}" data-kind="${b.kind}">
-        <button class="sb-del" data-bid="${b.id}" data-kind="${b.kind}" title="Eliminar">✕</button>
-        <div class="sb-title">${isEvent?'📅 ':''}${b.title}</div>
-        <div class="sb-time">${b.start}${b.end&&b.end!==b.start?' – '+b.end:''}</div>
-        ${!isEvent?`<div class="sb-days">${scheduleDaysLabel(state.routines.find(r=>r.id==b.id)||{})}</div>`:''}
+      <div class="sched-block" style="top:${top}px;height:${height}px;--c:${b.color||'var(--accent)'}" data-bid="${b.id}">
+        <button class="sb-del" data-bid="${b.id}" title="Eliminar">✕</button>
+        <div class="sb-title">${b.title}</div>
+        <div class="sb-time">${b.start} – ${b.end}</div>
+        <div class="sb-days">${scheduleDaysLabel(b)}</div>
       </div>`;
   });
 
   let nowHtml = '';
-  if(dateStr === todayDateStr()){
-    const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
-    if(nowMin >= rangeStartMin && nowMin <= endHour*60){
-      const top = (nowMin-rangeStartMin)/60*SCHED_HOUR_H;
-      nowHtml = `<div class="sched-now-line" style="top:${top}px"><span class="sched-now-label">Ahora</span></div>`;
-    }
+  const now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
+  if(nowMin >= rangeStartMin && nowMin <= endHour*60){
+    const top = (nowMin-rangeStartMin)/60*SCHED_HOUR_H;
+    nowHtml = `<div class="sched-now-line" style="top:${top}px"><span class="sched-now-label">Ahora</span></div>`;
   }
 
   wrap.innerHTML = `<div class="sched-wrap"><div class="sched-track" style="height:${trackHeight}px">${gridHtml}${blocksHtml}${nowHtml}</div></div>`;
 
   document.querySelectorAll('.sched-block').forEach(el => el.addEventListener('click', e => {
     if(e.target.closest('.sb-del')) return;
-    if(el.dataset.kind === 'event'){
-      const ev = state.events.find(x=>x.id==el.dataset.bid);
-      if(ev){
-        document.getElementById('evId').value = ev.id;
-        document.getElementById('evTitle').value = ev.title;
-        document.getElementById('evDate').value = ev.date;
-        document.getElementById('evStart').value = ev.start;
-        document.getElementById('evEnd').value = ev.end;
-        document.getElementById('evColor').value = ev.color || 'var(--accent)';
-        document.getElementById('evModalTitle').textContent = '✏️ Editar Evento';
-        openModal('eventModal');
-      }
-    } else {
-      const b = state.routines.find(x=>x.id==el.dataset.bid);
-      if(b){
-        document.getElementById('blockId').value = b.id;
-        document.getElementById('blockTitle').value = b.title;
-        document.getElementById('blockStart').value = b.start;
-        document.getElementById('blockEnd').value = b.end;
-        document.getElementById('blockColor').value = b.color || 'var(--accent)';
-        setBlockDayPills(b.repeatDays);
-        document.getElementById('blockModalTitle').textContent = '✏️ Editar Bloque';
-        openModal('blockModal');
-      }
+    const b = state.routines.find(x=>x.id==el.dataset.bid);
+    if(b){
+      document.getElementById('blockId').value = b.id;
+      document.getElementById('blockTitle').value = b.title;
+      document.getElementById('blockStart').value = b.start;
+      document.getElementById('blockEnd').value = b.end;
+      document.getElementById('blockColor').value = b.color || 'var(--accent)';
+      setBlockDayPills(b.repeatDays);
+      document.getElementById('blockModalTitle').textContent = '✏️ Editar Bloque';
+      openModal('blockModal');
     }
   }));
   document.querySelectorAll('.sb-del').forEach(btn => btn.addEventListener('click', e => {
     e.stopPropagation();
-    if(btn.dataset.kind === 'event'){
-      if(confirm('¿Eliminar evento?')){ const ev=state.events.find(x=>x.id==btn.dataset.bid); if(ev) addToTrash('event', ev); state.events = state.events.filter(x=>x.id != btn.dataset.bid); save(); renderCalendarView(); toast('🗑️ Movido a la papelera'); }
-    } else {
-      if(confirm('¿Eliminar bloque?')){ const rt=state.routines.find(x=>x.id==btn.dataset.bid); if(rt) addToTrash('routine', rt); state.routines = state.routines.filter(x=>x.id != btn.dataset.bid); save(); renderScheduleTimeline(); toast('🗑️ Movido a la papelera'); }
-    }
+    if(confirm('¿Eliminar bloque?')){ const rt=state.routines.find(x=>x.id==btn.dataset.bid); if(rt) addToTrash('routine', rt); state.routines = state.routines.filter(x=>x.id != btn.dataset.bid); save(); renderScheduleTimeline(); toast('🗑️ Movido a la papelera'); }
   }));
 };
 
