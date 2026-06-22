@@ -146,9 +146,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .note-card .note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 
 /* REORDENAMIENTO — long-press estilo Google Keep (notas y proyectos) */
-/* pan-y: scroll vertical nativo activo por defecto; el JS lo desactiva
-   solo en la tarjeta concreta cuando el long-press se confirma */
-.note-card,.proj-full-card{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+/* manipulation: bloquea solo el doble-tap-zoom pero deja el scroll vertical
+   libre. El bloqueo de scroll durante el arrastre lo hace el listener global
+   en document (ver _setDragTouchActive). */
+.note-card,.proj-full-card{touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .reorder-pending{transform:scale(.96)!important;box-shadow:0 0 0 2px var(--accent2) inset!important}
 .reorder-grab{transform:scale(1.045) rotate(-1deg)!important;box-shadow:0 18px 38px rgba(0,0,0,.45)!important;z-index:80;opacity:.97;cursor:grabbing!important;transition:none!important;touch-action:none!important}
 .reorder-mode-active{cursor:grabbing;touch-action:none!important}
@@ -1282,18 +1283,7 @@ const save = () => {
 // Sirve para notas y proyectos (cualquier grid de tarjetas con data-rid)
 // ══════════════════════════════════════════════
 let _suppressNextCardClick = false;
-const LONGPRESS_MS = 380, LONGPRESS_CANCEL_PX = 10;
-let _dragTouchActive = false;
-const _dragBlockTouchMove = (e) => e.preventDefault();
-// El listener bloqueador de scroll solo se conecta MIENTRAS se sostiene
-// una tarjeta (ver _setDragTouchActive abajo), para no afectar el
-// rendimiento del scroll normal del resto de la app.
-function _setDragTouchActive(active) {
-  if (active === _dragTouchActive) return;
-  _dragTouchActive = active;
-  if (active) document.addEventListener('touchmove', _dragBlockTouchMove, { passive: false });
-  else document.removeEventListener('touchmove', _dragBlockTouchMove);
-}
+const LONGPRESS_MS = 420, LONGPRESS_CANCEL_PX = 8;
 
 function getScrollParent(el) {
   let node = el.parentElement;
@@ -1312,10 +1302,10 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
 
   let dragEl = null, pointerId = null, startX = 0, startY = 0;
   let grabOffX = 0, grabOffY = 0, pressTimer = null, dragging = false, started = false;
-  let scrolling = false, scrollParent = null, lastY = 0;
+  // Guardamos el touch-action original del container para restaurarlo
+  const containerOrigTA = container.style.touchAction || '';
 
   const cards = () => [...container.querySelectorAll(`:scope > [${idAttr}]`)];
-
   const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
 
   const positionDrag = (clientX, clientY) => {
@@ -1325,35 +1315,13 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     dragEl.style.transform = `translate(${x}px, ${y}px) scale(1.045) rotate(-1deg)`;
   };
 
-  const onMove = (e) => {
-    if (!dragEl) return;
-
-    if (dragging) {
-      e.preventDefault();
-      positionDrag(e.clientX, e.clientY);
-      const under = document.elementFromPoint(e.clientX, e.clientY)?.closest(`[${idAttr}]`);
-      if (under && under !== dragEl && under.parentElement === container) {
-        const list = cards();
-        const di = list.indexOf(dragEl), ti = list.indexOf(under);
-        if (di < 0 || ti < 0) return;
-        if (di < ti) container.insertBefore(dragEl, under.nextSibling);
-        else container.insertBefore(dragEl, under);
-      }
-      return;
-    }
-
-    // Long-press aún no confirmado: si el dedo se movió demasiado, cancelamos
-    // el pending y dejamos que el scroll nativo tome el control (no bloqueamos nada).
-    const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) {
-      clearPress();
-      if (dragEl) {
-        dragEl.classList.remove('reorder-pending');
-        dragEl.style.touchAction = '';
-      }
-      _setDragTouchActive(false);
-      dragEl = null; scrolling = false; scrollParent = null; pointerId = null;
-    }
+  const cancelPending = () => {
+    clearPress();
+    if (dragEl) { dragEl.classList.remove('reorder-pending'); }
+    // Restaurar scroll nativo en el container
+    container.style.touchAction = containerOrigTA;
+    container.classList.remove('reorder-mode-active');
+    dragEl = null; pointerId = null; dragging = false; started = false;
   };
 
   const finish = () => {
@@ -1361,51 +1329,72 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     if (dragEl) {
       dragEl.classList.remove('reorder-pending', 'reorder-grab');
       dragEl.style.transform = '';
-      dragEl.style.touchAction = '';
     }
+    container.style.touchAction = containerOrigTA;
     container.classList.remove('reorder-mode-active');
     if (dragging && started) {
       _suppressNextCardClick = true;
       setTimeout(() => { _suppressNextCardClick = false; }, 300);
       onDrop(cards().map(el => el.getAttribute(idAttr)));
     }
-    dragEl = null; dragging = false; started = false; scrolling = false; scrollParent = null; pointerId = null;
-    _setDragTouchActive(false);
+    dragEl = null; dragging = false; started = false; pointerId = null;
+  };
+
+  const onMove = (e) => {
+    if (!dragEl) return;
+    if (dragging) {
+      e.preventDefault();
+      positionDrag(e.clientX, e.clientY);
+      const under = document.elementFromPoint(e.clientX, e.clientY)?.closest(`[${idAttr}]`);
+      if (under && under !== dragEl && under.parentElement === container) {
+        const list = cards();
+        const di = list.indexOf(dragEl), ti = list.indexOf(under);
+        if (di >= 0 && ti >= 0) {
+          if (di < ti) container.insertBefore(dragEl, under.nextSibling);
+          else container.insertBefore(dragEl, under);
+        }
+      }
+      return;
+    }
+    // Longpress aún no confirmado — si el dedo se movió demasiado, cancelar
+    const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
+    if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) {
+      cancelPending();
+    }
   };
 
   container.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const card = e.target.closest(`[${idAttr}]`);
     if (!card || e.target.closest('button,input,textarea,a,select')) return;
-    dragEl = card; pointerId = e.pointerId; startX = e.clientX; startY = e.clientY;
-    dragging = false; started = false; scrolling = false;
-    lastY = e.clientY;
-    scrollParent = getScrollParent(container);
+    if (dragEl) return; // ya hay uno activo
+
+    dragEl = card; pointerId = e.pointerId;
+    startX = e.clientX; startY = e.clientY;
+    dragging = false; started = false;
     const r = card.getBoundingClientRect();
     grabOffX = e.clientX - r.left; grabOffY = e.clientY - r.top;
+
     card.classList.add('reorder-pending');
-    // NO bloqueamos touch-action ni touchmove aquí todavía —
-    // esperamos a que el long-press se confirme para no interferir con el scroll normal.
     clearPress();
     pressTimer = setTimeout(() => {
       if (!dragEl) return;
       dragging = true; started = true;
-      // Solo ahora que el long-press se confirmó, bloqueamos el scroll nativo
-      card.style.touchAction = 'none';
-      _setDragTouchActive(true);
+      // Solo AQUÍ bloqueamos el scroll: ponemos touch-action:none en el container
+      // (no en la tarjeta) para que los pointermove sigan llegando fluidos
+      container.style.touchAction = 'none';
+      container.classList.add('reorder-mode-active');
       try { dragEl.setPointerCapture(pointerId); } catch (_) {}
       dragEl.classList.remove('reorder-pending');
       dragEl.classList.add('reorder-grab');
-      container.classList.add('reorder-mode-active');
-      if (navigator.vibrate) navigator.vibrate(12);
+      if (navigator.vibrate) navigator.vibrate(14);
       positionDrag(startX, startY);
     }, LONGPRESS_MS);
-  });
+  }, { passive: true });
 
   container.addEventListener('pointermove', onMove);
-  container.addEventListener('pointerup', () => { if (dragEl) finish(); });
-  container.addEventListener('pointercancel', () => { if (dragEl) finish(); });
-  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; _setDragTouchActive(false); } });
+  container.addEventListener('pointerup', finish);
+  container.addEventListener('pointercancel', finish);
 }
 
 // ══════════════════════════════════════════════
@@ -2389,7 +2378,7 @@ const renderDashboard=()=>{
 };
 
 const renderRemindersView = () => {
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>⏰</span> Recordatorios</div><button class="btn btn-primary" id="newReminderBtn">+ Nuevo</button></div><div id="remindersListWrap"></div>`;
   document.getElementById('newReminderBtn').addEventListener('click',()=>{
     document.getElementById('remModalTitle').textContent = '⏰ Nuevo Recordatorio';
@@ -2421,7 +2410,7 @@ const renderRemindersView = () => {
 };
 
 const renderDiaryView = () => {
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>📖</span> Diario Emocional</div><button class="btn btn-ghost" id="togglePrivacyBtn">${state.settings.diaryLocked ? '🔓 Desbloquear Vistas' : '🔒 Ocultar Entradas'}</button></div><div class="diary-card" style="margin-bottom:24px"><div style="font-size:1.05rem;font-weight:700;margin-bottom:12px">¿Cómo te sientes hoy?</div><div class="mood-picker" id="moodPicker">${['😊','😌','😐','😔','😢','😡','🤩'].map(m => `<div class="mood-btn" data-mood="${m}">${m}</div>`).join('')}</div><textarea id="diaryBody" rows="3" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.88rem;outline:none;resize:vertical;font-family:inherit;line-height:1.6" placeholder="Escribe tus pensamientos..."></textarea><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-primary" id="saveDiaryBtn">Guardar Entrada</button></div></div><div id="diaryListWrap"></div>`;
   let selectedMood = '😊'; const moodBtns = document.querySelectorAll('.mood-btn'); moodBtns[0].classList.add('active');
   document.getElementById('moodPicker').addEventListener('click', e => { if(e.target.classList.contains('mood-btn')) { moodBtns.forEach(b => b.classList.remove('active')); e.target.classList.add('active'); selectedMood = e.target.dataset.mood; } });
@@ -2971,7 +2960,7 @@ const sendAIMessage=async()=>{
 
 const renderSettingsView=()=>{
   purgeTrash();
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
@@ -3087,7 +3076,7 @@ const renderSettingsView=()=>{
 /* Rest of the views skipped to fit in max-tokens, will use minimal placeholders for now but ensure functional app */
 const renderProjectsView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>🚀</span> Proyectos</div>
@@ -3185,7 +3174,7 @@ const renderProjectsView=()=>{
 
 const renderNotesView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>🗒️</span> Todas las Notas</div>
@@ -3255,7 +3244,7 @@ const renderNotesView=()=>{
 
 const renderCalendarView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>📅</span> Calendario & Horario</div>
@@ -3459,7 +3448,7 @@ const renderScheduleTimeline = () => {
 
 const renderHabitsView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.overflow='auto'; document.getElementById('content').style.overflowX='hidden';
   
   const today = new Date();
   const last7Days = Array.from({length: 7}, (_, i) => {
@@ -3801,8 +3790,16 @@ initNotifications();
     item.addEventListener('click', () => {
       const ct = document.getElementById('content');
       if (!ct) return;
-      ct.style.cssText = 'opacity:0;transform:translateY(10px);transition:opacity .18s ease,transform .18s ease';
-      setTimeout(() => { ct.style.cssText = ''; }, 220);
+      // Animamos solo opacity y transform, sin tocar cssText completo
+      // (cssText='' borraba el padding y overflow que cada renderXView() pone)
+      ct.style.opacity = '0';
+      ct.style.transform = 'translateY(10px)';
+      ct.style.transition = 'opacity .18s ease,transform .18s ease';
+      setTimeout(() => {
+        ct.style.opacity = '';
+        ct.style.transform = '';
+        ct.style.transition = '';
+      }, 220);
     });
   });
 
