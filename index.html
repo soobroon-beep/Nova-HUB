@@ -95,7 +95,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* CONTENT */
-#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:28px;display:flex;flex-direction:column;gap:24px}
+#content{flex:1;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;padding:28px;display:flex;flex-direction:column;gap:24px}
 #content::-webkit-scrollbar{width:5px}
 #content::-webkit-scrollbar-track{background:transparent}
 #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
@@ -846,7 +846,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
   .fab:hover{transform:scale(1.1) rotate(90deg)}
 }
 
-/* MOBILE OVERFLOW FIX */
+/* ── VISTAS MASONRY: notas y proyectos necesitan display:block en #content
+   para que CSS columns calcule bien la altura de las columnas en mobile ── */
+#content.masonry-view{display:block!important;gap:0!important}
 html{max-width:100%}
 /* CRÍTICO: overflow-x:hidden en body rompe position:fixed en iOS/Safari cuando hay transforms.
    Solo aplicar a contenedores internos seguros, NUNCA a body ni a appShell (que no es scrollable) */
@@ -2102,9 +2104,13 @@ document.querySelectorAll('.nav-item,[data-view]').forEach(el=>{
     const v=el.dataset.view; if(!v) return;
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.nav-item[data-view="${v}"]`)?.classList.add('active');
+    // Las vistas masonry (notas/proyectos) necesitan display:block para que CSS columns funcione
+    const ct=document.getElementById('content');
+    if(v==='notes'||v==='projects') ct.classList.add('masonry-view');
+    else ct.classList.remove('masonry-view');
     rerenderView(v);
     closeSidebar();
-    document.getElementById('content').scrollTop = 0;
+    ct.scrollTop = 0;
     topbarLastScroll = 0;
     document.getElementById('topbar').classList.remove('hide-topbar');
   });
@@ -2392,7 +2398,7 @@ const renderDashboard=()=>{
 };
 
 const renderRemindersView = () => {
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; 
   document.getElementById('content').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>⏰</span> Recordatorios</div><button class="btn btn-primary" id="newReminderBtn">+ Nuevo</button></div><div id="remindersListWrap"></div>`;
   document.getElementById('newReminderBtn').addEventListener('click',()=>{
     document.getElementById('remModalTitle').textContent = '⏰ Nuevo Recordatorio';
@@ -2424,7 +2430,7 @@ const renderRemindersView = () => {
 };
 
 const renderDiaryView = () => {
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; 
   document.getElementById('content').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>📖</span> Diario Emocional</div><button class="btn btn-ghost" id="togglePrivacyBtn">${state.settings.diaryLocked ? '🔓 Desbloquear Vistas' : '🔒 Ocultar Entradas'}</button></div><div class="diary-card" style="margin-bottom:24px"><div style="font-size:1.05rem;font-weight:700;margin-bottom:12px">¿Cómo te sientes hoy?</div><div class="mood-picker" id="moodPicker">${['😊','😌','😐','😔','😢','😡','🤩'].map(m => `<div class="mood-btn" data-mood="${m}">${m}</div>`).join('')}</div><textarea id="diaryBody" rows="3" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.88rem;outline:none;resize:vertical;font-family:inherit;line-height:1.6" placeholder="Escribe tus pensamientos..."></textarea><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-primary" id="saveDiaryBtn">Guardar Entrada</button></div></div><div id="diaryListWrap"></div>`;
   let selectedMood = '😊'; const moodBtns = document.querySelectorAll('.mood-btn'); moodBtns[0].classList.add('active');
   document.getElementById('moodPicker').addEventListener('click', e => { if(e.target.classList.contains('mood-btn')) { moodBtns.forEach(b => b.classList.remove('active')); e.target.classList.add('active'); selectedMood = e.target.dataset.mood; } });
@@ -2450,7 +2456,7 @@ const renderDiaryView = () => {
 /* AI CHAT VIEW ... [keeping it brief to ensure we fit in 8k limit if possible, falling back to minimal if necessary]*/
 const AI_CHIPS = ['Resume mis notas','Lista mis proyectos activos','Dame ideas de hábitos','Ayúdame a priorizar tareas','Genera un plan semanal'];
 const renderAIView=()=>{
-  document.getElementById('content').style.padding='0'; document.getElementById('content').style.overflow='hidden';
+  document.getElementById('content').style.padding='0'; 
   document.getElementById('content').innerHTML=`
   <div id="aiChatWrap" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
     <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between">
@@ -2789,7 +2795,7 @@ const renderBriefingView = () => {
   const content = document.getElementById('content');
   if (!content) return;
   content.style.padding = '16px';
-  content.style.overflow = 'auto';
+  
 
   const apiKey = state.settings.aiApiKey || '';
   const history = state.briefingHistory || [];
@@ -2974,7 +2980,7 @@ const sendAIMessage=async()=>{
 
 const renderSettingsView=()=>{
   purgeTrash();
-  document.getElementById('content').style.padding='28px'; document.getElementById('content').style.overflow='auto';
+  document.getElementById('content').style.padding='28px'; 
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
@@ -3090,7 +3096,7 @@ const renderSettingsView=()=>{
 /* Rest of the views skipped to fit in max-tokens, will use minimal placeholders for now but ensure functional app */
 const renderProjectsView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>🚀</span> Proyectos</div>
@@ -3188,7 +3194,7 @@ const renderProjectsView=()=>{
 
 const renderNotesView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>🗒️</span> Todas las Notas</div>
@@ -3258,7 +3264,7 @@ const renderNotesView=()=>{
 
 const renderCalendarView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  
   document.getElementById('content').innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>📅</span> Calendario & Horario</div>
@@ -3462,7 +3468,7 @@ const renderScheduleTimeline = () => {
 
 const renderHabitsView=()=>{
   document.getElementById('content').style.padding='28px';
-  document.getElementById('content').style.overflow='auto';
+  
   
   const today = new Date();
   const last7Days = Array.from({length: 7}, (_, i) => {
