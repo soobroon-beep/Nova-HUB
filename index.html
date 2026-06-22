@@ -151,11 +151,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .note-card .note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 
 /* REORDENAMIENTO — long-press estilo Google Keep (notas y proyectos) */
-.note-card,.proj-full-card{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+/* touch-action:pan-y permite scroll vertical nativo mientras no se active el long-press */
+.note-card,.proj-full-card{touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .reorder-pending{transform:scale(.96)!important;box-shadow:0 0 0 2px var(--accent2) inset!important}
 .reorder-grab{transform:scale(1.045) rotate(-1deg)!important;box-shadow:0 18px 38px rgba(0,0,0,.45)!important;z-index:80;opacity:.97;cursor:grabbing!important;transition:none!important;touch-action:none!important}
-.reorder-mode-active{cursor:grabbing;touch-action:none!important}
-.reorder-mode-active>[data-rid]{touch-action:none!important}
+.reorder-mode-active{cursor:grabbing}
 
 /* PROYECTOS — masonry estilo Keep, igual que notas */
 .proj-masonry{column-width:300px;column-gap:20px}
@@ -1344,27 +1344,6 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
         if (di < ti) container.insertBefore(dragEl, under.nextSibling);
         else container.insertBefore(dragEl, under);
       }
-      return;
-    }
-
-    const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    if (!scrolling) {
-      if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) {
-        // El usuario movió el dedo antes de que se cumpliera el long-press:
-        // cancelamos el "modo arrastre" y pasamos a hacer scroll manual,
-        // ya que touch-action:none bloqueó el scroll nativo del navegador.
-        clearPress();
-        dragEl.classList.remove('reorder-pending');
-        scrolling = true;
-      } else {
-        return;
-      }
-    }
-
-    if (scrollParent) {
-      e.preventDefault();
-      scrollParent.scrollTop += (lastY - e.clientY);
-      lastY = e.clientY;
     }
   };
 
@@ -1416,12 +1395,15 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointermove', (e) => {
     if (!dragEl) return;
     if (dragging) { onMove(e); return; }
-    // Long-press pendiente: si el dedo se movió, cancelamos y dejamos scroll nativo libre
+    // Long-press pendiente: si el dedo se movió verticalmente más que horizontalmente,
+    // es scroll — cancelamos inmediatamente sin esperar threshold
     const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    if (dx > LONGPRESS_CANCEL_PX || dy > LONGPRESS_CANCEL_PX) {
+    const moved = dx > 4 || dy > 4;
+    if (moved) {
       clearPress();
       dragEl.classList.remove('reorder-pending');
       dragEl = null; scrolling = false; pointerId = null;
+      _setDragTouchActive(false);
     }
   });
   container.addEventListener('pointerup', () => { if (dragEl) finish(); });
