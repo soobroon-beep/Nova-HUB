@@ -3520,6 +3520,24 @@ const renderNotesView=()=>{
   }});
 };
 
+// ══════════════════════════════════════════════
+// SCHEDULE / ROUTINE CONSTANTS (needed by week view & schedule)
+// ══════════════════════════════════════════════
+const DAY_LETTERS = ['D','L','M','X','J','V','S'];
+const DAY_DEFS = [{l:'L',v:1},{l:'M',v:2},{l:'X',v:3},{l:'J',v:4},{l:'V',v:5},{l:'S',v:6},{l:'D',v:0}];
+const SCHED_HOUR_H = 56;
+const timeToMin = t => { const [h,m] = (t||'00:00').split(':').map(Number); return h*60+(m||0); };
+const blockRepeatsToday = (b, dow) => { const rd = Array.isArray(b.repeatDays) ? b.repeatDays : [0,1,2,3,4,5,6]; return rd.length===0 ? true : rd.includes(dow); };
+const scheduleDaysLabel = b => { const rd = Array.isArray(b.repeatDays) ? b.repeatDays : [0,1,2,3,4,5,6]; if(rd.length>=7) return 'Todos los días'; return [...rd].sort().map(d=>DAY_LETTERS[d]).join(' · '); };
+const setBlockDayPills = days => {
+  const all = !Array.isArray(days) || !days.length;
+  document.querySelectorAll('#blockDayPills .day-pill').forEach(p=>{
+    const v = parseInt(p.dataset.day);
+    p.classList.toggle('active', all || days.includes(v));
+  });
+};
+const getBlockDayPills = () => Array.from(document.querySelectorAll('#blockDayPills .day-pill.active')).map(p=>parseInt(p.dataset.day));
+
 // ─── WEEK VIEW HELPERS ────────────────────────────────────────────────────────
 if (typeof state.calWeekOffset === 'undefined') state.calWeekOffset = 0;
 if (typeof state.calSelectedDay === 'undefined') state.calSelectedDay = null;
@@ -3735,20 +3753,6 @@ const renderCalendarView=()=>{
 // ══════════════════════════════════════════════
 // MI HORARIO — VISTA DE BLOQUES POR DÍA (timeline)
 // ══════════════════════════════════════════════
-const DAY_LETTERS = ['D','L','M','X','J','V','S']; // index = JS getDay() (0=Domingo)
-const DAY_DEFS = [{l:'L',v:1},{l:'M',v:2},{l:'X',v:3},{l:'J',v:4},{l:'V',v:5},{l:'S',v:6},{l:'D',v:0}];
-const SCHED_HOUR_H = 56;
-const timeToMin = t => { const [h,m] = (t||'00:00').split(':').map(Number); return h*60+(m||0); };
-const blockRepeatsToday = (b, dow) => { const rd = Array.isArray(b.repeatDays) ? b.repeatDays : [0,1,2,3,4,5,6]; return rd.length===0 ? true : rd.includes(dow); };
-const scheduleDaysLabel = b => { const rd = Array.isArray(b.repeatDays) ? b.repeatDays : [0,1,2,3,4,5,6]; if(rd.length>=7) return 'Todos los días'; return [...rd].sort().map(d=>DAY_LETTERS[d]).join(' · '); };
-const setBlockDayPills = days => {
-  const all = !Array.isArray(days) || !days.length;
-  document.querySelectorAll('#blockDayPills .day-pill').forEach(p=>{
-    const v = parseInt(p.dataset.day);
-    p.classList.toggle('active', all || days.includes(v));
-  });
-};
-const getBlockDayPills = () => Array.from(document.querySelectorAll('#blockDayPills .day-pill.active')).map(p=>parseInt(p.dataset.day));
 
 const renderScheduleTimeline = () => {
   const wrap = document.getElementById('scheduleList');
