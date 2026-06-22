@@ -146,7 +146,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .note-card .note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 
 /* REORDENAMIENTO — long-press estilo Google Keep (notas y proyectos) */
-.note-card,.proj-full-card{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.note-card,.proj-full-card{user-select:none;-webkit-user-select:none}
 .reorder-pending{transform:scale(.96)!important;box-shadow:0 0 0 2px var(--accent2) inset!important}
 .reorder-grab{transform:scale(1.045) rotate(-1deg)!important;box-shadow:0 18px 38px rgba(0,0,0,.45)!important;z-index:80;opacity:.97;cursor:grabbing!important;transition:none!important;touch-action:none!important}
 .reorder-mode-active{cursor:grabbing;touch-action:none!important}
@@ -844,13 +844,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 }
 
 /* MOBILE OVERFLOW FIX */
-html,body{max-width:100%;overflow-x:hidden}
-#main,#content{max-width:100%;overflow-x:hidden}
+html,body{overflow-x:hidden}
+#main,#content{overflow-x:hidden}
 
 @media(max-width:700px){
-  *{max-width:100%}
+  /* NO usar *{max-width:100%} — rompe position:fixed del FAB y otros elementos */
   .notes-masonry,.proj-masonry{width:100%;overflow-x:hidden}
-  .note-card,.proj-full-card,.widget,.panel,.card{max-width:100%}
+  .note-card,.proj-full-card,.stat-card,.widget,.panel,.card,
+  .settings-section,.dash-grid,.cal-layout,.stats-row{max-width:100%;box-sizing:border-box}
 }
 
 </style>
