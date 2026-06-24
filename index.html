@@ -1890,20 +1890,16 @@ const fb = {
     const provider = new window.fbSDK.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    // Desde iPadOS 13, Safari en iPad se identifica como si fuera una Mac
-    // de escritorio (sin "iPad" en el user-agent), así que el chequeo viejo
-    // no detectaba iPads. Un iPad "disfrazado" de Mac sí tiene pantalla
-    // táctil (maxTouchPoints > 1); una Mac real no.
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    // Safari (incluyendo macOS) bloquea o rompe muy seguido el inicio de
-    // sesión por ventana emergente (popup) debido a su protección contra
-    // rastreo (ITP), así que para cualquier Safari usamos redirección, que
-    // es mucho más confiable.
     const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+    // Android Chrome tambien tiene problemas con popup en GitHub Pages.
+    // Usamos redirect para cualquier movil o PWA — es el metodo mas confiable.
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const isMobile = isIOS || isAndroid || (navigator.maxTouchPoints > 0 && window.innerWidth < 900);
     try {
-      setSyncStatus('syncing', 'Iniciando sesión…');
-      if (isStandalone || isIOS || isSafari) {
+      setSyncStatus('syncing', 'Iniciando sesion…');
+      if (isStandalone || isMobile || isSafari) {
         sessionStorage.setItem('pendingRedirectLogin', '1');
         await window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider);
         return;
@@ -2102,13 +2098,23 @@ const autoConnectFirebase = () => {
         sessionStorage.removeItem('pendingRedirectLogin');
         if (result && result.user) {
           console.log('[NOVA HUB] Redirect login exitoso:', result.user.email);
-          setSyncStatus('syncing', 'Sesión iniciada, cargando datos…');
-          // onAuthStateChanged se dispara automáticamente con el user.
+          setSyncStatus('syncing', 'Sesion iniciada, cargando datos…');
+        } else {
+          // Sin resultado de redirect — puede ser carga normal o redirect fallido.
+          const wasPending = sessionStorage.getItem('pendingRedirectLogin');
+          if (wasPending) {
+            // Veniamos de un redirect pero no hay usuario — loguear para diagnostico.
+            console.warn('[NOVA HUB] getRedirectResult: sin usuario tras redirect. authDomain:', window.fbSDK.auth.config?.authDomain);
+            setSyncStatus('error', 'Login fallido — intenta de nuevo');
+            toast('⚠️ No se pudo iniciar sesion. Codigo: redirect-no-user');
+          }
         }
       }).catch(e => {
         sessionStorage.removeItem('pendingRedirectLogin');
-        // Ignorar errores normales cuando no hay redirect pendiente.
         if (!e.code || e.code === 'auth/no-auth-event' || e.code === 'auth/null-user') return;
+        console.error('[NOVA HUB] getRedirectResult error:', e.code, e.message);
+        // Mostrar el codigo de error exacto para diagnostico
+        toast('⚠️ Error auth: ' + (e.code || e.message));
         fb._handleAuthError(e);
       });
       window.onAuthStateChanged(window.fbSDK.auth, async (user) => {
