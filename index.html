@@ -153,7 +153,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 /* REORDENAMIENTO — long-press estilo Google Keep (notas y proyectos) */
 /* touch-action:pan-y permite scroll vertical nativo mientras no se active el long-press */
 .note-card,.proj-full-card{touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.reorder-pending{transform:scale(.96)!important;box-shadow:0 0 0 2px var(--accent2) inset!important}
+.reorder-pending{transform:scale(.96)!important;box-shadow:0 0 0 2px var(--accent2) inset!important;touch-action:pan-y!important}
 .reorder-grab{transform:scale(1.045) rotate(-1deg)!important;box-shadow:0 18px 38px rgba(0,0,0,.45)!important;z-index:80;opacity:.97;cursor:grabbing!important;transition:none!important;touch-action:none!important}
 .reorder-mode-active{cursor:grabbing}
 
@@ -1451,7 +1451,7 @@ import { getMessaging, getToken, deleteToken, isSupported as isMessagingSupporte
 
 const firebaseConfig = {
   apiKey: "AIzaSyAACWtwcJayD3q_LIC7gL6QoY1H7dfaEjY",
-  authDomain: "soobroon-beep.github.io",
+  authDomain: "nova-hub-2a8a0.firebaseapp.com",
   projectId: "nova-hub-2a8a0",
   storageBucket: "nova-hub-2a8a0.firebasestorage.app",
   messagingSenderId: "438215534612",
@@ -1641,17 +1641,26 @@ const save = () => {
 // Sirve para notas y proyectos (cualquier grid de tarjetas con data-rid)
 // ══════════════════════════════════════════════
 let _suppressNextCardClick = false;
-const LONGPRESS_MS = 380, LONGPRESS_CANCEL_PX = 10;
+const LONGPRESS_MS = 420, LONGPRESS_CANCEL_PX = 10;
 let _dragTouchActive = false;
+let _dragBlockTarget = null;
 const _dragBlockTouchMove = (e) => e.preventDefault();
 // El listener bloqueador de scroll solo se conecta MIENTRAS se sostiene
-// una tarjeta (ver _setDragTouchActive abajo), para no afectar el
-// rendimiento del scroll normal del resto de la app.
-function _setDragTouchActive(active) {
+// una tarjeta (ver _setDragTouchActive abajo), y solo en el scrollParent
+// del contenedor — así no afecta scroll en otras zonas de la app.
+function _setDragTouchActive(active, target) {
   if (active === _dragTouchActive) return;
   _dragTouchActive = active;
-  if (active) document.addEventListener('touchmove', _dragBlockTouchMove, { passive: false });
-  else document.removeEventListener('touchmove', _dragBlockTouchMove);
+  const node = target || document;
+  if (active) {
+    _dragBlockTarget = node;
+    node.addEventListener('touchmove', _dragBlockTouchMove, { passive: false });
+  } else {
+    if (_dragBlockTarget) {
+      _dragBlockTarget.removeEventListener('touchmove', _dragBlockTouchMove);
+      _dragBlockTarget = null;
+    }
+  }
 }
 
 function getScrollParent(el) {
@@ -1723,7 +1732,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     if (dragEl) {
       dragEl.classList.remove('reorder-pending', 'reorder-grab');
       dragEl.style.transform = '';
-      dragEl.style.touchAction = '';
+      dragEl.style.touchAction = 'pan-y'; // restaurar scroll vertical nativo
       dragEl.style.willChange = '';
     }
     container.classList.remove('reorder-mode-active');
@@ -1759,7 +1768,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       card.style.willChange = 'transform';
       // Cacheamos la posición del contenedor una vez (el scroll ya está bloqueado).
       containerRect = container.getBoundingClientRect();
-      _setDragTouchActive(true);
+      _setDragTouchActive(true, scrollParent);
       try { dragEl.setPointerCapture(pointerId); } catch (_) {}
       dragEl.classList.remove('reorder-pending');
       dragEl.classList.add('reorder-grab');
@@ -1772,10 +1781,15 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointermove', (e) => {
     if (!dragEl) return;
     if (dragging) { onMove(e); return; }
-    // Long-press pendiente: si el dedo se movió verticalmente más que horizontalmente,
-    // es scroll — cancelamos inmediatamente sin esperar threshold
+    // Long-press pendiente: cancelamos si el dedo se mueve antes de que se confirme.
+    // — Si el movimiento es predominantemente VERTICAL (scroll), cancelamos de inmediato
+    //   con umbral bajo (6px) para no interferir con el scroll nativo.
+    // — Si es predominantemente HORIZONTAL o diagonal, esperamos un umbral mayor (14px)
+    //   ya que podría ser el inicio de un arrastre intencional.
     const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    const moved = dx > 4 || dy > 4;
+    const isScrollIntent = dy > dx;          // el dedo va más hacia arriba/abajo
+    const threshold = isScrollIntent ? 6 : 14;
+    const moved = Math.max(dx, dy) > threshold;
     if (moved) {
       clearPress();
       dragEl.classList.remove('reorder-pending');
@@ -1785,7 +1799,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   });
   container.addEventListener('pointerup', () => { if (dragEl) finish(); });
   container.addEventListener('pointercancel', () => { if (dragEl) finish(); });
-  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = ''; dragEl = null; _setDragTouchActive(false); } });
+  container.addEventListener('pointerleave', (e) => { if (dragEl && !dragging && !scrolling && e.target === dragEl) { clearPress(); dragEl.classList.remove('reorder-pending'); dragEl.style.touchAction = 'pan-y'; dragEl = null; _setDragTouchActive(false); } });
 }
 
 // ══════════════════════════════════════════════
