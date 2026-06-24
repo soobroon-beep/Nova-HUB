@@ -1904,6 +1904,7 @@ const fb = {
     try {
       setSyncStatus('syncing', 'Iniciando sesión…');
       if (isStandalone || isIOS || isSafari) {
+        sessionStorage.setItem('pendingRedirectLogin', '1');
         await window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider);
         return;
       }
@@ -2092,7 +2093,24 @@ const autoConnectFirebase = () => {
   let waitAttempts = 0;
   const wait = () => {
     if (window.fbSDK && window.onAuthStateChanged) {
-      window.fbSDK.getRedirectResult(window.fbSDK.auth).catch(e => fb._handleAuthError(e));
+      // Si venimos de un signInWithRedirect, hay un parámetro en la URL que
+      // indica que Google nos regresó. Mostramos feedback inmediato.
+      const urlHasOAuth = window.location.href.includes('state=') || window.location.href.includes('code=') || sessionStorage.getItem('pendingRedirectLogin');
+      if (urlHasOAuth) setSyncStatus('syncing', 'Procesando sesión de Google…');
+
+      window.fbSDK.getRedirectResult(window.fbSDK.auth).then(result => {
+        sessionStorage.removeItem('pendingRedirectLogin');
+        if (result && result.user) {
+          console.log('[NOVA HUB] Redirect login exitoso:', result.user.email);
+          setSyncStatus('syncing', 'Sesión iniciada, cargando datos…');
+          // onAuthStateChanged se dispara automáticamente con el user.
+        }
+      }).catch(e => {
+        sessionStorage.removeItem('pendingRedirectLogin');
+        // Ignorar errores normales cuando no hay redirect pendiente.
+        if (!e.code || e.code === 'auth/no-auth-event' || e.code === 'auth/null-user') return;
+        fb._handleAuthError(e);
+      });
       window.onAuthStateChanged(window.fbSDK.auth, async (user) => {
         if (user) {
           fb.enabled = true;
