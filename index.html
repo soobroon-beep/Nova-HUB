@@ -1132,7 +1132,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 
 /* ── PARALLAX LAYERS (CSS-driven) ── */
 #psBg{
-  transition:transform .1s linear;
+  transition:none; /* el parallax ya se suaviza por JS (lerp); la transición reiniciaba cada frame */
+  will-change:transform;
 }
 
 /* ── SCAN LINE EFFECT ON AI CARD ── */
@@ -1271,6 +1272,72 @@ html{max-width:100%}
   .note-card,.proj-full-card,.widget,.panel,.card{max-width:100%}
   .stat-card,.cal-card,.projects-card,.settings-section,.diary-card,.reminder-card,.ai-card{max-width:100%}
   .dash-grid,.cal-layout,.stats-row{max-width:100%}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FLUIDEZ TÁCTIL + TRANSICIONES
+   (va al final a propósito: ajusta/pisa reglas anteriores)
+   ═══════════════════════════════════════════════════════════════ */
+html{-webkit-tap-highlight-color:transparent}
+#content{scroll-behavior:auto;overscroll-behavior-y:contain}
+
+/* Entrada de tarjetas más ligera. 'backwards' = al terminar NO se queda una
+   animación activa sobre la tarjeta (antes 'both' dejaba cada tarjeta animada). */
+@keyframes cardEntrance{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.note-card,.proj-full-card{animation-duration:.32s;animation-fill-mode:backwards}
+.notes-masonry .note-card:nth-child(7){animation-delay:.27s}
+.notes-masonry .note-card:nth-child(8){animation-delay:.31s}
+.notes-masonry .note-card:nth-child(n+9){animation-delay:.33s}
+.proj-masonry .proj-full-card:nth-child(5){animation-delay:.24s}
+.proj-masonry .proj-full-card:nth-child(n+6){animation-delay:.28s}
+
+/* Táctil: sin "hover pegado" ni encogido al apoyar el dedo para hacer scroll */
+@media (hover:none){
+  .note-card:hover,.proj-full-card:hover{transform:none;box-shadow:none;border-color:var(--border)}
+  .note-card:active,.proj-full-card:active{transform:none}
+}
+/* Feedback al mantener presionado: leve y SIN el aro que parecía "seleccionada" */
+.reorder-pending{transform:scale(.975)!important;box-shadow:0 8px 22px rgba(0,0,0,.28)!important}
+.reorder-grab{box-shadow:0 22px 44px rgba(0,0,0,.5)!important}
+.btn:active{transform:scale(.96)}
+
+/* Vista nueva: fundido corto, sin dejar un transform pegado en #content */
+#content.view-anim{animation:viewFadeIn .26s cubic-bezier(.22,1,.36,1) backwards}
+
+/* Re-render suave (fijar, tachar tarea, borrar): sin re-animar todo el listado */
+.no-enter > .note-card,.no-enter > .proj-full-card{animation:none!important}
+.no-enter .progress-fill{animation:none!important}
+@keyframes cardPulse{0%{transform:scale(.96)}60%{transform:scale(1.025)}100%{transform:scale(1)}}
+@keyframes pinPop{0%{transform:scale(0) rotate(-45deg)}60%{transform:scale(1.5) rotate(12deg)}100%{transform:scale(1) rotate(0)}}
+.pin-pop::before{animation:pinPop .5s cubic-bezier(.34,1.56,.64,1)}
+.no-enter > .pin-pop{animation:cardPulse .45s cubic-bezier(.34,1.56,.64,1)!important}
+
+/* Salida al borrar */
+@keyframes cardExit{to{opacity:0;transform:scale(.92) translateY(-6px)}}
+.note-card.card-exit,.proj-full-card.card-exit{animation:cardExit .21s ease forwards!important;pointer-events:none}
+
+/* ── MÓVIL: la barra superior flota y se oculta SOLO con transform ──
+   Antes se encogía (max-height/padding) y eso movía el contenido y forzaba
+   recalcular el layout en cada frame mientras se hacía scroll. */
+@media(max-width:900px){
+  #main{position:relative}
+  #topbar{
+    position:absolute;top:0;left:0;right:0;z-index:30;
+    background:rgba(14,14,26,.86);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .22s ease;
+    will-change:transform;
+  }
+  [data-theme="light"] #topbar{background:rgba(247,247,252,.9)}
+  #topbar.hide-topbar{
+    max-height:160px;padding-top:20px;padding-bottom:20px;
+    transform:translateY(-105%);opacity:0;pointer-events:none;
+  }
+  #content{padding-top:calc(var(--topbar-h,72px) + 14px)!important}
+
+  /* Menos blur = menos repintado sobre el fondo animado */
+  .panel,.widget,.diary-card,.card,.toast{-webkit-backdrop-filter:none;backdrop-filter:none}
+  #sidebar:not(.open){-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 
 </style>
@@ -1874,10 +1941,52 @@ function getScrollParent(el) {
   return document.scrollingElement || document.documentElement;
 }
 
+// ── Guardia de clics: un scroll (o un tap con dedo arrastrado) NO debe contar como clic ──
+let _lastScrollAt = 0, _scrollStampBound = false;
+function _bindScrollStamp() {
+  if (_scrollStampBound) return;
+  const sc = document.getElementById('content');
+  if (!sc) return;
+  _scrollStampBound = true;
+  sc.addEventListener('scroll', () => { _lastScrollAt = performance.now(); }, { passive: true });
+}
+
+// ── Cambio de lugar suave (FLIP): las tarjetas se deslizan a su nuevo sitio ──
+function _flip(list, mutate) {
+  const first = new Map(list.map(c => [c, c.getBoundingClientRect()]));
+  mutate();
+  list.forEach(c => {
+    const a = first.get(c), b = c.getBoundingClientRect();
+    const dx = a.left - b.left, dy = a.top - b.top;
+    if (!dx && !dy || !c.animate) return;
+    c.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }],
+              { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+  });
+}
+
+// ── Re-render suave: conserva el scroll y no re-anima todas las tarjetas ──
+window._softRender = false;
+function softRender(fn) {
+  const ct = document.getElementById('content');
+  const top = ct ? ct.scrollTop : 0;
+  window._softRender = true;
+  try { fn(); } finally { window._softRender = false; }
+  if (ct) ct.scrollTop = top;
+}
+
 function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   if (!container || container._reorderBound) return;
   container._reorderBound = true;
   container.style.position = 'relative';
+  _bindScrollStamp();
+
+  let _downX = 0, _downY = 0;
+  container.addEventListener('pointerdown', (e) => { _downX = e.clientX; _downY = e.clientY; }, true);
+  container.addEventListener('click', (e) => {
+    if (e.detail === 0) return; // clic de teclado / programático
+    const moved = Math.hypot(e.clientX - _downX, e.clientY - _downY) > 12;
+    if (moved || performance.now() - _lastScrollAt < 140) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
 
   let dragEl = null, pointerId = null, startX = 0, startY = 0;
   let grabOffX = 0, grabOffY = 0, pressTimer = null, dragging = false, started = false;
@@ -1910,8 +2019,11 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       const list = cards();
       const di = list.indexOf(dragEl), ti = list.indexOf(under);
       if (di < 0 || ti < 0) return;
-      if (di < ti) container.insertBefore(dragEl, under.nextSibling);
-      else container.insertBefore(dragEl, under);
+      _flip(list.filter(c => c !== dragEl), () => {
+        if (di < ti) container.insertBefore(dragEl, under.nextSibling);
+        else container.insertBefore(dragEl, under);
+      });
+      positionDrag(moveX, moveY);
     }
   };
 
@@ -1946,11 +2058,11 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     _setDragTouchActive(false);
   };
 
-  // Retardo para mostrar el feedback visual "reorder-pending" (encogimiento).
-  // Es más corto que LONGPRESS_MS para que el usuario vea la retroalimentación
-  // antes de confirmar el drag, pero suficientemente largo para que un tap
-  // rápido o un scroll nunca lo alcancen → elimina el "glitch" visual.
-  const PENDING_VISUAL_DELAY = 160;
+  // Retardo para mostrar el feedback visual "reorder-pending" (leve encogimiento).
+  // Es más corto que LONGPRESS_MS para que se vea la señal antes de confirmar el
+  // arrastre, pero lo bastante largo para que un tap, o apoyar el dedo para
+  // empezar a hacer scroll, nunca parezca "selección".
+  const PENDING_VISUAL_DELAY = 260;
   let pendingVisualTimer = null;
   const clearPendingVisual = () => {
     if (pendingVisualTimer) { clearTimeout(pendingVisualTimer); pendingVisualTimer = null; }
@@ -2848,14 +2960,25 @@ let topbarLastScroll = 0;
       baseline = current;
       return;
     }
+    // 'baseline' sigue al punto extremo del recorrido actual (el más bajo mientras
+    // la barra está oculta, el más alto mientras está visible). Así la barra
+    // reaparece en cuanto subes ~28px, sin tener que llegar casi hasta arriba.
     const delta = current - baseline;
-    if (!hidden && delta > HIDE_THRESHOLD) {
-      topbar.classList.add('hide-topbar'); hidden = true; baseline = current;
-    } else if (hidden && delta < -SHOW_THRESHOLD) {
-      topbar.classList.remove('hide-topbar'); hidden = false; baseline = current;
+    if (delta > 0) {
+      if (hidden) baseline = current;
+      else if (delta > HIDE_THRESHOLD) { topbar.classList.add('hide-topbar'); hidden = true; baseline = current; }
+    } else if (delta < 0) {
+      if (!hidden) baseline = current;
+      else if (-delta > SHOW_THRESHOLD) { topbar.classList.remove('hide-topbar'); hidden = false; baseline = current; }
     }
   }, { passive: true });
   window.addEventListener('resize', () => { if (window.innerWidth > 900) topbar.classList.remove('hide-topbar'); });
+  // En móvil la barra flota encima y el contenido reserva su alto con --topbar-h;
+  // así ocultarla/mostrarla es solo un transform (sin recalcular el layout al hacer scroll).
+  const setTopbarH = () => document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+  setTopbarH();
+  if ('ResizeObserver' in window) new ResizeObserver(setTopbarH).observe(topbar);
+  window.addEventListener('resize', setTopbarH);
 })();
 const updateStats=()=>{ const el=document.getElementById('statTasks'); if(el) el.textContent=state.projects.reduce((a,p)=>a+(p.tasks?.filter(t=>!t.done).length||0),0); };
 
@@ -3966,6 +4089,7 @@ const renderProjectsView=()=>{
     openModal('projModal');
   });
   const list=document.getElementById('projFullList');
+  if(window._softRender) list.classList.add('no-enter');
   if(!state.projects.length){
     list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">Aún no tienes proyectos. Crea uno para empezar.</div>';
     return;
@@ -3973,7 +4097,7 @@ const renderProjectsView=()=>{
 
   [...state.projects].sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0))||((a.order??0)-(b.order??0))).forEach(p=>{
     const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
-    const el=document.createElement('div'); el.className='proj-full-card'+(p.pinned?' pinned':''); el.setAttribute('data-rid', p.id);
+    const el=document.createElement('div'); el.className='proj-full-card'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
     el.style.borderTop = `4px solid ${p.color||'var(--accent)'}`;
     el.innerHTML=`
       <div class="proj-card-head">
@@ -4025,27 +4149,28 @@ const renderProjectsView=()=>{
 
   document.querySelectorAll('.pin-proj-btn').forEach(b=>b.addEventListener('click',e=>{
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p){ p.pinned=!p.pinned; save(); renderProjectsView(); toast(p.pinned?'📌 Proyecto fijado':'Proyecto desfijado'); }
+    if(p){ p.pinned=!p.pinned; window._pinPopId=p.pinned?p.id:null; save(); softRender(renderProjectsView); toast(p.pinned?'📌 Proyecto fijado':'Proyecto desfijado'); }
   }));
 
   document.querySelectorAll('.task-check').forEach(c=>c.addEventListener('change',e=>{
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks[e.target.dataset.idx].done=e.target.checked; save(); renderProjectsView(); updateStats(); if(e.target.checked) addXP(10); }
+    if(p) { p.tasks[e.target.dataset.idx].done=e.target.checked; save(); softRender(renderProjectsView); updateStats(); if(e.target.checked) addXP(10); }
   }));
   document.querySelectorAll('.del-task-btn').forEach(b=>b.addEventListener('click',e=>{
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p && confirm('¿Eliminar esta tarea?')) { const idx=Number(e.target.dataset.idx); const t=p.tasks[idx]; addToTrash('task', t, {projectId:p.id, idx}); p.tasks.splice(idx,1); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
+    if(p && confirm('¿Eliminar esta tarea?')) { const idx=Number(e.target.dataset.idx); const t=p.tasks[idx]; addToTrash('task', t, {projectId:p.id, idx}); p.tasks.splice(idx,1); save(); softRender(renderProjectsView); updateStats(); toast('🗑️ Movido a la papelera'); }
   }));
   document.querySelectorAll('[id^=addTaskBtn-]').forEach(b=>b.addEventListener('click',e=>{
     const title=prompt('Nueva tarea:');
     if(!title) return;
     const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks=p.tasks||[]; p.tasks.push({title,done:false}); save(); renderProjectsView(); updateStats(); }
+    if(p) { p.tasks=p.tasks||[]; p.tasks.push({title,done:false}); save(); softRender(renderProjectsView); updateStats(); }
   }));
   document.querySelectorAll('.del-proj-btn').forEach(b=>b.addEventListener('click',e=>{
-    if(confirm('¿Eliminar proyecto y sus tareas?')){ const p=state.projects.find(x=>x.id==e.target.dataset.pid); if(p) addToTrash('project', p); state.projects=state.projects.filter(x=>x.id!=e.target.dataset.pid); save(); renderProjectsView(); updateStats(); toast('🗑️ Movido a la papelera'); }
+    if(confirm('¿Eliminar proyecto y sus tareas?')){ const pid=e.target.dataset.pid; e.target.closest('.proj-full-card')?.classList.add('card-exit'); setTimeout(()=>{ const p=state.projects.find(x=>x.id==pid); if(p) addToTrash('project', p); state.projects=state.projects.filter(x=>x.id!=pid); save(); softRender(renderProjectsView); updateStats(); toast('🗑️ Movido a la papelera'); }, 210); }
   }));
 
+  window._pinPopId = null;
   enableDragReorder(list, { onDrop: (orderedIds) => {
     orderedIds.forEach((id, i) => {
       const proj = state.projects.find(x => x.id == id);
@@ -4072,11 +4197,12 @@ const renderNotesView=()=>{
     openModal('noteModal');
   });
   const c=document.getElementById('notesFullList');
+  if(window._softRender) c.classList.add('no-enter');
   const sorted=[...state.notes].sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0))||((a.order??0)-(b.order??0)));
   if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px;column-span:all">No hay notas.</div>'; return; }
   
   sorted.forEach(n=>{
-    const el=document.createElement('div'); el.className='note-card'+(n.pinned?' pinned':''); el.setAttribute('data-rid', n.id);
+    const el=document.createElement('div'); el.className='note-card'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
     el.innerHTML=`
       <div class="note-color" style="background:${n.color}"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -4095,7 +4221,7 @@ const renderNotesView=()=>{
       if(_suppressNextCardClick) return;
       if(e.target.closest('.del-note-btn') || e.target.closest('.edit-note-btn')) return;
       const idx=state.notes.findIndex(x=>x.id===n.id);
-      if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; save(); renderNotesView(); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');}
+      if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; window._pinPopId=state.notes[idx].pinned?n.id:null; save(); softRender(renderNotesView); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');}
     });
 
     // Editar nota
@@ -4111,11 +4237,12 @@ const renderNotesView=()=>{
 
     // Eliminar nota
     el.querySelector('.del-note-btn').addEventListener('click',()=>{
-      if(confirm('¿Eliminar esta nota?')){ addToTrash('note', n); state.notes=state.notes.filter(x=>x.id!==n.id); save(); renderNotesView(); toast('🗑️ Movido a la papelera'); }
+      if(confirm('¿Eliminar esta nota?')){ el.classList.add('card-exit'); setTimeout(()=>{ addToTrash('note', n); state.notes=state.notes.filter(x=>x.id!==n.id); save(); softRender(renderNotesView); toast('🗑️ Movido a la papelera'); }, 210); }
     });
     c.appendChild(el);
   });
 
+  window._pinPopId = null;
   enableDragReorder(c, { onDrop: (orderedIds) => {
     orderedIds.forEach((id, i) => {
       const note = state.notes.find(x => x.id == id);
@@ -4793,9 +4920,17 @@ initNotifications();
   const ctx = canvas.getContext('2d');
   let w, h, time = 0, lastFrame = 0;
 
+  // En móvil se pinta a media resolución: son degradados difusos y se ve igual,
+  // pero hay 4 veces menos píxeles que repintar por frame.
+  const quality = () => window.innerWidth <= 900 ? 0.5 : 1;
   function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+    const q = quality();
+    const nw = Math.round(window.innerWidth * q), nh = Math.round(window.innerHeight * q);
+    // La barra de direcciones del móvil dispara 'resize' al hacer scroll: si solo
+    // cambió un poco el alto, no recreamos el canvas (borraba el fondo y daba tirones).
+    if (w !== undefined && canvas.width === nw && Math.abs(canvas.height - nh) < 120 * q) return;
+    w = canvas.width = nw;
+    h = canvas.height = nh;
   }
   window.addEventListener('resize', resize);
   resize();
@@ -4803,7 +4938,20 @@ initNotifications();
   // Pausamos el fondo animado mientras el usuario hace scroll: así el
   // navegador no tiene que repintar gradientes a pantalla completa al
   // mismo tiempo que mueve el contenido, y el scroll se siente fluido.
-  let isScrolling = false, scrollEndTimer = null;
+  let isScrolling = false, scrollEndTimer = null, touching = false, touchEndTimer = null;
+  // Con un dedo apoyado (scroll, mantener para reordenar, arrastrar) el fondo no
+  // se repinta: todo el trabajo del navegador se queda para mover el contenido.
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    touching = true; clearTimeout(touchEndTimer);
+  }, { passive: true, capture: true });
+  const _touchDone = (e) => {
+    if (e.pointerType === 'mouse') return;
+    clearTimeout(touchEndTimer);
+    touchEndTimer = setTimeout(() => { touching = false; }, 200);
+  };
+  document.addEventListener('pointerup', _touchDone, { passive: true, capture: true });
+  document.addEventListener('pointercancel', _touchDone, { passive: true, capture: true });
   document.getElementById('content')?.addEventListener('scroll', () => {
     isScrolling = true;
     clearTimeout(scrollEndTimer);
@@ -4814,13 +4962,16 @@ initNotifications();
     requestAnimationFrame(draw);
 
     const mobile = w <= 900;
-    const frameInterval = mobile ? 1000 / 26 : 1000 / 60; // limita fps, más en móvil
+    const frameInterval = mobile ? 1000 / 20 : 1000 / 60; // limita fps, más en móvil
     if (now - lastFrame < frameInterval) return;
+    const dt = Math.min(now - lastFrame, 100);
     lastFrame = now;
 
-    if (isScrolling) return; // congelado mientras se hace scroll
+    if (isScrolling || touching) return; // congelado mientras se hace scroll o hay un dedo en pantalla
 
-    time += 0.003;
+    // La velocidad depende del tiempo real (antes dependía de cuántos frames se
+    // alcanzaban a pintar): igual de lento y suave en móvil que en escritorio.
+    time += 0.003 * (dt / (1000 / 60)) * (mobile ? 0.43 : 1);
     ctx.clearRect(0, 0, w, h);
     
     const theme = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -4868,7 +5019,7 @@ initNotifications();
        const py = (h + 100) - ((time * 40 + i * 80) % (h + 200));
        
        ctx.beginPath();
-       ctx.arc(finalX, py, Math.abs(Math.sin(time+i))*1.5 + 0.5, 0, Math.PI * 2);
+       ctx.arc(finalX, py, (Math.abs(Math.sin(time+i))*1.5 + 0.5) * (canvas.width / window.innerWidth), 0, Math.PI * 2);
        ctx.fillStyle = theme === 'light' ? 'rgba(100,100,200,0.2)' : 'rgba(200, 220, 255, 0.15)';
        ctx.fill();
     }
@@ -4966,6 +5117,7 @@ initNotifications();
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
     const SCALE = 1.06;
+    let lastTf = '';
     function anim() {
       cx = lerp(cx, tx, 0.05);
       cy = lerp(cy, ty, 0.05);
@@ -4976,40 +5128,49 @@ initNotifications();
       const maxY = Math.max(0, ((SCALE - 1) / 2) * canvas.clientHeight - 1);
       const px = Math.max(-maxX, Math.min(maxX, cx));
       const py = Math.max(-maxY, Math.min(maxY, cy));
-      canvas.style.transform = 'translate('+px+'px,'+py+'px) scale('+SCALE+')';
+      const tf = 'translate('+px.toFixed(2)+'px,'+py.toFixed(2)+'px) scale('+SCALE+')';
+      if (tf !== lastTf) { canvas.style.transform = tf; lastTf = tf; }
       requestAnimationFrame(anim);
     }
     anim();
   })();
 
   // ── 4. SCROLL ENTRANCE ──
+  // IMPORTANTE: antes las tarjetas fuera de pantalla quedaban con la animación
+  // en "paused" hasta aparecer. Esas animaciones pausadas bloqueaban el primer
+  // deslizamiento táctil tras abrir una pestaña (parecía que "se traba").
+  // Ahora lo que está fuera de pantalla espera SIN animación activa y arranca
+  // la entrada un poco antes de llegar a la vista (rootMargin).
+  const ENTER_SEL = '.stat-card,.note-card,.proj-full-card,.diary-card,.reminder-card,.event-item,.habit-row,.settings-section';
   const scrollObs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.animationPlayState = 'running';
-        scrollObs.unobserve(entry.target);
-      }
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      scrollObs.unobserve(el);
+      el.style.animation = '';   // vuelve la animación definida en CSS → arranca ahora
+      el.style.opacity = '';
     });
-  }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+  }, { threshold: 0, rootMargin: '0px 0px 140px 0px' });
 
   function observeCards(root) {
-    root.querySelectorAll('.stat-card,.note-card,.proj-full-card,.diary-card,.reminder-card,.event-item,.habit-row,.settings-section').forEach(el => {
-      el.style.animationPlayState = 'paused';
+    const els = [...root.querySelectorAll(ENTER_SEL)].filter(el => !el._enterBound);
+    if (!els.length) return;
+    const vh = window.innerHeight;
+    // 1) leer todo   2) escribir todo  → evita forzar layout una vez por tarjeta
+    const tops = els.map(el => el.getBoundingClientRect().top);
+    els.forEach((el, i) => {
+      el._enterBound = true;
+      if (el.closest('.no-enter')) return;     // re-render suave: sin re-animar
+      if (tops[i] < vh + 140) return;          // ya visible: anima normal
+      el.style.animation = 'none';             // fuera de pantalla: espera sin animación
+      el.style.opacity = '0';
       scrollObs.observe(el);
     });
   }
 
   // ── 5. VIEW TRANSITION ──
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const ct = document.getElementById('content');
-      if (!ct) return;
-      ct.style.opacity = '0';
-      ct.style.transform = 'translateY(10px)';
-      ct.style.transition = 'opacity .18s ease,transform .18s ease';
-      setTimeout(() => { ct.style.opacity=''; ct.style.transform=''; ct.style.transition=''; }, 220);
-    });
-  });
+  // La transición de vista la hace #content.view-anim (CSS). Se quitó el
+  // fundido manual que competía con ella y dejaba el contenido en blanco ~220ms.
 
   // ── 6. MODAL RE-ANIMATE ──
   const modalObs = new MutationObserver((mutations) => {
@@ -5027,12 +5188,18 @@ initNotifications();
   });
 
   // ── 7. CONTENT MUTATION — re-attach ──
+  let _moQueued = false;
   const contentObs = new MutationObserver(() => {
-    const root = document.getElementById('content');
-    if (!root) return;
-    attachRipples(root);
-    observeCards(root);
-    attachNavRipple();
+    if (_moQueued) return;               // muchas mutaciones → un solo trabajo por frame
+    _moQueued = true;
+    requestAnimationFrame(() => {
+      _moQueued = false;
+      const root = document.getElementById('content');
+      if (!root) return;
+      attachRipples(root);
+      observeCards(root);
+      attachNavRipple();
+    });
   });
   const mainCt = document.getElementById('content');
   if (mainCt) contentObs.observe(mainCt, { childList: true, subtree: true });
