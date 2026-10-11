@@ -53,7 +53,10 @@
   --text3: #9090b8;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{height:100%}
+/* Color base sólido en html: si por cualquier razón el canvas de fondo no cubre
+   un borde (parallax, barra del navegador, rotación), se ve oscuro y no blanco. */
+html{height:100%;background:#080811}
+html[data-theme="light"]{background:#f7f7fc}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:var(--text);height:100vh;height:100dvh;margin:0;padding:0}
 /* #appShell asume el flex layout que antes tenía body.
    Al sacarlo de body, position:fixed usa el viewport real (no el body) en iOS/Android.
@@ -4962,10 +4965,18 @@ initNotifications();
       }, { passive: true });
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
+    const SCALE = 1.06;
     function anim() {
       cx = lerp(cx, tx, 0.05);
       cy = lerp(cy, ty, 0.05);
-      canvas.style.transform = 'translate('+cx+'px,'+cy+'px) scale(1.06)';
+      // El canvas escalado solo sobra (SCALE-1)/2 por lado. Si el desplazamiento
+      // del parallax supera ese margen, se asoma el borde (franja blanca en
+      // pantallas angostas como el celular). Limitamos al margen real.
+      const maxX = Math.max(0, ((SCALE - 1) / 2) * canvas.clientWidth - 1);
+      const maxY = Math.max(0, ((SCALE - 1) / 2) * canvas.clientHeight - 1);
+      const px = Math.max(-maxX, Math.min(maxX, cx));
+      const py = Math.max(-maxY, Math.min(maxY, cy));
+      canvas.style.transform = 'translate('+px+'px,'+py+'px) scale('+SCALE+')';
       requestAnimationFrame(anim);
     }
     anim();
