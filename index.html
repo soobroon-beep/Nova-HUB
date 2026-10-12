@@ -71,6 +71,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 /* SIDEBAR */
 #sidebar{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;transition:var(--trans);z-index:100}
 .logo{display:flex;align-items:center;gap:10px;padding:0 20px 28px;font-size:1.2rem;font-weight:700;letter-spacing:.5px}
+.logo-img{width:38px;height:38px;border-radius:11px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.app-icon-grid{display:flex;flex-wrap:wrap;gap:12px;padding:6px 0 4px}
+.app-icon-opt{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px;padding:10px 6px;background:var(--bg3);border:2px solid var(--border);border-radius:16px;cursor:pointer;color:var(--text2);font-size:.72rem;font-weight:600;transition:var(--trans)}
+.app-icon-opt img{width:60px;height:60px;border-radius:15px;object-fit:cover}
+.app-icon-opt:hover{border-color:var(--accent2);transform:translateY(-2px)}
+.app-icon-opt.active{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px rgba(124,106,247,.18)}
 .logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 .nav-section{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:0 20px 8px;font-weight:600}
 .nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:var(--trans);font-size:.9rem;color:var(--text2);border-left:3px solid transparent;margin:1px 0}
@@ -166,7 +172,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 
 /* NOTES */
 .notes-section{background:transparent;border:none;border-radius:var(--card-r);padding:0}
-.notes-masonry{column-width:240px;column-gap:16px}
+/* Notas: cuadrícula que se llena de IZQUIERDA a DERECHA y luego hacia abajo (1ª arriba-izquierda,
+   2ª a su lado, 3ª debajo de la 1ª…). La columna de cada tarjeta la asigna layoutNotesGrid() en JS;
+   las alturas se ajustan con filas de 1px para que no queden huecos (estilo Keep). */
+.notes-masonry{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));column-gap:16px;row-gap:0;grid-auto-rows:1px;grid-auto-flow:row dense;align-items:start}
+.notes-masonry>.note-card{align-self:start}
 .note-card{break-inside:avoid;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;transition:var(--trans);cursor:pointer;position:relative}
 .note-card:hover{transform:translateY(-2px);border-color:var(--accent2);box-shadow:0 8px 24px rgba(124,106,247,.15)}
 .note-card.pinned::before{content:none}
@@ -368,7 +378,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 
 /* ── NOTAS Y PROYECTOS: estilo Keep, 2 columnas en móvil ── */
 @media(max-width:700px){
-  .notes-masonry,.proj-masonry{column-count:2;column-width:auto;column-gap:10px}
+  .proj-masonry{column-count:2;column-width:auto;column-gap:10px}
+  .notes-masonry{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px}
   .note-card{padding:12px;margin-bottom:10px;border-radius:12px}
   .note-card .note-title{font-size:.85rem;margin-bottom:4px}
   .note-card .note-body{font-size:.78rem;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
@@ -1472,6 +1483,7 @@ html{-webkit-tap-highlight-color:transparent}
 <div id="appShell">
 <nav id="sidebar">
   <div class="logo">
+    <img id="appLogoImg" class="logo-img" src="icon-96.png" alt="" onerror="this.style.display='none'">
     <span id="appTitle">NOVA HUB</span>
   </div>
   <div class="nav-section">Principal</div>
@@ -2011,6 +2023,11 @@ const addXP = (amount) => {
   updateXPUI();
 };
 
+// Marca persistente: hay cambios en ESTE dispositivo que aún no se confirman en la nube.
+// Sobrevive a cerrar la app, así que al volver a abrir NO se pisan con lo que hay en la nube.
+const UNSYNCED_KEY = 'nn_unsynced_at';
+const markUnsynced = () => { try { localStorage.setItem(UNSYNCED_KEY, String(Date.now())); } catch(e) {} };
+const hasUnsynced  = () => { try { return !!localStorage.getItem(UNSYNCED_KEY); } catch(e) { return false; } };
 let _pushDebounce = null;
 let _pushPending = false;   // hay cambios locales esperando subirse a la nube
 let _dirtyBeforeReady = false; // el usuario cambió algo mientras se hacía la primera descarga
@@ -2021,6 +2038,7 @@ const schedulePush = () => {
   // descarga tardaba más) y borraba en la nube lo creado en otro dispositivo,
   // por ejemplo un hábito nuevo.
   if (!fb.syncReady) { _dirtyBeforeReady = true; return; }
+  markUnsynced();
   _pushPending = true;
   clearTimeout(_pushDebounce);
   _pushDebounce = setTimeout(() => { _pushPending = false; fb.pushAll(); }, 1000);
@@ -2253,6 +2271,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       _flip(list.filter(c => c !== dragEl), () => {
         if (di < ti) container.insertBefore(dragEl, under.nextSibling);
         else container.insertBefore(dragEl, under);
+        if (container._relayout) container._relayout();   // cuadrícula de notas: recalcular columnas
       });
       positionDrag(moveX, moveY);
     }
@@ -2504,9 +2523,10 @@ const fb = {
   async pushAll() {
     if (!this.enabled || !this.uid) return;
     setSyncStatus('syncing', navigator.onLine ? 'Subiendo…' : '📴 Guardando offline…');
+    const unsyncedAtStart = localStorage.getItem(UNSYNCED_KEY);
     try {
       const ref = window.fbSDK.doc(window.fbSDK.db, 'users', this.uid);
-      await window.fbSDK.setDoc(ref, {
+      const payload = {
         notes:     state.notes,
         events:    state.events,
         projects:  state.projects,
@@ -2519,7 +2539,20 @@ const fb = {
         _at:       Date.now(),
         _uid:      this.uid,
         _deviceId: DEVICE_ID,
-      }, { merge: true });
+      };
+      // Firestore guarda todo en UN documento con tope de 1 MiB: avisamos antes de llegar al límite.
+      try { this.lastSize = new Blob([JSON.stringify(payload)]).size; } catch(e) {}
+      if (this.lastSize > 900 * 1024 && !this._sizeWarned) {
+        this._sizeWarned = true;
+        toast('⚠️ Tus datos ya ocupan ' + Math.round(this.lastSize / 1024) + ' KB de 1024 KB en la nube. Exporta un respaldo y libera espacio (papelera/diario antiguo).');
+      }
+      await window.fbSDK.setDoc(ref, payload, { merge: true });
+      // Confirmado por el servidor: si no hubo cambios nuevos mientras subía, ya no hay nada pendiente.
+      if (localStorage.getItem(UNSYNCED_KEY) === unsyncedAtStart) { try { localStorage.removeItem(UNSYNCED_KEY); } catch(e) {} }
+      this.lastSyncAt = Date.now();
+      if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') {
+        const el = document.getElementById('syncMeta'); if (el) el.textContent = syncMetaText();
+      }
       // Con caché persistente, setDoc() resuelve aunque no haya internet:
       // el cambio queda guardado en IndexedDB y Firestore lo sube solo al reconectar.
       if (navigator.onLine) {
@@ -2530,7 +2563,10 @@ const fb = {
     } catch(e) {
       console.error('[NOVA HUB] pushAll error', e.code, e.message);
       setSyncStatus('error', 'Error al subir');
-      toast('❌ Firestore: ' + (e.code || e.message));
+      toast('❌ Firestore: ' + (e.code || e.message) + ' — tus cambios siguen guardados en este dispositivo y se reintentarán.');
+      // Los cambios quedan marcados como pendientes; reintento automático en 20 s.
+      clearTimeout(this._retryTimer);
+      this._retryTimer = setTimeout(() => { if (this.enabled && hasUnsynced()) schedulePush(); }, 20000);
     }
   },
 
@@ -2601,8 +2637,23 @@ window.addEventListener('online', () => {
   if (fb.enabled) {
     setSyncStatus('syncing', 'Conectado — sincronizando…');
     toast('🌐 Conexión recuperada, sincronizando…');
+    if (hasUnsynced()) schedulePush();
   }
 });
+// Al minimizar o cerrar la app se sube YA lo pendiente (antes esperaba 1 s y podía perderse).
+const flushPendingPush = () => {
+  if (!fb.enabled || !fb.syncReady) return;
+  if (_pushPending) { clearTimeout(_pushDebounce); _pushPending = false; fb.pushAll(); }
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPendingPush(); });
+window.addEventListener('pagehide', flushPendingPush);
+
+const syncMetaText = () => {
+  const when = fb.lastSyncAt ? new Date(fb.lastSyncAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const size = fb.lastSize ? Math.round(fb.lastSize / 1024) + ' KB de 1024 KB' : '—';
+  const pend = hasUnsynced() ? ' · ⏳ cambios pendientes de subir' : ' · ✓ todo guardado';
+  return 'Última subida: ' + when + ' · Datos en la nube: ' + size + pend;
+};
 
 
 function setSyncStatus(st, label) {
@@ -2649,10 +2700,12 @@ function applyRemoteData(data) {
   if (data.settings && typeof data.settings === 'object') {
     // preservar API key local si la nube no la tiene
     const localKey = state.settings.anthropicApiKey || '';
-    state.settings = { ...state.settings, ...data.settings };
+    state.settings = keepLocal ? { ...data.settings, ...state.settings } : { ...state.settings, ...data.settings };
     if (localKey && !state.settings.anthropicApiKey) state.settings.anthropicApiKey = localKey;
     localStorage.setItem('nn_settings', JSON.stringify(state.settings));
     if (data.settings.username) applyUsername(data.settings.username);
+    applyAccent(state.settings.accentColor || '#7c6af7');
+    applyAppIcon(state.settings.appIcon || 'nova');
     changed = true;
   }
   if (!changed) return;
@@ -2673,10 +2726,11 @@ const autoConnectFirebase = () => {
           fb.enabled = true;
           fb.syncReady = false;   // no subir nada hasta terminar la primera descarga
           fb.uid = user.uid;
+          const hadUnsyncedChanges = hasUnsynced();   // cambios de una sesión anterior que no llegaron a la nube
           if (user.displayName) { state.settings.username = user.displayName; }
           state.settings.photoURL = user.photoURL || '';
           save(); applyUsername(state.settings.username); applyAvatarPhoto(state.settings.photoURL);
-          _dirtyBeforeReady = false;   // ese save() es solo de arranque (nombre/foto), no un cambio del usuario
+          _dirtyBeforeReady = hadUnsyncedChanges;   // ese save() es solo de arranque; si quedaron cambios sin subir, se conservan y se suben
           // 1) Descargar del servidor primero
           await fb.pullAll();
           fb.syncReady = true;
@@ -2804,11 +2858,75 @@ const ACCENT_PRESETS = [
   { name:'Verde',  h:'#10b981', a:'#34d399', b:'#6ee7b7' }, { name:'Naranja',h:'#f59e0b', a:'#fbbf24', b:'#fd9a00' },
   { name:'Azul',   h:'#3b82f6', a:'#60a5fa', b:'#38bdf8' }, { name:'Rojo',   h:'#ef4444', a:'#f87171', b:'#fb923c' },
 ];
+const _hexToHsl = (hex) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return [250, .85, .66];
+  const n = parseInt(m[1], 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let h = 0, s = 0;
+  if (mx !== mn) {
+    const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+  }
+  return [h, s, l];
+};
+const _hslToHex = (h, s, l) => {
+  h = ((h % 360) + 360) % 360; s = Math.max(0, Math.min(1, s)); l = Math.max(0, Math.min(1, l));
+  const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))).toString(16).padStart(2, '0');
+  return '#' + f(0) + f(8) + f(4);
+};
 function applyAccent(hex) {
   document.documentElement.style.setProperty('--accent', hex);
   const preset = ACCENT_PRESETS.find(p => p.h === hex);
   if (preset) { document.documentElement.style.setProperty('--accent2', preset.a); document.documentElement.style.setProperty('--accent3', preset.b); }
+  else {
+    // Color que no es de la lista (p. ej. el que sale de un icono): se derivan los tonos claros
+    const [h, s, l] = _hexToHsl(hex);
+    document.documentElement.style.setProperty('--accent2', _hslToHex(h, s, Math.min(.78, l + .12)));
+    document.documentElement.style.setProperty('--accent3', _hslToHex(h + 28, s, Math.min(.72, l + .06)));
+  }
   state.settings.accentColor = hex;
+}
+
+// ══════════════════════════════════════════════
+// ICONO DE LA APP (se elige en Ajustes; cambia también el color de la app)
+// Para agregar un icono: copia sus PNG a la carpeta del proyecto y añade una línea aquí.
+// `accent` es opcional: si no se pone, el color se toma automáticamente del icono.
+// ══════════════════════════════════════════════
+const APP_ICONS = [
+  { id:'nova', label:'Original', src:'icon-192.png', favicon:'icon-96.png', touch:'apple-touch-icon.png', accent:'#7c6af7' },
+];
+const extractIconColor = (src) => new Promise(resolve => {
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const c = document.createElement('canvas'); c.width = c.height = 48;
+      const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 48, 48);
+      const d = ctx.getImageData(0, 0, 48, 48).data; let R = 0, G = 0, B = 0, W = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 200) continue;
+        const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
+        const v = mx / 255, sat = mx ? (mx - mn) / mx : 0;
+        if (v < .35 || sat < .3) continue;            // ignora fondo oscuro y grises
+        const w = sat * v; R += d[i] * w; G += d[i + 1] * w; B += d[i + 2] * w; W += w;
+      }
+      if (!W) return resolve(null);
+      const [h, s, l] = _hexToHsl('#' + [R / W, G / W, B / W].map(x => Math.round(x).toString(16).padStart(2, '0')).join(''));
+      resolve(_hslToHex(h, Math.max(s, .6), Math.min(.62, Math.max(.5, l))));
+    } catch (e) { resolve(null); }
+  };
+  img.onerror = () => resolve(null);
+  img.src = src;
+});
+async function applyAppIcon(id, { applyColor = false } = {}) {
+  const ic = APP_ICONS.find(x => x.id === id) || APP_ICONS[0];
+  state.settings.appIcon = ic.id;
+  document.querySelectorAll('link[rel="icon"]').forEach(l => { l.href = ic.favicon || ic.src; });
+  document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(l => { l.href = ic.touch || ic.src; });
+  const img = document.getElementById('appLogoImg'); if (img) { img.style.display = ''; img.src = ic.src; }
+  if (applyColor) {
+    const hex = ic.accent || await extractIconColor(ic.src);
+    if (hex) applyAccent(hex);
+  }
 }
 const applyTheme = t => {
   document.documentElement.setAttribute('data-theme', t);
@@ -2817,6 +2935,7 @@ const applyTheme = t => {
   localStorage.setItem('nn_theme', t);
 };
 applyTheme(state.theme); applyAccent(state.settings.accentColor || '#7c6af7'); applyAvatarPhoto(state.settings.photoURL);
+applyAppIcon(state.settings.appIcon || 'nova');
 document.getElementById('themeToggle').addEventListener('click', () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); });
 
 function applyAvatarPhoto(url) {
@@ -2901,6 +3020,32 @@ const setNotePinned=(n,val)=>{
   window._pinPopId=n.pinned?n.id:null;
   save();
 };
+// Acomoda las tarjetas en orden de lectura: la 1ª arriba a la izquierda, la 2ª junto a ella,
+// la 3ª debajo de la 1ª, la 4ª debajo de la 2ª… (columna = posición % nº de columnas).
+const layoutNotesGrid=(c)=>{
+  if(!c || !c.isConnected) return;
+  const n=Math.max(1,(getComputedStyle(c).gridTemplateColumns||'').split(' ').filter(Boolean).length);
+  const cards=[...c.children].filter(el=>el.classList&&el.classList.contains('note-card'));
+  cards.forEach((el,i)=>{ el.style.gridColumn=String((i%n)+1); el.style.gridRowEnd=''; });
+  cards.forEach(el=>{
+    const mb=parseFloat(getComputedStyle(el).marginBottom)||0;
+    el.style.gridRowEnd='span '+Math.max(1,Math.ceil(el.offsetHeight+mb));
+  });
+};
+const bindNotesGrid=(c)=>{
+  if(!c) return;
+  c._relayout=()=>layoutNotesGrid(c);
+  if('ResizeObserver' in window){
+    if(c._ro) c._ro.disconnect();
+    let raf=0;
+    c._ro=new ResizeObserver(()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>layoutNotesGrid(c)); });
+    c._ro.observe(c);
+    [...c.children].forEach(el=>{ if(el.classList&&el.classList.contains('note-card')) c._ro.observe(el); });
+  }
+  layoutNotesGrid(c);
+  // Respaldo: tras cargar fuentes/estilos las alturas pueden cambiar
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>layoutNotesGrid(c));
+};
 const renderNotes=()=>{
   const c=document.getElementById('notesMasonry'); if(!c) return; c.innerHTML='';
   const statNotes=document.getElementById('statNotes'); if(statNotes) statNotes.textContent=state.notes.length;
@@ -2914,6 +3059,7 @@ const renderNotes=()=>{
     el.addEventListener('click',()=>{ if(_suppressNextCardClick) return; openNoteDetail(n.id); }); c.appendChild(el);
   });
   window._pinPopId=null;
+  bindNotesGrid(c);
 };
 // ══════════════════════════════════════════════
 // ICON PICKER (proyectos)
@@ -4221,6 +4367,10 @@ const renderSettingsView=()=>{
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h}"></div>`).join('')}</div></div></div>
+    <div class="settings-section"><h3>🖼️ Icono de la app</h3>
+      <div class="settings-sub" style="margin-top:0">Al elegir un icono también cambia el color de la app. El icono ya instalado en tu pantalla de inicio lo fija el sistema: para verlo cambiar ahí, desinstala la app y vuelve a instalarla.</div>
+      <div class="app-icon-grid" id="appIconGrid">${APP_ICONS.map(ic=>`<button type="button" class="app-icon-opt${(state.settings.appIcon||'nova')===ic.id?' active':''}" data-icon="${ic.id}"><img src="${ic.src}" alt=""><span>${ic.label}</span></button>`).join('')}</div>
+    </div>
     <div class="settings-section"><h3>🧩 Widgets del Dashboard</h3>
       <div class="settings-row" style="border-bottom:none;padding-bottom:14px"><div class="settings-sub" style="margin-top:0">Elige qué tarjetas se muestran en tu pantalla de Inicio. El orden no cambia, solo se ocultan las que apagues.</div></div>
       ${Object.keys(WIDGET_LABELS).map(key=>`
@@ -4239,7 +4389,7 @@ const renderSettingsView=()=>{
         <label class="toggle-sw"><input type="checkbox" id="notifToggle" ${(window.Notification && Notification.permission==='granted' && state.settings.notificationsEnabled)?'checked':''} ${(!window.Notification || Notification.permission==='denied')?'disabled':''}/><span class="slider"></span></label>
       </div>
     </div>
-    <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div></div></div>
+    <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div>${fb.enabled?'<div id="syncMeta" style="font-size:.72rem;color:var(--text3);margin-top:4px">'+syncMetaText()+'</div>':''}</div></div>
     <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div></div>
     <div class="settings-section"><h3>🤖 IA Asistente</h3>
       <div class="settings-row">
@@ -4289,6 +4439,11 @@ const renderSettingsView=()=>{
   });
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
+  document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
+    const b=e.target.closest('.app-icon-opt'); if(!b) return;
+    await applyAppIcon(b.dataset.icon,{applyColor:true});
+    save(); renderSettingsView(); toast('🖼️ Icono y color actualizados');
+  });
   document.querySelectorAll('.widgetToggle').forEach(cb=>cb.addEventListener('change',e=>{
     state.settings.dashboardWidgets[e.target.dataset.widget] = e.target.checked;
     save();
@@ -4307,7 +4462,7 @@ const renderSettingsView=()=>{
   document.getElementById('fbLoginBtn')?.addEventListener('click', async () => { await fb.login(); });
   document.getElementById('fbLogoutBtn')?.addEventListener('click', async () => { await fb.logout(); });
   document.getElementById('fbPushBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ await fb.pushAll(); toast('☁️ Datos subidos'); } });
-  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ await fb.pullAll(); renderSettingsView(); } });
+  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ if(hasUnsynced()) await fb.pushAll(); await fb.pullAll(); renderSettingsView(); } });
   document.getElementById('exportJson').addEventListener('click',()=>{
     const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(state,null,2)); a.download=`nova-hub-backup.json`; a.click(); toast('⬇️ JSON exportado');
   });
@@ -4591,7 +4746,7 @@ const renderNotesView=()=>{
   const c=document.getElementById('notesFullList');
   if(window._softRender) c.classList.add('no-enter');
   const sorted=sortNotes(state.notes);
-  if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px;column-span:all">No hay notas.</div>'; return; }
+  if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px;column-span:all;grid-column:1/-1">No hay notas.</div>'; return; }
   
   sorted.forEach(n=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
@@ -4624,6 +4779,7 @@ const renderNotesView=()=>{
   });
 
   window._pinPopId = null;
+  bindNotesGrid(c);
   enableDragReorder(c, { onDrop: (orderedIds) => {
     // Si se arrastran notas fijadas entre sí, se respeta el nuevo orden entre ellas
     const base = Date.now();
