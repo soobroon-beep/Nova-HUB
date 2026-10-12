@@ -1410,6 +1410,27 @@ html{-webkit-tap-highlight-color:transparent}
 .pd-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 16px;border-top:1px solid var(--border)}
 .pd-actions .btn{font-size:.8rem}
 
+/* Ventana de lectura de la nota (clic en una nota): nota completa + fijar / editar / eliminar */
+#noteDetailModal .modal{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:90vh;width:680px;max-width:94vw}
+.nd-head{display:flex;align-items:flex-start;gap:12px;padding:22px 22px 18px;background:var(--card-bg,var(--bg3));color:var(--card-fg,var(--text))}
+.nd-head-text{flex:1;min-width:0}
+.nd-title{font-size:1.3rem;font-weight:800;line-height:1.3;overflow-wrap:break-word;word-break:break-word}
+.nd-date{font-size:.74rem;margin-top:6px;color:var(--card-fg2,var(--text2))}
+.nd-body{padding:20px 22px;overflow-y:auto;flex:1;min-height:0;font-size:1rem;line-height:1.7;color:var(--text);white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;-webkit-overflow-scrolling:touch}
+.nd-body.empty{color:var(--text3);font-style:italic}
+.nd-tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 22px 16px}
+.nd-tags .note-tag{font-size:.75rem}
+.nd-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 22px 16px;border-top:1px solid var(--border)}
+.nd-actions .btn{font-size:.82rem}
+@media(max-width:700px){
+  .nd-head{padding:18px 16px 14px}
+  .nd-title{font-size:1.15rem}
+  .nd-body{padding:16px;font-size:.95rem}
+  .nd-tags{padding:0 16px 12px}
+  .nd-actions{padding:10px 16px 14px;flex-wrap:wrap}
+  .nd-actions .btn{flex:1;justify-content:center}
+}
+
 /* Selector de color: 10 colores predeterminados */
 .color-swatches{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
 .color-swatch{
@@ -1577,6 +1598,10 @@ html{-webkit-tap-highlight-color:transparent}
 
 <div class="modal-overlay" id="projDetailModal">
   <div class="modal" id="projDetailBox"></div>
+</div>
+
+<div class="modal-overlay" id="noteDetailModal">
+  <div class="modal" id="noteDetailBox"></div>
 </div>
 
 <div class="modal-overlay" id="habitModal">
@@ -2875,7 +2900,7 @@ const renderNotes=()=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'');
     el.setAttribute('style', cardToneStyle(n.color));
     el.innerHTML=`<div class="note-title">${n.title||'Sin título'}</div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
-    el.addEventListener('click',()=>{ const idx=state.notes.findIndex(x=>x.id===n.id); if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; save(); renderNotes(); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');} }); c.appendChild(el);
+    el.addEventListener('click',()=>{ if(_suppressNextCardClick) return; openNoteDetail(n.id); }); c.appendChild(el);
   });
 };
 // ══════════════════════════════════════════════
@@ -4465,6 +4490,76 @@ const openProjectDetail = (pid) => {
   openModal('projDetailModal');
 };
 
+// ══════════════════════════════════════════════
+// DETALLE DE LA NOTA — se abre al hacer clic; aquí se lee completa, se fija, edita o elimina
+// ══════════════════════════════════════════════
+let _openNoteId = null;
+const refreshNotesBehind = () => {
+  if (document.getElementById('notesFullList')) softRender(renderNotesView);   // vista Notas abierta
+  else if (typeof renderNotes === 'function') renderNotes();                    // widget del dashboard
+  updateStats();
+};
+const renderNoteDetail = () => {
+  const box = document.getElementById('noteDetailBox'); if (!box) return;
+  const n = state.notes.find(x => x.id == _openNoteId);
+  if (!n) { closeModal('noteDetailModal'); return; }
+  const prevScroll = box.querySelector('.nd-body')?.scrollTop || 0;
+  let dateTxt = '';
+  try { if (n.createdAt) dateTxt = new Date(n.createdAt).toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' }); } catch(e) {}
+
+  box.innerHTML = `
+    <div class="nd-head" style="${cardToneStyle(n.color)}">
+      <div class="nd-head-text">
+        <div class="nd-title">${n.pinned ? '📌 ' : ''}${_esc(n.title || 'Sin título')}</div>
+        ${dateTxt ? `<div class="nd-date">${_esc(dateTxt)}</div>` : ''}
+      </div>
+      <button class="pd-close" id="ndClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="nd-body${n.body ? '' : ' empty'}">${n.body ? _esc(n.body) : 'Esta nota no tiene contenido.'}</div>
+    ${n.tags?.length ? `<div class="nd-tags">${n.tags.map(t => `<span class="note-tag">${_esc(t)}</span>`).join('')}</div>` : ''}
+    <div class="nd-actions">
+      <button class="btn btn-ghost" id="ndPin">${n.pinned ? '📌 Desfijar' : '📌 Fijar'}</button>
+      <button class="btn btn-ghost" id="ndEdit">✏️ Editar</button>
+      <button class="btn btn-ghost" id="ndDelete" style="color:var(--red)">🗑 Eliminar</button>
+    </div>`;
+
+  const body = box.querySelector('.nd-body');
+  if (body) body.scrollTop = prevScroll;
+
+  box.querySelector('#ndClose').addEventListener('click', () => closeModal('noteDetailModal'));
+
+  box.querySelector('#ndPin').addEventListener('click', () => {
+    n.pinned = !n.pinned; window._pinPopId = n.pinned ? n.id : null; save();
+    renderNoteDetail(); refreshNotesBehind();
+    toast(n.pinned ? '📌 Nota fijada' : 'Nota desfijada');
+  });
+
+  box.querySelector('#ndEdit').addEventListener('click', () => {
+    closeModal('noteDetailModal');
+    document.getElementById('noteId').value = n.id;
+    document.getElementById('noteTitle').value = n.title || '';
+    document.getElementById('noteBody').value = n.body || '';
+    document.getElementById('noteColor').value = colorToHex(n.color);
+    document.getElementById('noteTags').value = n.tags ? n.tags.join(', ') : '';
+    document.getElementById('noteModalTitle').textContent = '✏️ Editar Nota';
+    openModal('noteModal');
+  });
+
+  box.querySelector('#ndDelete').addEventListener('click', () => {
+    if (!confirm('¿Eliminar esta nota?')) return;
+    closeModal('noteDetailModal');
+    addToTrash('note', n);
+    state.notes = state.notes.filter(x => x.id !== n.id); save();
+    refreshNotesBehind();
+    toast('🗑️ Movido a la papelera');
+  });
+};
+const openNoteDetail = (nid) => {
+  _openNoteId = nid;
+  renderNoteDetail();
+  openModal('noteDetailModal');
+};
+
 const renderNotesView=()=>{
   document.getElementById('content').style.padding='28px';
   
@@ -4501,12 +4596,11 @@ const renderNotesView=()=>{
       ${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}
     `;
     
-    // Anclar/Desanclar
+    // Clic en la nota: abrir la ventana de lectura (ahí se fija, edita o elimina)
     el.addEventListener('click',(e)=>{
       if(_suppressNextCardClick) return;
       if(e.target.closest('.del-note-btn') || e.target.closest('.edit-note-btn')) return;
-      const idx=state.notes.findIndex(x=>x.id===n.id);
-      if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; window._pinPopId=state.notes[idx].pinned?n.id:null; save(); softRender(renderNotesView); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');}
+      openNoteDetail(n.id);
     });
 
     // Editar nota
