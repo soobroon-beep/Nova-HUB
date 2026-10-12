@@ -2458,24 +2458,14 @@ const fb = {
     }
     const provider = new window.fbSDK.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    // Desde iPadOS 13, Safari en iPad se identifica como si fuera una Mac
-    // de escritorio (sin "iPad" en el user-agent), así que el chequeo viejo
-    // no detectaba iPads. Un iPad "disfrazado" de Mac sí tiene pantalla
-    // táctil (maxTouchPoints > 1); una Mac real no.
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    // Safari (incluyendo macOS) bloquea o rompe muy seguido el inicio de
-    // sesión por ventana emergente (popup) debido a su protección contra
-    // rastreo (ITP), así que para cualquier Safari usamos redirección, que
-    // es mucho más confiable.
-    const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+    // IMPORTANTE: el inicio de sesión por REDIRECCIÓN (signInWithRedirect) ya no es
+    // confiable cuando la app vive en otro dominio que el authDomain de Firebase
+    // (aquí: github.io vs firebaseapp.com). Safari, Chrome y Firefox modernos aíslan
+    // el almacenamiento de terceros, y al volver de Google la sesión se pierde: la
+    // app queda en "Sin sesión" aunque hayas iniciado bien. Por eso se usa siempre
+    // la ventana emergente (popup).
     try {
       setSyncStatus('syncing', 'Iniciando sesión…');
-      if (isStandalone || isIOS || isSafari) {
-        await window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider);
-        return;
-      }
       await window.fbSDK.signInWithPopup(window.fbSDK.auth, provider);
     } catch (e) {
       this._handleAuthError(e);
@@ -2488,10 +2478,12 @@ const fb = {
       const domain = window.location.hostname;
       showAuthSetupModal('⚙️ Dominio no autorizado',
         `Agrega "${domain}" en Firebase Console → Authentication → Authorized domains y recarga.`);
-    } else if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-      toast('⚠️ Popup bloqueado. Probando redirección…');
-      const provider = new window.fbSDK.GoogleAuthProvider();
-      window.fbSDK.signInWithRedirect(window.fbSDK.auth, provider).catch(e2 => this._handleAuthError(e2));
+    } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      setSyncStatus('error', 'Sin sesión');
+      toast('Inicio de sesión cancelado. Vuelve a intentarlo y completa el acceso con Google en la ventana que se abre.');
+    } else if (e.code === 'auth/popup-blocked') {
+      toast('⚠️ El navegador bloqueó la ventana. Permite ventanas emergentes para este sitio e inténtalo de nuevo.');
+      setSyncStatus('error', 'Sin sesión');
     } else if (e.code === 'auth/web-storage-unsupported' || e.code === 'auth/operation-not-supported-in-this-environment') {
       toast('⚠️ Activa las cookies y desactiva la Navegación Privada en Safari para poder iniciar sesión.');
     } else {
@@ -5092,7 +5084,10 @@ const renderCalendarView=()=>{
   ct.innerHTML=`
   <div id="calHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px"><span>📅</span> Calendario &amp; Horario</div>
-    <button class="btn btn-primary btn-sm" id="newEventBtnView">+ Evento</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" id="newBlockBtn">+ Bloque</button>
+      <button class="btn btn-primary btn-sm" id="newEventBtnView">+ Evento</button>
+    </div>
   </div>
 
   <div class="week-card" id="weekCard">
@@ -5103,14 +5098,6 @@ const renderCalendarView=()=>{
       <button class="week-nav-btn" id="weekNext">&#8250;</button>
     </div>
     <div class="week-grid-wrap" id="weekGridWrap"></div>
-  </div>
-
-  <div class="cal-section-card" id="scheduleCard">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:1.05rem;font-weight:700;display:flex;align-items:center;gap:8px"><span>⏳</span> Mi Horario de Hoy</div>
-      <button class="btn btn-ghost btn-sm" id="newBlockBtn" style="padding:4px 10px">+ Bloque</button>
-    </div>
-    <div id="scheduleList" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
 
   <div class="cal-section-card" id="routinesCard" style="padding-bottom:8px">
@@ -5140,7 +5127,6 @@ const renderCalendarView=()=>{
   // Render content - rAF garantiza que el DOM esté pintado antes de buscar elementos
   requestAnimationFrame(() => {
     _renderWeekStrip();
-    renderScheduleTimeline();
     renderRoutinesSections();
   });
 
