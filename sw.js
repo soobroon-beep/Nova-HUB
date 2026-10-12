@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v4';
+const CACHE_NAME = 'nova-hub-v5';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -20,7 +20,13 @@ const ASSETS = [
   './icon-512.png',
   './apple-touch-icon.png',
   './maskable-192.png',
-  './maskable-512.png'
+  './maskable-512.png',
+  './icon-neon-96.png',
+  './icon-neon-180.png',
+  './icon-neon-192.png',
+  './icon-mono-96.png',
+  './icon-mono-180.png',
+  './icon-mono-192.png'
 ];
 
 self.addEventListener('install', e => {
