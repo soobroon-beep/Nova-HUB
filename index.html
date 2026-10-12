@@ -2463,10 +2463,55 @@ const emptyTrash = () => {
 };
 
 // ══════════════════════════════════════════════
+// RED DE SEGURIDAD DE DATOS (conteos, copia local, diagnóstico)
+// ══════════════════════════════════════════════
+const DATA_KEYS = ['notes','events','projects','habits','routines','reminders','diary','trash'];
+// Los datos de ejemplo (ids 1-6 creados por seed()) no cuentan como datos reales.
+const _isSeedItem = x => !!x && Number(x.id) >= 1 && Number(x.id) <= 6 && /ejemplo|inicio|Bienvenido|Trabajo profundo|Leer 20/i.test(JSON.stringify(x));
+const realCounts = src => {
+  const c = {};
+  DATA_KEYS.forEach(k => { c[k] = Array.isArray(src?.[k]) ? src[k].filter(x => !_isSeedItem(x)).length : 0; });
+  return c;
+};
+const sumCounts = c => DATA_KEYS.filter(k => k !== 'trash').reduce((a, k) => a + (c[k] || 0), 0);
+const countsText = c => `${c.notes} notas · ${c.projects} proyectos · ${c.habits} hábitos · ${c.reminders} recordatorios · ${c.diary} entradas de diario`;
+
+// Copia local de seguridad: antes de que lo que llega de la nube reemplace datos
+// reales de este dispositivo con MENOS datos (p. ej. una nube que quedó vacía),
+// se guarda aquí lo que había. Solo se conserva la copia más completa.
+const SAFETY_KEY = 'nn_safety_copy';
+const getSafetyCopy = () => { try { return JSON.parse(localStorage.getItem(SAFETY_KEY) || 'null'); } catch (e) { return null; } };
+const saveSafetyCopy = (reason) => {
+  try {
+    const mine = realCounts(state);
+    if (sumCounts(mine) === 0) return;
+    const old = getSafetyCopy();
+    if (old && sumCounts(realCounts(old)) > sumCounts(mine)) return;   // ya hay una copia más completa
+    const snap = { at: Date.now(), reason };
+    DATA_KEYS.forEach(k => { snap[k] = state[k]; });
+    localStorage.setItem(SAFETY_KEY, JSON.stringify(snap));
+  } catch (e) { console.warn('[NOVA HUB] No se pudo guardar la copia local de seguridad:', e.message); }
+};
+const restoreSafetyCopy = () => {
+  const c = getSafetyCopy();
+  if (!c) { toast('No hay copia local guardada en este dispositivo.'); return; }
+  const when = new Date(c.at).toLocaleString('es-MX');
+  if (!confirm(`Restaurar la copia local del ${when}:\n${countsText(realCounts(c))}\n\nReemplaza lo que ves ahora y se sube a la nube. ¿Continuar?`)) return;
+  DATA_KEYS.forEach(k => { if (Array.isArray(c[k])) state[k] = c[k]; });
+  save();
+  const av = document.querySelector('.nav-item.active')?.dataset.view;
+  if (av) rerenderView(av);
+  updateStats && updateStats();
+  toast('♻️ Copia local restaurada');
+};
+
+// ══════════════════════════════════════════════
 // FIREBASE MODULE
 // ══════════════════════════════════════════════
 const fb = {
-  enabled: false, uid: null,
+  enabled: false, uid: null, email: '',
+  diag: null,       // último resultado de descarga (para el panel de diagnóstico)
+  _hold: false,     // la nube está vacía pero este dispositivo tiene datos: no se toca nada hasta que el usuario decida
   async init() {
     setSyncStatus('syncing', 'Comprobando sesión…');
   },
@@ -2521,6 +2566,9 @@ const fb = {
     this.enabled = false;
     this.syncReady = false;
     this.uid = null;
+    this.email = '';
+    this._hold = false;
+    this.diag = null;
     setSyncStatus('error', 'Sin sesión');
     toast('✅ Sesión cerrada');
     renderSettingsView();
@@ -2581,6 +2629,9 @@ const fb = {
 
   // ── Lee del SERVIDOR (no caché) y aplica al state ───────────────────────
   // Devuelve true solo si la nube CONFIRMÓ la respuesta (no caché local ni error).
+  _cloudEmptyButLocalHasData(data) {
+    return sumCounts(realCounts(data)) === 0 && sumCounts(realCounts(state)) > 0;
+  },
   async pullAll() {
     if (!this.enabled || !this.uid) return false;
     setSyncStatus('syncing', 'Descargando…');
@@ -2588,8 +2639,30 @@ const fb = {
       const ref = window.fbSDK.doc(window.fbSDK.db, 'users', this.uid);
       const snap = await window.fbSDK.getDoc(ref);
       const confirmed = !(snap.metadata && snap.metadata.fromCache);
+      this.diag = { at: Date.now(), exists: snap.exists(), fromCache: !confirmed, cloud: snap.exists() ? realCounts(snap.data()) : null, error: '' };
       if (snap.exists()) {
-        applyRemoteData(snap.data());
+        const data = snap.data();
+        // Nube sin datos reales pero este dispositivo SÍ los tiene: antes se borraban aquí
+        // al descargar. Ahora no se toca nada hasta que el usuario decida.
+        if (confirmed && this._cloudEmptyButLocalHasData(data)) {
+          const mine = realCounts(state);
+          saveSafetyCopy('la nube estaba vacía');
+          const upload = confirm(`La nube de tu cuenta${this.email ? ' (' + this.email + ')' : ''} está VACÍA, pero este dispositivo tiene datos:\n${countsText(mine)}\n\n¿Subirlos a la nube ahora?\n\nAceptar = subir lo de este dispositivo\nCancelar = no tocar nada por ahora`);
+          if (upload) {
+            this._hold = false;
+            this.syncReady = true;
+            await this.pushAll();
+            toast('☁️ Datos de este dispositivo subidos a la nube');
+            return true;
+          }
+          this._hold = true;
+          setSyncStatus('error', 'Nube vacía — no se sube ni se borra nada');
+          return false;
+        }
+        // Si lo que llega tiene MENOS datos que lo local, antes de reemplazar se guarda una copia.
+        const lc = realCounts(state), rc = realCounts(data);
+        if (!(_pushPending || _dirtyBeforeReady) && DATA_KEYS.some(k => k !== 'trash' && Array.isArray(data[k]) && rc[k] < lc[k])) saveSafetyCopy('antes de descargar de la nube');
+        applyRemoteData(data);
         if (confirmed) toast('☁️ Datos descargados de la nube');
       }
       if (!confirmed) {
@@ -2603,6 +2676,7 @@ const fb = {
       return true;
     } catch(e) {
       console.error('[NOVA HUB] pullAll error', e.code, e.message);
+      this.diag = { at: Date.now(), exists: null, fromCache: null, cloud: null, error: (e.code || e.message || 'desconocido') };
       setSyncStatus('error', 'Error al descargar — no se sube nada');
       toast('❌ Firestore: ' + (e.code || e.message));
       return false;
@@ -2623,6 +2697,8 @@ const fb = {
       const data = snap.data();
       // Si la descarga inicial falló, el primer dato confirmado por el servidor la completa.
       if (!this.syncReady) {
+        // Nube vacía y este dispositivo con datos (o decisión pendiente): lo resuelve pullAll con el usuario, aquí no se borra nada.
+        if (this._hold || this._cloudEmptyButLocalHasData(data)) return;
         applyRemoteData(data);
         this.syncReady = true;
         setSyncStatus('connected', 'En vivo ✓');
@@ -2663,7 +2739,7 @@ window.addEventListener('online', () => {
   if (fb.enabled) {
     setSyncStatus('syncing', 'Conectado — sincronizando…');
     toast('🌐 Conexión recuperada, sincronizando…');
-    if (!fb.syncReady) fb.pullAll().then(ok => { if (ok && _dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); } });
+    if (!fb.syncReady && !fb._hold) fb.pullAll().then(ok => { if (ok && _dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); } });
     else if (hasUnsynced()) schedulePush();
   }
 });
@@ -2682,6 +2758,27 @@ const syncMetaText = () => {
   return 'Última subida: ' + when + ' · Datos en la nube: ' + size + pend;
 };
 
+
+// Panel de diagnóstico (Ajustes → Nube): muestra qué hay en la nube y qué hay en este dispositivo.
+const fbDiagHtml = () => {
+  const d = fb.diag, mine = realCounts(state), copy = getSafetyCopy();
+  const row = (k, v) => `<div style="margin-top:4px"><span style="color:var(--text3)">${k}:</span> ${v}</div>`;
+  const uidShort = fb.uid ? fb.uid.slice(0, 6) + '…' + fb.uid.slice(-4) : '—';
+  let cloud = 'sin descargar todavía';
+  if (d) cloud = d.error ? `<b style="color:#f87171">error: ${_esc(d.error)}</b>`
+    : (!d.exists ? '<b>no existe documento para esta cuenta</b>' : (sumCounts(d.cloud) === 0 ? '<b style="color:#f87171">VACÍA</b>' : _esc(countsText(d.cloud))));
+  const src = d && !d.error ? (d.fromCache ? 'solo caché del dispositivo (sin confirmar)' : 'servidor (confirmado)') : '—';
+  const state_ = fb._hold ? 'en pausa: nube vacía, esperando tu decisión' : (fb.syncReady ? 'lista' : 'descarga sin confirmar — no se sube nada');
+  return `<details style="margin-top:14px;font-size:.75rem;color:var(--text2)"><summary style="cursor:pointer;font-weight:600">🔎 Diagnóstico de sincronización</summary>
+    <div style="margin-top:6px;line-height:1.5">
+      ${row('Cuenta', _esc(fb.email || '—') + ' · id ' + uidShort)}
+      ${row('Sincronización', state_)}
+      ${row('Última descarga', d ? new Date(d.at).toLocaleTimeString('es-MX') + ' · ' + src : '—')}
+      ${row('En la nube', cloud)}
+      ${row('En este dispositivo', _esc(countsText(mine)))}
+      ${copy ? row('Copia local de seguridad', new Date(copy.at).toLocaleString('es-MX') + ' · ' + _esc(countsText(realCounts(copy))) + ' <button class="btn btn-ghost btn-sm" id="restoreSafetyBtn" style="margin-left:6px">Restaurar</button>') : ''}
+    </div></details>`;
+};
 
 function setSyncStatus(st, label) {
   const dot = document.getElementById('syncDot'), lbl = document.getElementById('syncLabel');
@@ -2718,8 +2815,7 @@ function applyRemoteData(data) {
     let next = data[k];
     if (keepLocal && k !== 'trash' && hasIds(state[k]) && hasIds(next)) {
       // Los datos de ejemplo (ids 1-6 creados por seed()) nunca se mezclan con los reales de la nube.
-      const isSeed = x => Number(x.id) >= 1 && Number(x.id) <= 6 && /ejemplo|inicio|Bienvenido|Trabajo profundo|Leer 20/i.test(JSON.stringify(x));
-      const localReal = state[k].filter(x => !isSeed(x));
+      const localReal = state[k].filter(x => !_isSeedItem(x));
       const localIds = new Set(localReal.map(x => String(x.id)));
       next = [...localReal, ...next.filter(x => !localIds.has(String(x.id)) && !trashedIds.has(String(x.id)))];
     } else if (keepLocal && k === 'trash') {
@@ -2755,7 +2851,9 @@ const autoConnectFirebase = () => {
         if (user) {
           fb.enabled = true;
           fb.syncReady = false;   // no subir nada hasta terminar la primera descarga
+          fb._hold = false;
           fb.uid = user.uid;
+          fb.email = user.email || '';
           const hadUnsyncedChanges = hasUnsynced();   // cambios de una sesión anterior que no llegaron a la nube
           if (user.displayName) { state.settings.username = user.displayName; }
           state.settings.photoURL = user.photoURL || '';
@@ -2767,10 +2865,10 @@ const autoConnectFirebase = () => {
           fb.startRealtimeSync();
           if (pulled) {
             if (_dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
-          } else {
+          } else if (!fb._hold) {
             // Reintenta la descarga; mientras tanto NO se sube nada para no pisar tus datos de la nube.
             toast('⚠️ No pude descargar tus datos de la nube. Reintentando… (no se subirá nada hasta lograrlo)');
-            for (let i = 1; i <= 5 && !pulled && !fb.syncReady && fb.uid === user.uid; i++) {
+            for (let i = 1; i <= 5 && !pulled && !fb.syncReady && !fb._hold && fb.uid === user.uid; i++) {
               await new Promise(r => setTimeout(r, 4000 * i));
               pulled = await fb.pullAll();
             }
@@ -4434,7 +4532,7 @@ const renderSettingsView=()=>{
       </div>
     </div>
     <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div>${fb.enabled?'<div id="syncMeta" style="font-size:.72rem;color:var(--text3);margin-top:4px">'+syncMetaText()+'</div>':''}</div></div>
-    <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div></div>
+    <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div>${fb.enabled ? fbDiagHtml() : ''}</div>
     <div class="settings-section"><h3>🤖 IA Asistente</h3>
       <div class="settings-row">
         <div><div class="settings-label">Proveedor de IA</div><div class="settings-sub">Selecciona el servicio que quieres usar</div></div>
@@ -4505,8 +4603,17 @@ const renderSettingsView=()=>{
   });
   document.getElementById('fbLoginBtn')?.addEventListener('click', async () => { await fb.login(); });
   document.getElementById('fbLogoutBtn')?.addEventListener('click', async () => { await fb.logout(); });
-  document.getElementById('fbPushBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ await fb.pushAll(); toast('☁️ Datos subidos'); } });
-  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ if(fb.syncReady && hasUnsynced()) await fb.pushAll(); const ok = await fb.pullAll(); if(ok && _dirtyBeforeReady){ _dirtyBeforeReady=false; schedulePush(); } renderSettingsView(); } });
+  document.getElementById('restoreSafetyBtn')?.addEventListener('click', () => { restoreSafetyCopy(); renderSettingsView(); });
+  document.getElementById('fbPushBtn')?.addEventListener('click',async()=>{
+    if(!fb.enabled) return;
+    if(!fb.syncReady){
+      // Antes decía "Datos subidos" aunque pushAll() no hacía nada por no haber confirmado la descarga.
+      if(!confirm('Todavía no se pudo confirmar lo que hay en tu nube. Si subes ahora, lo de ESTE dispositivo reemplaza lo que haya en la nube.\n\n¿Subir de todos modos?')) return;
+      fb._hold = false; fb.syncReady = true;
+    }
+    await fb.pushAll(); toast('☁️ Datos subidos'); renderSettingsView();
+  });
+  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ fb._hold = false; if(fb.syncReady && hasUnsynced()) await fb.pushAll(); const ok = await fb.pullAll(); if(ok && _dirtyBeforeReady){ _dirtyBeforeReady=false; schedulePush(); } renderSettingsView(); } });
   document.getElementById('exportJson').addEventListener('click',()=>{
     const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(state,null,2)); a.download=`nova-hub-backup.json`; a.click(); toast('⬇️ JSON exportado');
   });
