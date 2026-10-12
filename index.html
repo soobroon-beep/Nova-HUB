@@ -1353,18 +1353,23 @@ html{-webkit-tap-highlight-color:transparent}
 .note-card.colored .edit-note-btn,.note-card.colored .del-note-btn{color:var(--card-fg)!important;opacity:.6!important}
 .proj-full-card.colored .proj-icon-badge{background:var(--card-chip);border-color:transparent;color:var(--card-fg)}
 
-/* Títulos resaltados: franja más oscura del mismo color de la nota / proyecto */
+/* Títulos resaltados: chip suave, más oscuro que la tarjeta, con un punto discreto */
 .note-card.colored .note-title,.proj-full-card.colored .proj-card-title,.pd-title{
   display:inline-block;max-width:100%;
-  background:var(--card-title-bg,rgba(0,0,0,.2));
-  padding:5px 12px;border-radius:9px;line-height:1.3;
-  box-shadow:inset 0 0 0 1px var(--card-chip,transparent);
+  background:var(--card-title-bg,rgba(0,0,0,.16));
+  padding:5px 12px 5px 10px;border-radius:10px;
+  font-weight:700;letter-spacing:.1px;line-height:1.3;
+}
+.note-card.colored .note-title::before,.proj-full-card.colored .proj-card-title::before,.pd-title::before{
+  content:'';display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:currentColor;opacity:.55;margin-right:8px;vertical-align:.12em;
 }
 .note-card.colored .note-title{margin-bottom:10px}
 .proj-full-card.colored .proj-card-desc{margin-top:8px}
 .pd-desc{margin-top:8px}
 @media(max-width:700px){
-  .note-card.colored .note-title,.proj-full-card.colored .proj-card-title{padding:3px 8px;border-radius:7px}
+  .note-card.colored .note-title,.proj-full-card.colored .proj-card-title{padding:3px 8px;border-radius:8px}
+  .note-card.colored .note-title::before,.proj-full-card.colored .proj-card-title::before{display:none}
   .note-card.colored .note-title{margin-bottom:8px}
 }
 
@@ -1404,6 +1409,25 @@ html{-webkit-tap-highlight-color:transparent}
 .pd-add input:focus{border-color:var(--accent)}
 .pd-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 16px;border-top:1px solid var(--border)}
 .pd-actions .btn{font-size:.8rem}
+
+/* Selector de color: 10 colores predeterminados */
+.color-swatches{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.color-swatch{
+  width:28px;height:28px;border-radius:50%;padding:0;cursor:pointer;flex-shrink:0;
+  background:var(--c);border:none;position:relative;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);
+  transition:transform .16s cubic-bezier(.34,1.56,.64,1),box-shadow .16s;
+}
+.color-swatch:hover{transform:scale(1.12)}
+.color-swatch:active{transform:scale(.92)}
+.color-swatch:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+.color-swatch.active{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--c)}
+.color-swatch.active::after{
+  content:'';position:absolute;left:50%;top:50%;width:6px;height:11px;
+  border:solid #fff;border-width:0 2px 2px 0;
+  transform:translate(-50%,-62%) rotate(45deg);
+  filter:drop-shadow(0 0 1px rgba(0,0,0,.55));
+}
 
 /* Hábitos en móvil: la fila de días cabe en pantalla y no se recorta */
 @media(max-width:600px){
@@ -1487,7 +1511,7 @@ html{-webkit-tap-highlight-color:transparent}
     <div class="field"><label>Contenido</label><textarea id="noteBody" rows="4" placeholder="Escribe aquí…"></textarea></div>
     <div class="field"><label>Etiquetas (separadas por coma)</label><input id="noteTags" placeholder="idea, trabajo, personal…"/></div>
     <div class="field"><label>Color</label>
-      <input id="noteColor" type="color" value="#7c6af7">
+      <input id="noteColor" type="hidden" value="#7c6af7" data-colorpick>
         
     </div>
     <div class="modal-btns">
@@ -1506,7 +1530,7 @@ html{-webkit-tap-highlight-color:transparent}
     <div class="field"><label>Hora inicio</label><input id="evStart" type="time"/></div>
     <div class="field"><label>Hora fin</label><input id="evEnd" type="time"/></div>
     <div class="field"><label>Color</label>
-      <input id="evColor" type="color" value="#7c6af7">
+      <input id="evColor" type="hidden" value="#7c6af7" data-colorpick>
         
     </div>
     <div class="modal-btns">
@@ -1540,7 +1564,7 @@ html{-webkit-tap-highlight-color:transparent}
         </select>
       </div>
       <div class="field" style="flex:1"><label>Color</label>
-        <input id="projColor" type="color" value="#7c6af7">
+        <input id="projColor" type="hidden" value="#7c6af7" data-colorpick>
           
       </div>
     </div>
@@ -1588,7 +1612,7 @@ html{-webkit-tap-highlight-color:transparent}
       </div>
     </div>
     <div class="field"><label>Color</label>
-      <input id="blockColor" type="color" value="#7c6af7">
+      <input id="blockColor" type="hidden" value="#7c6af7" data-colorpick>
         
     </div>
     <div class="modal-btns">
@@ -1608,7 +1632,7 @@ html{-webkit-tap-highlight-color:transparent}
     <div style="display:flex;gap:10px">
       <div class="field" style="flex:2"><label>Etiquetas</label><input id="remTags" placeholder="separadas por coma..."/></div>
       <div class="field" style="flex:1"><label>Color</label>
-        <input id="remColor" type="color" value="#7c6af7">
+        <input id="remColor" type="hidden" value="#7c6af7" data-colorpick>
           
       </div>
     </div>
@@ -2020,9 +2044,67 @@ const cardToneStyle = (color) => {
   const fg2  = dark ? 'rgba(22,19,11,.78)' : 'rgba(255,255,255,.86)';
   const chip = dark ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.22)';
   // Fondo del título: una versión más oscura del mismo color de la tarjeta
-  const titleBg = dark ? 'rgba(0,0,0,.17)' : 'rgba(0,0,0,.32)';
+  const titleBg = dark ? 'rgba(0,0,0,.11)' : 'rgba(0,0,0,.24)';
   return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip};--card-title-bg:${titleBg}`;
 };
+
+// ══════════════════════════════════════════════
+// PALETA DE COLORES PREDETERMINADOS
+// Todos los campos "Color" (notas, proyectos, eventos, recordatorios, horario)
+// usan estos 10 colores en lugar del selector libre del navegador. El input
+// real sigue existiendo (oculto) con el mismo id, así el resto del código
+// sigue leyendo y escribiendo `.value` sin cambios.
+// ══════════════════════════════════════════════
+const COLOR_PALETTE = [
+  { hex: '#dc143c', name: 'Carmesí' },
+  { hex: '#f5b700', name: 'Oro' },
+  { hex: '#00a878', name: 'Jade' },
+  { hex: '#1c1c24', name: 'Negro' },
+  { hex: '#7c6af7', name: 'Violeta' },
+  { hex: '#3b82f6', name: 'Azul' },
+  { hex: '#14b8c4', name: 'Turquesa' },
+  { hex: '#f97316', name: 'Naranja' },
+  { hex: '#ec4899', name: 'Rosa' },
+  { hex: '#64748b', name: 'Piedra' },
+];
+const DEFAULT_PICK_COLOR = '#7c6af7';
+const initColorPickers = () => {
+  const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  document.querySelectorAll('input[data-colorpick]').forEach(input => {
+    if (input._colorPickBound) return;
+    input._colorPickBound = true;
+    const getRaw = () => desc.get.call(input);
+    const setRaw = v => desc.set.call(input, v);
+    const wrap = document.createElement('div');
+    wrap.className = 'color-swatches';
+    wrap.setAttribute('role', 'radiogroup');
+    wrap.setAttribute('aria-label', 'Color');
+    input.insertAdjacentElement('afterend', wrap);
+
+    const render = () => {
+      const cur = String(getRaw() || '').toLowerCase();
+      // Un color guardado que no está en la paleta (de antes) se muestra como
+      // un círculo extra para no cambiarlo sin querer al editar.
+      const items = COLOR_PALETTE.some(c => c.hex === cur) ? COLOR_PALETTE : [...COLOR_PALETTE, { hex: cur, name: 'Color actual' }];
+      wrap.innerHTML = items.map(c =>
+        `<button type="button" class="color-swatch${c.hex === cur ? ' active' : ''}" data-hex="${c.hex}" style="--c:${c.hex}" role="radio" aria-checked="${c.hex === cur}" aria-label="${c.name}" title="${c.name}"></button>`
+      ).join('');
+    };
+
+    // Cualquier `input.value = ...` desde el resto del código normaliza a #rrggbb y repinta
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: getRaw,
+      set(v) { setRaw(v ? colorToHex(v) : DEFAULT_PICK_COLOR); render(); },
+    });
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('.color-swatch'); if (!b) return;
+      setRaw(b.dataset.hex); render();
+    });
+    input.value = getRaw() || DEFAULT_PICK_COLOR;
+  });
+};
+initColorPickers();
 
 // ══════════════════════════════════════════════
 // REORDENAMIENTO — long-press estilo Google Keep
