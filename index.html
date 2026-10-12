@@ -1340,6 +1340,58 @@ html{-webkit-tap-highlight-color:transparent}
   #sidebar:not(.open){-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TARJETAS A COLOR COMPLETO (estilo Google Keep)
+   El color elegido rellena TODA la nota / proyecto. El color del texto
+   (--card-fg) se calcula en JS según qué tan claro u oscuro sea el fondo.
+   ═══════════════════════════════════════════════════════════════ */
+.note-card.colored,.proj-full-card.colored{background:var(--card-bg);border-color:transparent;color:var(--card-fg)}
+.note-card.colored:hover,.proj-full-card.colored:hover{border-color:transparent;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.note-card.colored .note-title,.proj-full-card.colored .proj-card-title{color:var(--card-fg)}
+.note-card.colored .note-body,.proj-full-card.colored .proj-card-desc{color:var(--card-fg2)}
+.note-card.colored .note-tag{background:var(--card-chip);color:var(--card-fg);border-color:transparent}
+.note-card.colored .edit-note-btn,.note-card.colored .del-note-btn{color:var(--card-fg)!important;opacity:.6!important}
+.proj-full-card.colored .proj-icon-badge{background:var(--card-chip);border-color:transparent;color:var(--card-fg)}
+
+/* Tarjeta de proyecto compacta: icono + título + descripción + pendientes */
+.proj-full-card.compact{cursor:pointer;padding:18px}
+.proj-full-card.compact .proj-card-head{margin-bottom:12px}
+.proj-card-pending{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;padding:5px 10px;border-radius:20px;background:var(--card-chip,var(--bg3));color:var(--card-fg,var(--text2))}
+.proj-card-pending .material-symbols-outlined{font-size:1rem}
+@media(max-width:700px){
+  .proj-full-card.compact{padding:12px}
+  .proj-full-card.compact .proj-card-head{margin-bottom:10px}
+  .proj-card-pending{font-size:.7rem;padding:4px 8px}
+}
+
+/* Ventana de detalle del proyecto (aquí sí se ven las tareas) */
+#projDetailModal .modal{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh;width:520px}
+.pd-head{display:flex;align-items:flex-start;gap:12px;padding:20px 20px 18px;background:var(--card-bg,var(--bg3));color:var(--card-fg,var(--text))}
+.pd-head .proj-icon-badge{background:var(--card-chip,var(--bg3));border-color:transparent;color:var(--card-fg,var(--text))}
+.pd-head-text{flex:1;min-width:0}
+.pd-title{font-size:1.15rem;font-weight:800;overflow-wrap:break-word;word-break:break-word}
+.pd-desc{font-size:.85rem;margin-top:4px;color:var(--card-fg2,var(--text2));overflow-wrap:break-word;word-break:break-word}
+.pd-close{background:var(--card-chip,var(--bg3));border:none;color:var(--card-fg,var(--text));width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;flex-shrink:0}
+.pd-body{padding:16px 20px;overflow-y:auto;flex:1;min-height:0}
+.pd-progress-txt{display:flex;justify-content:space-between;font-size:.76rem;color:var(--text3);margin:8px 0 14px}
+.pd-task{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+.pd-task label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;flex:1;min-width:0;overflow-wrap:anywhere}
+.pd-task.done span{text-decoration:line-through;color:var(--text3)}
+.pd-task .pd-del{background:none;border:none;color:var(--red);cursor:pointer;opacity:.55;font-size:.85rem;padding:2px 4px}
+.pd-empty{font-size:.82rem;color:var(--text3);text-align:center;padding:14px 0}
+.pd-add{display:flex;gap:8px;margin-top:10px}
+.pd-add input{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:.88rem;outline:none}
+.pd-add input:focus{border-color:var(--accent)}
+.pd-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 16px;border-top:1px solid var(--border)}
+.pd-actions .btn{font-size:.8rem}
+
+/* Hábitos en móvil: la fila de días cabe en pantalla y no se recorta */
+@media(max-width:600px){
+  .habit-row{padding:14px 14px}
+  .habit-row-days{box-sizing:border-box;padding-right:0;gap:6px;justify-content:space-between}
+  .habit-row-days .hb-check{flex:0 1 34px;min-width:0}
+}
+
 </style>
 </head>
 <body>
@@ -1477,6 +1529,10 @@ html{-webkit-tap-highlight-color:transparent}
       <button class="btn btn-primary" id="projSave">Guardar</button>
     </div>
   </div>
+</div>
+
+<div class="modal-overlay" id="projDetailModal">
+  <div class="modal" id="projDetailBox"></div>
 </div>
 
 <div class="modal-overlay" id="habitModal">
@@ -1883,10 +1939,18 @@ const addXP = (amount) => {
 };
 
 let _pushDebounce = null;
+let _pushPending = false;   // hay cambios locales esperando subirse a la nube
+let _dirtyBeforeReady = false; // el usuario cambió algo mientras se hacía la primera descarga
 const schedulePush = () => {
   if (!fb.enabled) return;
+  // Hasta que termine la PRIMERA descarga de la nube no se sube nada: antes, un
+  // save() al iniciar sesión subía el estado viejo del celular en ~1 s (si la
+  // descarga tardaba más) y borraba en la nube lo creado en otro dispositivo,
+  // por ejemplo un hábito nuevo.
+  if (!fb.syncReady) { _dirtyBeforeReady = true; return; }
+  _pushPending = true;
   clearTimeout(_pushDebounce);
-  _pushDebounce = setTimeout(() => fb.pushAll(), 1000);
+  _pushDebounce = setTimeout(() => { _pushPending = false; fb.pushAll(); }, 1000);
 };
 
 const save = () => {
@@ -1902,6 +1966,40 @@ const save = () => {
   localStorage.setItem('nn_briefing_history', JSON.stringify((state.briefingHistory||[]).slice(-30)));
   localStorage.setItem('nn_settings',   JSON.stringify(state.settings));
   schedulePush();
+};
+
+// ══════════════════════════════════════════════
+// COLOR COMPLETO DE TARJETAS (estilo Google Keep)
+// Devuelve las variables CSS que rellenan toda la tarjeta con el color
+// elegido y escogen texto claro u oscuro según el contraste.
+// ══════════════════════════════════════════════
+const _esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const _resolveRgb = (col) => {
+  let rgb = [124, 106, 247];
+  try {
+    const probe = document.createElement('span');
+    probe.style.color = col || 'var(--accent)';
+    if (probe.style.color) {                       // si el color es inválido se ignora
+      probe.style.display = 'none';
+      document.body.appendChild(probe);
+      const m = getComputedStyle(probe).color.match(/[\d.]+/g);
+      document.body.removeChild(probe);
+      if (m && m.length >= 3) rgb = m.slice(0, 3).map(Number);
+    }
+  } catch (_) {}
+  return rgb;
+};
+// <input type="color"> solo acepta #rrggbb: convierte colores guardados como var(--accent), rgb(), etc.
+const colorToHex = (col) => '#' + _resolveRgb(col).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+const cardToneStyle = (color) => {
+  const rgb = _resolveRgb(color);
+  const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+  const dark = L > 0.179;                          // fondo claro → texto oscuro
+  const fg   = dark ? '#16130b' : '#ffffff';
+  const fg2  = dark ? 'rgba(22,19,11,.78)' : 'rgba(255,255,255,.86)';
+  const chip = dark ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.22)';
+  return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip}`;
 };
 
 // ══════════════════════════════════════════════
@@ -2406,8 +2504,22 @@ function rerenderView(v) {
 function applyRemoteData(data) {
   const keys = ['notes','events','projects','habits','routines','reminders','diary','trash'];
   let changed = false;
+  // Si ESTE dispositivo tiene cambios sin subir (p. ej. acabas de crear un hábito),
+  // no los pisamos con lo que llegó de la nube: se conserva lo local y solo se
+  // agregan los elementos nuevos que vienen de afuera.
+  const keepLocal = _pushPending || _dirtyBeforeReady;
+  const hasIds = arr => Array.isArray(arr) && arr.every(x => x && typeof x === 'object' && x.id !== undefined);
+  const trashedIds = new Set((state.trash || []).map(t => String(t?.data?.id)));
   keys.forEach(k => {
-    if (Array.isArray(data[k])) { state[k] = data[k]; localStorage.setItem('nn_' + k, JSON.stringify(data[k])); changed = true; }
+    if (!Array.isArray(data[k])) return;
+    let next = data[k];
+    if (keepLocal && k !== 'trash' && hasIds(state[k]) && hasIds(next)) {
+      const localIds = new Set(state[k].map(x => String(x.id)));
+      next = [...state[k], ...next.filter(x => !localIds.has(String(x.id)) && !trashedIds.has(String(x.id)))];
+    } else if (keepLocal && k === 'trash') {
+      return;   // la papelera local manda mientras haya cambios sin subir
+    }
+    state[k] = next; localStorage.setItem('nn_' + k, JSON.stringify(next)); changed = true;
   });
   if (data.settings && typeof data.settings === 'object') {
     // preservar API key local si la nube no la tiene
@@ -2434,12 +2546,16 @@ const autoConnectFirebase = () => {
       window.onAuthStateChanged(window.fbSDK.auth, async (user) => {
         if (user) {
           fb.enabled = true;
+          fb.syncReady = false;   // no subir nada hasta terminar la primera descarga
           fb.uid = user.uid;
           if (user.displayName) { state.settings.username = user.displayName; }
           state.settings.photoURL = user.photoURL || '';
           save(); applyUsername(state.settings.username); applyAvatarPhoto(state.settings.photoURL);
+          _dirtyBeforeReady = false;   // ese save() es solo de arranque (nombre/foto), no un cambio del usuario
           // 1) Descargar del servidor primero
           await fb.pullAll();
+          fb.syncReady = true;
+          if (_dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
           // 2) Luego arrancar listener tiempo real
           fb.startRealtimeSync();
           // 3) Si ya tenías notificaciones activadas, (re)registra el token
@@ -2451,6 +2567,7 @@ const autoConnectFirebase = () => {
         } else {
           fb.stopRealtimeSync();
           fb.enabled = false;
+          fb.syncReady = false;
           fb.uid = null;
           state.settings.photoURL = '';
           applyAvatarPhoto('');
@@ -2651,8 +2768,9 @@ const renderNotes=()=>{
   const sorted=[...state.notes].sort((a,b)=>b.pinned-a.pinned);
   if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px">No hay notas.</div>'; return; }
   sorted.forEach(n=>{
-    const el=document.createElement('div'); el.className='note-card'+(n.pinned?' pinned':'');
-    el.innerHTML=`<div class="note-color" style="background:${n.color}"></div><div class="note-title">${n.title||'Sin título'}</div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
+    const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'');
+    el.setAttribute('style', cardToneStyle(n.color));
+    el.innerHTML=`<div class="note-title">${n.title||'Sin título'}</div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
     el.addEventListener('click',()=>{ const idx=state.notes.findIndex(x=>x.id===n.id); if(idx>=0){state.notes[idx].pinned=!state.notes[idx].pinned; save(); renderNotes(); toast(state.notes[idx].pinned?'📌 Anclada':'Desanclada');} }); c.appendChild(el);
   });
 };
@@ -4096,79 +4214,32 @@ const renderProjectsView=()=>{
   }
 
   [...state.projects].sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0))||((a.order??0)-(b.order??0))).forEach(p=>{
-    const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
-    const el=document.createElement('div'); el.className='proj-full-card'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
-    el.style.borderTop = `4px solid ${p.color||'var(--accent)'}`;
+    // Tarjeta compacta: solo icono, título, descripción y conteo de pendientes.
+    // Las tareas se ven al abrir el proyecto (ventana de detalle).
+    const total = p.tasks?.length || 0;
+    const pending = (p.tasks||[]).filter(t=>!t.done).length;
+    const pendingTxt = !total ? 'Sin tareas' : (pending === 0 ? 'Todo listo' : `${pending} pendiente${pending===1?'':'s'}`);
+    const pendingIcon = !total ? 'playlist_add' : (pending === 0 ? 'task_alt' : 'checklist');
+    const el=document.createElement('div'); el.className='proj-full-card colored compact'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
+    el.setAttribute('style', cardToneStyle(p.color));
     el.innerHTML=`
       <div class="proj-card-head">
         <div class="proj-card-info">
-          <div class="proj-icon-badge" style="--c:${p.color||'var(--accent)'}"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
+          <div class="proj-icon-badge"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
           <div class="proj-card-info-text">
-            <div class="proj-card-title">${p.name}</div>
-            <div class="proj-card-desc">${p.desc||'Sin descripción'}</div>
+            <div class="proj-card-title">${_esc(p.name)}</div>
+            <div class="proj-card-desc">${_esc(p.desc||'Sin descripción')}</div>
           </div>
         </div>
-        <div class="proj-card-actions">
-          <button class="btn-ghost btn-sm btn" data-pid="${p.id}" id="addTaskBtn-${p.id}"><span class="btn-icon">＋</span><span class="btn-label">Tarea</span></button>
-          <button class="pin-proj-btn btn-ghost btn-sm btn" style="border:none;color:${p.pinned?'var(--accent2)':'var(--text2)'};opacity:${p.pinned?'1':'0.5'};font-size:1rem;padding:4px" data-pid="${p.id}" title="${p.pinned?'Desfijar':'Fijar'}">📌</button>
-          <button class="edit-proj-btn btn-ghost btn-sm btn" style="border:none;color:var(--text2);opacity:0.5;font-size:1rem;padding:4px" data-pid="${p.id}">✏️</button>
-          <button class="del-proj-btn btn-ghost btn-sm btn" style="border:none;color:var(--red);opacity:0.5;font-size:1rem;padding:4px" data-pid="${p.id}">🗑</button>
-        </div>
       </div>
-      <div class="progress-bar" style="margin-bottom:16px;height:6px;border-radius:6px;background:var(--bg3)"><div class="progress-fill" style="width:${pct}%;border-radius:6px;background:linear-gradient(90deg,${p.color||'var(--accent)'},var(--accent3))"></div></div>
-      <div class="tasks-list" id="tasks-${p.id}" style="display:flex;flex-direction:column;gap:6px">${
-        p.tasks?.map((t,i)=>`<div class="task-row" style="background:var(--bg3);border-radius:8px;padding:8px 12px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;flex:1"><input type="checkbox" ${t.done?'checked':''} class="task-check" data-pid="${p.id}" data-idx="${i}"/><span style="${t.done?'text-decoration:line-through;color:var(--text3)':''}">${t.title}</span></label><button class="del-task-btn" style="background:none;border:none;color:var(--red);cursor:pointer;opacity:0.5;font-size:0.8rem;padding:0 4px" data-pid="${p.id}" data-idx="${i}">✖</button></div>`).join('')||'<div style="font-size:.8rem;color:var(--text3);padding:8px 0;text-align:center">Sin tareas</div>'
-      }</div>
-      ${(p.tasks?.length||0) > 4 ? `<button class="tasks-more-btn" data-target="tasks-${p.id}" data-count="${p.tasks.length}">Ver todas (${p.tasks.length})</button>` : ''}
+      <div class="proj-card-pending"><span class="material-symbols-outlined">${pendingIcon}</span>${pendingTxt}</div>
     `;
+    el.addEventListener('click', () => {
+      if (_suppressNextCardClick) return;
+      openProjectDetail(p.id);
+    });
     list.appendChild(el);
   });
-
-  document.querySelectorAll('.tasks-more-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = document.getElementById(btn.dataset.target);
-      if (!target) return;
-      const isOpen = target.classList.toggle('expanded');
-      btn.textContent = isOpen ? 'Ver menos' : `Ver todas (${btn.dataset.count})`;
-    });
-  });
-
-  document.querySelectorAll('.edit-proj-btn').forEach(b=>b.addEventListener('click',e=>{
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p){
-      document.getElementById('projId').value = p.id;
-      document.getElementById('projName').value = p.name;
-      document.getElementById('projDesc').value = p.desc||'';
-      document.getElementById('projStatus').value = p.status;
-      document.getElementById('projColor').value = p.color || 'var(--accent)';
-      renderIconPicker(p.icon || 'rocket_launch');
-      document.getElementById('projModalTitle').textContent = '✏️ Editar Proyecto';
-      openModal('projModal');
-    }
-  }));
-
-  document.querySelectorAll('.pin-proj-btn').forEach(b=>b.addEventListener('click',e=>{
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p){ p.pinned=!p.pinned; window._pinPopId=p.pinned?p.id:null; save(); softRender(renderProjectsView); toast(p.pinned?'📌 Proyecto fijado':'Proyecto desfijado'); }
-  }));
-
-  document.querySelectorAll('.task-check').forEach(c=>c.addEventListener('change',e=>{
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks[e.target.dataset.idx].done=e.target.checked; save(); softRender(renderProjectsView); updateStats(); if(e.target.checked) addXP(10); }
-  }));
-  document.querySelectorAll('.del-task-btn').forEach(b=>b.addEventListener('click',e=>{
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p && confirm('¿Eliminar esta tarea?')) { const idx=Number(e.target.dataset.idx); const t=p.tasks[idx]; addToTrash('task', t, {projectId:p.id, idx}); p.tasks.splice(idx,1); save(); softRender(renderProjectsView); updateStats(); toast('🗑️ Movido a la papelera'); }
-  }));
-  document.querySelectorAll('[id^=addTaskBtn-]').forEach(b=>b.addEventListener('click',e=>{
-    const title=prompt('Nueva tarea:');
-    if(!title) return;
-    const p=state.projects.find(x=>x.id==e.target.dataset.pid);
-    if(p) { p.tasks=p.tasks||[]; p.tasks.push({title,done:false}); save(); softRender(renderProjectsView); updateStats(); }
-  }));
-  document.querySelectorAll('.del-proj-btn').forEach(b=>b.addEventListener('click',e=>{
-    if(confirm('¿Eliminar proyecto y sus tareas?')){ const pid=e.target.dataset.pid; e.target.closest('.proj-full-card')?.classList.add('card-exit'); setTimeout(()=>{ const p=state.projects.find(x=>x.id==pid); if(p) addToTrash('project', p); state.projects=state.projects.filter(x=>x.id!=pid); save(); softRender(renderProjectsView); updateStats(); toast('🗑️ Movido a la papelera'); }, 210); }
-  }));
 
   window._pinPopId = null;
   enableDragReorder(list, { onDrop: (orderedIds) => {
@@ -4178,6 +4249,116 @@ const renderProjectsView=()=>{
     });
     save(); toast('↕️ Orden actualizado');
   }});
+};
+
+// ══════════════════════════════════════════════
+// DETALLE DEL PROYECTO — aquí sí se ven las tareas
+// ══════════════════════════════════════════════
+let _openProjId = null;
+const refreshProjectsBehind = () => {
+  if (document.getElementById('projFullList')) softRender(renderProjectsView);   // vista Proyectos abierta
+  else if (typeof renderProjects === 'function') renderProjects();               // widget del dashboard
+  updateStats();
+};
+
+const renderProjectDetail = () => {
+  const box = document.getElementById('projDetailBox'); if (!box) return;
+  const p = state.projects.find(x => x.id == _openProjId);
+  if (!p) { closeModal('projDetailModal'); return; }
+  const prevScroll = box.querySelector('.pd-body')?.scrollTop || 0;
+  const tasks = p.tasks || [];
+  const done = tasks.filter(t => t.done).length;
+  const pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+
+  box.innerHTML = `
+    <div class="pd-head" style="${cardToneStyle(p.color)}">
+      <div class="proj-icon-badge"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
+      <div class="pd-head-text">
+        <div class="pd-title">${_esc(p.name)}</div>
+        <div class="pd-desc">${_esc(p.desc||'Sin descripción')}</div>
+      </div>
+      <button class="pd-close" id="pdClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="pd-body">
+      <div class="progress-bar" style="height:6px;border-radius:6px;background:var(--bg3)"><div class="progress-fill" style="width:${pct}%;border-radius:6px;background:linear-gradient(90deg,${p.color||'var(--accent)'},var(--accent3))"></div></div>
+      <div class="pd-progress-txt"><span>${tasks.length - done} pendiente${tasks.length - done === 1 ? '' : 's'} · ${done} hecha${done === 1 ? '' : 's'}</span><span>${pct}%</span></div>
+      <div id="pdTasks">${
+        tasks.length
+          ? tasks.map((t, i) => `<div class="pd-task${t.done ? ' done' : ''}"><label><input type="checkbox" class="pd-check" data-idx="${i}" ${t.done ? 'checked' : ''}/><span>${_esc(t.title)}</span></label><button class="pd-del" data-idx="${i}" title="Eliminar tarea">✖</button></div>`).join('')
+          : '<div class="pd-empty">Sin tareas todavía</div>'
+      }</div>
+      <div class="pd-add"><input id="pdNewTask" placeholder="Nueva tarea…" maxlength="200"/><button class="btn btn-primary" id="pdAddTask">＋</button></div>
+    </div>
+    <div class="pd-actions">
+      <button class="btn btn-ghost" id="pdPin">${p.pinned ? '📌 Desfijar' : '📌 Fijar'}</button>
+      <button class="btn btn-ghost" id="pdEdit">✏️ Editar</button>
+      <button class="btn btn-ghost" id="pdDelete" style="color:var(--red)">🗑 Eliminar</button>
+    </div>`;
+
+  const body = box.querySelector('.pd-body');
+  if (body) body.scrollTop = prevScroll;
+
+  box.querySelector('#pdClose').addEventListener('click', () => closeModal('projDetailModal'));
+
+  box.querySelectorAll('.pd-check').forEach(c => c.addEventListener('change', () => {
+    const t = p.tasks[Number(c.dataset.idx)]; if (!t) return;
+    t.done = c.checked; save();
+    renderProjectDetail(); refreshProjectsBehind();
+    if (c.checked) addXP(10);
+  }));
+
+  box.querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', () => {
+    const idx = Number(b.dataset.idx);
+    if (!confirm('¿Eliminar esta tarea?')) return;
+    const t = p.tasks[idx]; if (!t) return;
+    addToTrash('task', t, { projectId: p.id, idx });
+    p.tasks.splice(idx, 1); save();
+    renderProjectDetail(); refreshProjectsBehind();
+    toast('🗑️ Movido a la papelera');
+  }));
+
+  const addTask = () => {
+    const inp = box.querySelector('#pdNewTask');
+    const title = inp.value.trim(); if (!title) { inp.focus(); return; }
+    p.tasks = p.tasks || []; p.tasks.push({ title, done: false }); save();
+    renderProjectDetail(); refreshProjectsBehind();
+    box.querySelector('#pdNewTask')?.focus();
+  };
+  box.querySelector('#pdAddTask').addEventListener('click', addTask);
+  box.querySelector('#pdNewTask').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+
+  box.querySelector('#pdPin').addEventListener('click', () => {
+    p.pinned = !p.pinned; window._pinPopId = p.pinned ? p.id : null; save();
+    renderProjectDetail(); refreshProjectsBehind();
+    toast(p.pinned ? '📌 Proyecto fijado' : 'Proyecto desfijado');
+  });
+
+  box.querySelector('#pdEdit').addEventListener('click', () => {
+    closeModal('projDetailModal');
+    document.getElementById('projId').value = p.id;
+    document.getElementById('projName').value = p.name;
+    document.getElementById('projDesc').value = p.desc || '';
+    document.getElementById('projStatus').value = p.status;
+    document.getElementById('projColor').value = colorToHex(p.color);
+    renderIconPicker(p.icon || 'rocket_launch');
+    document.getElementById('projModalTitle').textContent = '✏️ Editar Proyecto';
+    openModal('projModal');
+  });
+
+  box.querySelector('#pdDelete').addEventListener('click', () => {
+    if (!confirm('¿Eliminar proyecto y sus tareas?')) return;
+    closeModal('projDetailModal');
+    addToTrash('project', p);
+    state.projects = state.projects.filter(x => x.id != p.id); save();
+    refreshProjectsBehind();
+    toast('🗑️ Movido a la papelera');
+  });
+};
+
+const openProjectDetail = (pid) => {
+  _openProjId = pid;
+  renderProjectDetail();
+  openModal('projDetailModal');
 };
 
 const renderNotesView=()=>{
@@ -4202,9 +4383,9 @@ const renderNotesView=()=>{
   if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px;column-span:all">No hay notas.</div>'; return; }
   
   sorted.forEach(n=>{
-    const el=document.createElement('div'); el.className='note-card'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
+    const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
+    el.setAttribute('style', cardToneStyle(n.color));
     el.innerHTML=`
-      <div class="note-color" style="background:${n.color}"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="note-title">${n.title||'Sin título'}</div>
         <div style="display:flex;">
@@ -4229,7 +4410,7 @@ const renderNotesView=()=>{
       document.getElementById('noteId').value = n.id;
       document.getElementById('noteTitle').value = n.title;
       document.getElementById('noteBody').value = n.body||'';
-      document.getElementById('noteColor').value = n.color || 'var(--accent)';
+      document.getElementById('noteColor').value = colorToHex(n.color);
       document.getElementById('noteTags').value = n.tags?n.tags.join(', '):'';
       document.getElementById('noteModalTitle').textContent = '✏️ Editar Nota';
       openModal('noteModal');
@@ -5141,7 +5322,9 @@ initNotifications();
   // deslizamiento táctil tras abrir una pestaña (parecía que "se traba").
   // Ahora lo que está fuera de pantalla espera SIN animación activa y arranca
   // la entrada un poco antes de llegar a la vista (rootMargin).
-  const ENTER_SEL = '.stat-card,.note-card,.proj-full-card,.diary-card,.reminder-card,.event-item,.habit-row,.settings-section';
+  // (.habit-row ya no está aquí: no tiene animación de entrada y, si el observador
+  //  no la "revelaba", un hábito recién creado en el móvil quedaba con opacity:0.)
+  const ENTER_SEL = '.stat-card,.note-card,.proj-full-card,.diary-card,.reminder-card,.event-item,.settings-section';
   const scrollObs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
