@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>NOVA HUB</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json" id="appManifest">
 
 <!-- PWA Icons -->
 <link rel="icon" type="image/png" sizes="32x32" href="icon-96.png">
@@ -16,6 +16,12 @@
 <link rel="apple-touch-icon" sizes="144x144" href="icon-144.png">
 <link rel="apple-touch-icon" sizes="128x128" href="icon-128.png">
 <meta name="theme-color" content="#0f0f1a"/>
+<script>
+/* Antes de que el navegador evalúe la app: usa el manifest del icono elegido, para que
+   "Instalar app" / "Agregar a pantalla de inicio" tome ese icono y no siempre el original. */
+try{var _s=JSON.parse(localStorage.getItem('nn_settings')||'{}'),_m={neon:['manifest-neon.json','#0b1a22'],mono:['manifest-mono.json','#111214']}[_s.appIcon];
+if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector('meta[name="theme-color"]').content=_m[1];}}catch(e){}
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NOVA HUB">
@@ -2893,9 +2899,9 @@ function applyAccent(hex) {
 // `accent` es opcional: si no se pone, el color se toma automáticamente del icono.
 // ══════════════════════════════════════════════
 const APP_ICONS = [
-  { id:'nova', label:'Original', src:'icon-192.png', favicon:'icon-96.png', touch:'apple-touch-icon.png', accent:'#7c6af7' },
-  { id:'neon',  label:'Neón',     src:'icon-neon-192.png', favicon:'icon-neon-96.png', touch:'icon-neon-180.png', accent:'#22d3ee' },
-  { id:'mono',  label:'Mono',     src:'icon-mono-192.png', favicon:'icon-mono-96.png', touch:'icon-mono-180.png', accent:'#64748b' },
+  { id:'nova', label:'Original', src:'icon-192.png', favicon:'icon-96.png', touch:'apple-touch-icon.png', accent:'#7c6af7', manifest:'manifest.json', theme:'#0f0f1a' },
+  { id:'neon',  label:'Neón',     src:'icon-neon-192.png', favicon:'icon-neon-96.png', touch:'icon-neon-180.png', accent:'#22d3ee', manifest:'manifest-neon.json', theme:'#0b1a22' },
+  { id:'mono',  label:'Mono',     src:'icon-mono-192.png', favicon:'icon-mono-96.png', touch:'icon-mono-180.png', accent:'#64748b', manifest:'manifest-mono.json', theme:'#111214' },
 ];
 const extractIconColor = (src) => new Promise(resolve => {
   const img = new Image();
@@ -2925,6 +2931,9 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
   document.querySelectorAll('link[rel="icon"]').forEach(l => { l.href = ic.favicon || ic.src; });
   document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(l => { l.href = ic.touch || ic.src; });
   const img = document.getElementById('appLogoImg'); if (img) { img.style.display = ''; img.src = ic.src; }
+  // Manifest y color de la barra del sistema según el icono (así la instalación usa el icono elegido)
+  const mf = document.getElementById('appManifest'); if (mf && ic.manifest) mf.setAttribute('href', ic.manifest);
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc && ic.theme) tc.setAttribute('content', ic.theme);
   if (applyColor) {
     const hex = ic.accent || await extractIconColor(ic.src);
     if (hex) applyAccent(hex);

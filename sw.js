@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v5';
+const CACHE_NAME = 'nova-hub-v6';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -21,12 +21,36 @@ const ASSETS = [
   './apple-touch-icon.png',
   './maskable-192.png',
   './maskable-512.png',
-  './icon-neon-96.png',
+  './icon-mono-128.png',
+  './icon-mono-144.png',
+  './icon-mono-152.png',
+  './icon-mono-167.png',
+  './icon-mono-180.png',
+  './icon-mono-192.png',
+  './icon-mono-256.png',
+  './icon-mono-384.png',
+  './icon-mono-48.png',
+  './icon-mono-512.png',
+  './icon-mono-72.png',
+  './icon-mono-96.png',
+  './icon-neon-128.png',
+  './icon-neon-144.png',
+  './icon-neon-152.png',
+  './icon-neon-167.png',
   './icon-neon-180.png',
   './icon-neon-192.png',
-  './icon-mono-96.png',
-  './icon-mono-180.png',
-  './icon-mono-192.png'
+  './icon-neon-256.png',
+  './icon-neon-384.png',
+  './icon-neon-48.png',
+  './icon-neon-512.png',
+  './icon-neon-72.png',
+  './icon-neon-96.png',
+  './maskable-mono-192.png',
+  './maskable-mono-512.png',
+  './maskable-neon-192.png',
+  './maskable-neon-512.png',
+  './manifest-neon.json',
+  './manifest-mono.json'
 ];
 
 self.addEventListener('install', e => {
