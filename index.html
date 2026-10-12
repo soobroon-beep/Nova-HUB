@@ -2519,6 +2519,7 @@ const fb = {
     await window.fbSDK.signOut(window.fbSDK.auth);
     this.stopRealtimeSync();
     this.enabled = false;
+    this.syncReady = false;
     this.uid = null;
     setSyncStatus('error', 'Sin sesión');
     toast('✅ Sesión cerrada');
@@ -2527,7 +2528,9 @@ const fb = {
 
   // ── Escribe UN SOLO documento con todo el state ─────────────────────────
   async pushAll() {
-    if (!this.enabled || !this.uid) return;
+    // Nunca se sube nada hasta haber CONFIRMADO la descarga de la nube: si la descarga
+    // falló y se subía el estado local (p. ej. los datos de ejemplo), se borraban tus datos reales.
+    if (!this.enabled || !this.uid || !this.syncReady) return;
     setSyncStatus('syncing', navigator.onLine ? 'Subiendo…' : '📴 Guardando offline…');
     const unsyncedAtStart = localStorage.getItem(UNSYNCED_KEY);
     try {
@@ -2577,23 +2580,32 @@ const fb = {
   },
 
   // ── Lee del SERVIDOR (no caché) y aplica al state ───────────────────────
+  // Devuelve true solo si la nube CONFIRMÓ la respuesta (no caché local ni error).
   async pullAll() {
-    if (!this.enabled || !this.uid) return;
+    if (!this.enabled || !this.uid) return false;
     setSyncStatus('syncing', 'Descargando…');
     try {
       const ref = window.fbSDK.doc(window.fbSDK.db, 'users', this.uid);
       const snap = await window.fbSDK.getDoc(ref);
+      const confirmed = !(snap.metadata && snap.metadata.fromCache);
       if (snap.exists()) {
         applyRemoteData(snap.data());
-        toast('☁️ Datos descargados de la nube');
-      } else {
-        await this.pushAll();
+        if (confirmed) toast('☁️ Datos descargados de la nube');
       }
+      if (!confirmed) {
+        // Respuesta solo de la caché del dispositivo: se muestra lo que haya, pero NO se sube nada.
+        setSyncStatus('syncing', '📴 Sin confirmar con la nube — no se subirá nada todavía');
+        return false;
+      }
+      this.syncReady = true;
+      if (!snap.exists()) await this.pushAll();   // cuenta nueva: primera subida
       setSyncStatus('connected', 'Sincronizado ✓');
+      return true;
     } catch(e) {
       console.error('[NOVA HUB] pullAll error', e.code, e.message);
-      setSyncStatus('error', 'Error al descargar');
+      setSyncStatus('error', 'Error al descargar — no se sube nada');
       toast('❌ Firestore: ' + (e.code || e.message));
+      return false;
     }
   },
 
@@ -2609,6 +2621,14 @@ const fb = {
       if (snap.metadata.fromCache) return;
       if (!snap.exists()) return;
       const data = snap.data();
+      // Si la descarga inicial falló, el primer dato confirmado por el servidor la completa.
+      if (!this.syncReady) {
+        applyRemoteData(data);
+        this.syncReady = true;
+        setSyncStatus('connected', 'En vivo ✓');
+        if (_dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
+        return;
+      }
       // Ignorar solo si lo escribió ESTE MISMO dispositivo hace menos de 8 s
       // (antes comparaba por _uid, que es igual en todos tus dispositivos
       // con la misma cuenta, así que bloqueaba también los cambios reales
@@ -2621,7 +2641,7 @@ const fb = {
       console.error('[NOVA HUB] onSnapshot error', err);
       setSyncStatus('error', 'Error de conexión');
     });
-    setSyncStatus('connected', 'En vivo ✓');
+    if (this.syncReady) setSyncStatus('connected', 'En vivo ✓');
   },
   stopRealtimeSync() {
     if (this._unsub) { this._unsub(); this._unsub = null; }
@@ -2643,7 +2663,8 @@ window.addEventListener('online', () => {
   if (fb.enabled) {
     setSyncStatus('syncing', 'Conectado — sincronizando…');
     toast('🌐 Conexión recuperada, sincronizando…');
-    if (hasUnsynced()) schedulePush();
+    if (!fb.syncReady) fb.pullAll().then(ok => { if (ok && _dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); } });
+    else if (hasUnsynced()) schedulePush();
   }
 });
 // Al minimizar o cerrar la app se sube YA lo pendiente (antes esperaba 1 s y podía perderse).
@@ -2696,8 +2717,11 @@ function applyRemoteData(data) {
     if (!Array.isArray(data[k])) return;
     let next = data[k];
     if (keepLocal && k !== 'trash' && hasIds(state[k]) && hasIds(next)) {
-      const localIds = new Set(state[k].map(x => String(x.id)));
-      next = [...state[k], ...next.filter(x => !localIds.has(String(x.id)) && !trashedIds.has(String(x.id)))];
+      // Los datos de ejemplo (ids 1-6 creados por seed()) nunca se mezclan con los reales de la nube.
+      const isSeed = x => Number(x.id) >= 1 && Number(x.id) <= 6 && /ejemplo|inicio|Bienvenido|Trabajo profundo|Leer 20/i.test(JSON.stringify(x));
+      const localReal = state[k].filter(x => !isSeed(x));
+      const localIds = new Set(localReal.map(x => String(x.id)));
+      next = [...localReal, ...next.filter(x => !localIds.has(String(x.id)) && !trashedIds.has(String(x.id)))];
     } else if (keepLocal && k === 'trash') {
       return;   // la papelera local manda mientras haya cambios sin subir
     }
@@ -2738,11 +2762,20 @@ const autoConnectFirebase = () => {
           save(); applyUsername(state.settings.username); applyAvatarPhoto(state.settings.photoURL);
           _dirtyBeforeReady = hadUnsyncedChanges;   // ese save() es solo de arranque; si quedaron cambios sin subir, se conservan y se suben
           // 1) Descargar del servidor primero
-          await fb.pullAll();
-          fb.syncReady = true;
-          if (_dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
-          // 2) Luego arrancar listener tiempo real
+          let pulled = await fb.pullAll();
+          // 2) Luego arrancar listener tiempo real (si la descarga falló, su primer dato confirmado la completa)
           fb.startRealtimeSync();
+          if (pulled) {
+            if (_dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
+          } else {
+            // Reintenta la descarga; mientras tanto NO se sube nada para no pisar tus datos de la nube.
+            toast('⚠️ No pude descargar tus datos de la nube. Reintentando… (no se subirá nada hasta lograrlo)');
+            for (let i = 1; i <= 5 && !pulled && !fb.syncReady && fb.uid === user.uid; i++) {
+              await new Promise(r => setTimeout(r, 4000 * i));
+              pulled = await fb.pullAll();
+            }
+            if (fb.syncReady && _dirtyBeforeReady) { _dirtyBeforeReady = false; schedulePush(); }
+          }
           // 3) Si ya tenías notificaciones activadas, (re)registra el token
           //    de ESTE dispositivo para que el push real lo encuentre.
           if (state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted' && window.fbSDK?.registerFcmToken) {
@@ -4473,7 +4506,7 @@ const renderSettingsView=()=>{
   document.getElementById('fbLoginBtn')?.addEventListener('click', async () => { await fb.login(); });
   document.getElementById('fbLogoutBtn')?.addEventListener('click', async () => { await fb.logout(); });
   document.getElementById('fbPushBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ await fb.pushAll(); toast('☁️ Datos subidos'); } });
-  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ if(hasUnsynced()) await fb.pushAll(); await fb.pullAll(); renderSettingsView(); } });
+  document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ if(fb.syncReady && hasUnsynced()) await fb.pushAll(); const ok = await fb.pullAll(); if(ok && _dirtyBeforeReady){ _dirtyBeforeReady=false; schedulePush(); } renderSettingsView(); } });
   document.getElementById('exportJson').addEventListener('click',()=>{
     const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(state,null,2)); a.download=`nova-hub-backup.json`; a.click(); toast('⬇️ JSON exportado');
   });
