@@ -173,6 +173,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:va
 .events-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
 .event-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border-left:3px solid var(--c,var(--accent));transition:var(--trans)}
 .event-item:hover{transform:translateX(3px)}
+.event-item.tattoo{border-left:4px solid #FFD700!important;background:linear-gradient(90deg,rgba(255,215,0,.16),var(--bg3) 70%);box-shadow:0 0 0 1px rgba(255,215,0,.28),0 2px 14px rgba(255,215,0,.12)}
+.event-item.tattoo .event-time{color:#FFD700;font-weight:800}
+.event-item.tattoo .event-name{font-weight:800}
+.cal-day.has-tattoo{box-shadow:inset 0 0 0 1.5px #FFD700;background:rgba(255,215,0,.12);font-weight:800}
+.cal-day.has-tattoo::after{background:#FFD700!important;width:6px;height:6px;box-shadow:0 0 6px #FFD700}
+.wg-block.tattoo{box-shadow:0 0 0 1.5px #FFD700,0 0 14px rgba(255,215,0,.35)}
+.focus-item.tattoo{border-left-color:#FFD700!important;background:linear-gradient(90deg,rgba(255,215,0,.14),transparent 75%)}
 .event-time{font-size:.75rem;color:var(--text3);white-space:nowrap;font-weight:600}
 .event-name{font-size:.85rem;font-weight:500;flex:1}
 
@@ -2619,6 +2626,36 @@ const gcal = {
       else this.status = this.events.length ? 'ok' : 'error';
     }
     this._busy = false; this.refreshUI();
+    try { this.tattooReminders(); } catch (e) { console.warn(e); }
+  },
+  // Citas del calendario de tatuajes (cualquier calendario de Google cuyo nombre contenga "tatuaj")
+  isTattoo(e) { return !!(e && e.google && /tatuaj/i.test(e.calName || '')); },
+  tattooFor(ds) { return this.events.filter(e => e.date === ds && this.isTattoo(e)).sort((a, b) => (a.start || '').localeCompare(b.start || '')); },
+  _tdone() { try { const o = JSON.parse(localStorage.getItem('nh_tt_done') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } },
+  isTattooDone(id) { return !!this._tdone()[id]; },
+  markTattooDone(id) { const o = this._tdone(); o[id] = localDateStr(new Date()); try { localStorage.setItem('nh_tt_done', JSON.stringify(o)); } catch (e) {} },
+  // Avisos de citas de tatuaje: resumen de la mañana, aviso la noche anterior, 60 y 15 min antes.
+  // Funcionan con la app abierta (o en segundo plano); cada aviso se manda una sola vez.
+  tattooReminders() {
+    if (!this.events.length) return;
+    let sent; try { sent = JSON.parse(localStorage.getItem('nh_tt_sent') || '{}'); } catch (e) { sent = {}; }
+    const now = new Date(), today = localDateStr(now), tom = new Date(now); tom.setDate(tom.getDate() + 1);
+    const tomorrow = localDateStr(tom), nowMin = now.getHours() * 60 + now.getMinutes();
+    Object.keys(sent).forEach(k => { if (sent[k] < localDateStr(new Date(now.getTime() - 3 * 864e5))) delete sent[k]; });
+    let dirty = false;
+    const fire = (key, title, body) => { if (sent[key]) return; sent[key] = today; dirty = true; localNotify(title, body); toast(title + ' ' + body); };
+    const names = list => list.map(e => (e.start ? e.start + ' ' : '') + e.title).join(' · ');
+    const tt = this.tattooFor(today).filter(e => !this.isTattooDone(e.id));
+    if (tt.length && nowMin >= 7 * 60) fire('am_' + today, '🖋 Hoy tienes ' + tt.length + (tt.length > 1 ? ' citas' : ' cita') + ' de tatuaje:', names(tt));
+    const tt2 = this.tattooFor(tomorrow);
+    if (tt2.length && nowMin >= 20 * 60) fire('pm_' + tomorrow, '🖋 Mañana tienes ' + tt2.length + (tt2.length > 1 ? ' citas' : ' cita') + ' de tatuaje:', names(tt2));
+    tt.forEach(e => {
+      if (!e.start) return;
+      const m = timeToMin(e.start) - nowMin;
+      if (m <= 60 && m > 15) fire('h_' + e.id, '🖋 Cita en ' + m + ' min:', e.start + ' ' + e.title);
+      else if (m <= 15 && m >= 0) fire('q_' + e.id, '🖋 Cita en ' + m + ' min:', e.start + ' ' + e.title);
+    });
+    if (dirty) { try { localStorage.setItem('nh_tt_sent', JSON.stringify(sent)); } catch (e) {} }
   },
   // Todos los eventos de un día (propios + Google), ordenados por hora
   forDate(ds) {
@@ -2645,14 +2682,24 @@ const gcal = {
     const btn = (id, txt) => `<button class="btn btn-primary btn-sm" id="${id}">${txt}</button>`;
     let body;
     if (this.status === 'off') {
-      body = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div style="font-size:.82rem;color:var(--text2)">Conecta tu Google Calendar para ver aquí tus eventos.</div>${btn('gcalConnectBtn', fb.enabled ? 'Conectar calendario' : 'Iniciar sesión con Google')}</div>`;
+      body = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div style="font-size:.82rem;color:var(--text2)">Conecta tu Google Calendar para ver aquí tus eventos y tus citas de tatuaje.</div>${btn('gcalConnectBtn', fb.enabled ? 'Conectar calendario' : 'Iniciar sesión con Google')}</div>`;
     } else {
-      const ds = localDateStr(new Date());
-      const evs = this.forDate(ds);
-      const rows = evs.map(ev => `<div style="display:flex;gap:10px;align-items:baseline;padding:3px 0"><span style="width:8px;height:8px;border-radius:50%;background:${esc(ev.color || 'var(--accent)')};flex-shrink:0;position:relative;top:-1px"></span><span style="font-size:.78rem;color:var(--text3);min-width:84px;font-variant-numeric:tabular-nums">${ev.start ? esc(ev.start) + (ev.end ? '–' + esc(ev.end) : '') : 'Todo el día'}</span><span style="font-size:.88rem;font-weight:600;color:var(--text);min-width:0;overflow-wrap:anywhere">${esc(ev.title)}</span></div>`).join('');
+      const ds = localDateStr(new Date()), tm = new Date(); tm.setDate(tm.getDate() + 1);
+      const evs = this.forDate(ds), tattoo = evs.filter(e => this.isTattoo(e)), others = evs.filter(e => !this.isTattoo(e));
+      const tomorrowTattoo = this.tattooFor(localDateStr(tm));
+      const timeOf = ev => ev.start ? esc(ev.start) + (ev.end ? '–' + esc(ev.end) : '') : 'Todo el día';
+      const tCard = (ev, extra) => `<div style="display:flex;gap:12px;align-items:center;padding:10px 12px;margin-bottom:6px;border-radius:12px;border:1px solid rgba(255,215,0,.45);background:linear-gradient(90deg,rgba(255,215,0,.18),rgba(255,215,0,.04));box-shadow:0 0 14px rgba(255,215,0,.12)"><span style="font-size:1.1rem">🖋</span><div style="min-width:0;flex:1"><div style="font-size:.95rem;font-weight:800;color:var(--text);overflow-wrap:anywhere">${esc(ev.title)}</div><div style="font-size:.78rem;color:#FFD700;font-weight:700;font-variant-numeric:tabular-nums">${extra || ''}${timeOf(ev)}</div></div></div>`;
+      const tHead = '<div style="font-size:.66rem;text-transform:uppercase;letter-spacing:1px;color:#FFD700;font-weight:800;margin:0 0 8px">🖋 Citas de tatuaje' + (tattoo.length ? ' · hoy (' + tattoo.length + ')' : '') + '</div>';
+      let tHTML = '';
+      if (tattoo.length || tomorrowTattoo.length) {
+        tHTML = tHead + (tattoo.length ? tattoo.map(e => tCard(e)).join('') : '<div style="font-size:.8rem;color:var(--text3);margin-bottom:6px">Sin citas hoy</div>')
+          + (tomorrowTattoo.length ? '<div style="font-size:.7rem;color:var(--text3);font-weight:700;margin:8px 0 6px">MAÑANA (' + tomorrowTattoo.length + ')</div>' + tomorrowTattoo.map(e => tCard(e)).join('') : '');
+      }
+      const rows = others.map(ev => `<div style="display:flex;gap:10px;align-items:baseline;padding:3px 0"><span style="width:8px;height:8px;border-radius:50%;background:${esc(ev.color || 'var(--accent)')};flex-shrink:0;position:relative;top:-1px"></span><span style="font-size:.78rem;color:var(--text3);min-width:84px;font-variant-numeric:tabular-nums">${timeOf(ev)}</span><span style="font-size:.88rem;font-weight:600;color:var(--text);min-width:0;overflow-wrap:anywhere">${esc(ev.title)}</span></div>`).join('');
       const warn = (this.status === 'expired' || this.status === 'no-scope') ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px"><div style="font-size:.76rem;color:var(--text3)">${esc(this.statusText())}</div>${btn('gcalConnectBtn', 'Reconectar')}</div>`
         : (this.status === 'api-disabled' || this.status === 'error') ? `<div style="font-size:.76rem;color:var(--red);margin-top:8px">${esc(this.statusText())}</div>` : '';
-      body = (rows || `<div style="font-size:.82rem;color:var(--text3)">${this.status === 'loading' ? 'Cargando tus eventos…' : 'Sin eventos hoy'}</div>`) + warn;
+      const empty = (!tHTML && !rows) ? `<div style="font-size:.82rem;color:var(--text3)">${this.status === 'loading' ? 'Cargando tus eventos…' : 'Sin eventos hoy'}</div>` : '';
+      body = tHTML + (tHTML && rows ? '<div style="height:6px"></div>' : '') + rows + empty + warn;
     }
     box.innerHTML = head + body;
     box.querySelector('#gcalConnectBtn')?.addEventListener('click', () => { fb.enabled ? gcal.connect() : fb.login(); });
@@ -3144,6 +3191,7 @@ const initNotifications = () => {
     });
     if (changed) { save(); if(document.getElementById('remindersList')) renderRemindersView(); }
     checkScheduleNotifications();
+    try { gcal.tattooReminders(); } catch (e) {}
   }, 30000);
 };
 
@@ -3271,11 +3319,12 @@ const renderCalendar = () => {
   if (!grid) return; grid.innerHTML='';
   const today=new Date();
   const eventDays=new Set([...state.events, ...gcal.events].filter(e=>{const ed=new Date(e.date+'T12:00:00'); return ed.getFullYear()===y && ed.getMonth()===m;}).map(e=>new Date(e.date+'T12:00:00').getDate()));
+  const tattooDays=new Set(gcal.events.filter(e=>gcal.isTattoo(e)&&e.date.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`).map(e=>Number(e.date.slice(8,10))));
   for(let i=0;i<first;i++){ const el=document.createElement('div'); el.className='cal-day other-month'; el.textContent=prevDays-first+1+i; grid.appendChild(el); }
   for(let i=1;i<=days;i++){
     const el=document.createElement('div'); el.className='cal-day';
     if(i===today.getDate()&&m===today.getMonth()&&y===today.getFullYear()) el.classList.add('today');
-    if(eventDays.has(i)) el.classList.add('has-event'); el.textContent=i; el.addEventListener('click',()=>selectDay(y,m,i)); grid.appendChild(el);
+    if(eventDays.has(i)) el.classList.add('has-event'); if(tattooDays.has(i)) el.classList.add('has-tattoo'); el.textContent=i; el.addEventListener('click',()=>selectDay(y,m,i)); grid.appendChild(el);
   }
   const remaining=42-first-days;
   for(let i=1;i<=remaining;i++){ const el=document.createElement('div'); el.className='cal-day other-month'; el.textContent=i; grid.appendChild(el); }
@@ -3302,7 +3351,7 @@ const selectDay=(y,m,d)=>{
 const renderTodayEvents=()=>{
   const todayEvs=gcal.forDate(localDateStr(new Date()));
   const list=document.getElementById('eventsList'); if(!list) return;
-  list.innerHTML = todayEvs.length ? todayEvs.map(ev=>{ const t=ev.google?String(ev.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):ev.title; return `<div class="event-item" style="--c:${ev.google?String(ev.color).replace(/[^#\w(),.% -]/g,''):(ev.color||'var(--accent)')}"><div class="event-time">${ev.start?ev.start+(ev.end?'–'+ev.end:''):'Todo el día'}</div><div class="event-name">${ev.google?'<span title="Google Calendar" style="opacity:.7">🗓 </span>':''}${t}</div></div>`; }).join('') : '<div style="text-align:center;color:var(--text3);font-size:.82rem;padding:12px">Sin eventos hoy</div>';
+  list.innerHTML = todayEvs.length ? todayEvs.map(ev=>{ const t=ev.google?String(ev.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):ev.title; return `<div class="event-item${gcal.isTattoo(ev)?' tattoo':''}" style="--c:${ev.google?String(ev.color).replace(/[^#\w(),.% -]/g,''):(ev.color||'var(--accent)')}"><div class="event-time">${ev.start?ev.start+(ev.end?'–'+ev.end:''):'Todo el día'}</div><div class="event-name">${gcal.isTattoo(ev)?'🖋 ':(ev.google?'<span title="Google Calendar" style="opacity:.7">🗓 </span>':'')}${t}</div></div>`; }).join('') : '<div style="text-align:center;color:var(--text3);font-size:.82rem;padding:12px">Sin eventos hoy</div>';
 };
 
 // ══════════════════════════════════════════════
@@ -3731,6 +3780,9 @@ const getFocusItems = () => {
       items.push({ kind:'reminder', id:r.id, title:r.title, overdue: d < now, sortTime: d.getTime(), timeLabel: d.toLocaleString('es-MX', d<now && d.toISOString().split('T')[0]!==todayStr ? {day:'numeric',month:'short'} : {hour:'2-digit',minute:'2-digit'}) });
     }
   });
+  gcal.tattooFor(localDateStr(now)).forEach(e => {
+    if (!gcal.isTattooDone(e.id)) items.push({ kind:'tattoo', id:e.id, title:e.title, overdue:false, sortTime:-1, timeLabel:e.start ? (e.end ? e.start+'–'+e.end : e.start) : 'Todo el día' });
+  });
   (state.habits||[]).forEach(h => {
     if (!(h.logs||[]).includes(todayStr)) items.push({ kind:'habit', id:h.id, title:h.name, overdue:false, sortTime:2, timeLabel:'Hoy' });
   });
@@ -3745,13 +3797,13 @@ const getFocusItems = () => {
 const renderFocusCard = () => {
   const container = document.getElementById('focusCard'); if(!container) return;
   const { items, overdueCount, moreTasks } = getFocusItems();
-  const kindMeta = { reminder:{icon:'⏰',label:'Recordatorio'}, habit:{icon:'🔥',label:'Hábito'}, task:{icon:'✅',label:'Tarea'} };
+  const kindMeta = { tattoo:{icon:'🖋',label:'Cita de tatuaje'}, reminder:{icon:'⏰',label:'Recordatorio'}, habit:{icon:'🔥',label:'Hábito'}, task:{icon:'✅',label:'Tarea'} };
   const countBadge = items.length
     ? `<div class="focus-count${overdueCount?' urgent':''}">${overdueCount ? overdueCount+' vencido'+(overdueCount>1?'s':'') : items.length+' pendiente'+(items.length>1?'s':'')}</div>`
     : `<div class="focus-count clear">Al día ✅</div>`;
   const listHTML = items.length ? items.map(it => {
     const m = kindMeta[it.kind];
-    return `<div class="focus-item${it.overdue?' overdue':''}" data-kind="${it.kind}" data-id="${it.id}" ${it.idx!=null?`data-idx="${it.idx}"`:''}>
+    return `<div class="focus-item${it.overdue?' overdue':''}${it.kind==='tattoo'?' tattoo':''}" data-kind="${it.kind}" data-id="${it.id}" ${it.idx!=null?`data-idx="${it.idx}"`:''}>
       <button class="focus-check" title="Marcar como hecho">✓</button>
       <div class="focus-body">
         <div class="focus-body-title">${it.title}</div>
@@ -3771,6 +3823,8 @@ const renderFocusCard = () => {
       } else if (kind==='habit') {
         const h = state.habits.find(x=>String(x.id)===id), todayStr = new Date().toISOString().split('T')[0];
         if (h) { h.logs = h.logs||[]; if(!h.logs.includes(todayStr)){ h.logs.push(todayStr); addXP(10); } }
+      } else if (kind==='tattoo') {
+        gcal.markTattooDone(id);
       } else if (kind==='reminder') {
         const r = state.reminders.find(x=>String(x.id)===id);
         if (r) r.notified = true;
@@ -5182,7 +5236,7 @@ function _renderWeekStrip() {
     const dow = d.getDay();
     const items = [];
     gcal.forDate(ds).forEach(e=>{
-      items.push({ kind:'event', id:e.id, title:(e.google?String(e.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):e.title), start:e.start||'', end:e.end||'', color:e.color||'var(--green)' });
+      items.push({ kind:'event', id:e.id, title:(e.google?String(e.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):e.title), start:e.start||'', end:e.end||'', color:gcal.isTattoo(e)?'#FFD700':(e.color||'var(--green)'), tattoo:gcal.isTattoo(e) });
     });
     (state.routines||[]).filter(b=>blockRepeatsToday(b, dow)).forEach(b=>{
       items.push({ kind:'block', id:b.id, title:b.title, start:b.start||'', end:b.end||'', color:b.color||'var(--accent)' });
@@ -5230,9 +5284,9 @@ function _renderWeekStrip() {
       const eMin = it.end ? timeToMin(it.end) : sMin+60;
       const top = (sMin-rangeStartMin)/60*WEEK_PX_PER_HOUR;
       const height = Math.max(22, (eMin-sMin)/60*WEEK_PX_PER_HOUR - 2);
-      blocks += `<div class="wg-block" data-kind="${it.kind}" data-id="${it.id}" data-ds="${day.ds}"
+      blocks += `<div class="wg-block${it.tattoo?' tattoo':''}" data-kind="${it.kind}" data-id="${it.id}" data-ds="${day.ds}"
         style="top:${top}px;height:${height}px;--c:${it.color}">
-        <div class="wg-bl-title">${it.title}</div>
+        <div class="wg-bl-title">${it.tattoo?'🖋 ':''}${it.title}</div>
         <div class="wg-bl-time">${it.start}${it.end?'–'+it.end:''}</div>
       </div>`;
     });
