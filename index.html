@@ -2506,6 +2506,160 @@ const restoreSafetyCopy = () => {
 };
 
 // ══════════════════════════════════════════════
+// GOOGLE CALENDAR (solo lectura)
+// Se conecta con la misma cuenta de Google del inicio de sesión. Los eventos se
+// guardan SOLO en este dispositivo (localStorage); no se suben a Firestore ni se
+// mezclan con tus eventos propios, así que nunca se duplican ni se borran.
+// El token de acceso de Google dura ~1 h: al vencer, basta un toque en
+// "Reconectar" (la ventana de Google se abre y se cierra sola si ya diste permiso).
+// ══════════════════════════════════════════════
+const gcal = {
+  SCOPE: 'https://www.googleapis.com/auth/calendar.readonly',
+  TOKEN_KEY: 'nh_gcal_token', CACHE_KEY: 'nh_gcal_events',
+  events: [], status: 'off', lastSync: 0, _busy: false, _timer: null,
+  // off = nunca conectado · loading · ok · expired = token vencido · api-disabled · no-scope · error
+  _read(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } },
+  _write(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} },
+  _token() {
+    const t = this._read(this.TOKEN_KEY);
+    return (t && t.token && t.exp > Date.now() && (!fb.uid || !t.uid || t.uid === fb.uid)) ? t.token : null;
+  },
+  captureFromResult(result) {
+    try {
+      const cred = window.fbSDK.GoogleAuthProvider.credentialFromResult(result);
+      if (!cred || !cred.accessToken) return false;
+      this._write(this.TOKEN_KEY, { token: cred.accessToken, exp: Date.now() + 55 * 60 * 1000, uid: result.user && result.user.uid });
+      this.status = 'loading';
+      // el uid de fb aún puede no estar listo: sincroniza en cuanto termine el arranque de sesión
+      setTimeout(() => this.sync(true), 300);
+      return true;
+    } catch (e) { console.warn('[NOVA HUB] No se obtuvo token de Calendar:', e.message); return false; }
+  },
+  init() {
+    const cache = this._read(this.CACHE_KEY);
+    if (cache && cache.uid === fb.uid && Array.isArray(cache.events)) { this.events = cache.events; this.lastSync = cache.at || 0; }
+    else { this.events = []; }
+    if (this._token()) this.sync(true);
+    else { this.status = (cache && cache.uid === fb.uid) ? 'expired' : (this._read(this.TOKEN_KEY) ? 'expired' : 'off'); this.refreshUI(); }
+    if (!this._timer) {
+      this._timer = setInterval(() => this.sync(false), 10 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - this.lastSync > 5 * 60 * 1000) this.sync(false); });
+    }
+  },
+  clear() {
+    try { localStorage.removeItem(this.TOKEN_KEY); localStorage.removeItem(this.CACHE_KEY); } catch (e) {}
+    this.events = []; this.status = 'off'; this.lastSync = 0; this.refreshUI();
+  },
+  // Abre la ventana de Google (hay que llamarlo directo desde un clic)
+  async connect() {
+    if (!window.fbSDK) { toast('⏳ Firebase aún está cargando, intenta de nuevo.'); return; }
+    const provider = new window.fbSDK.GoogleAuthProvider();
+    provider.addScope(this.SCOPE);
+    provider.setCustomParameters(fb.email ? { login_hint: fb.email } : { prompt: 'select_account' });
+    try {
+      const result = await window.fbSDK.signInWithPopup(window.fbSDK.auth, provider);
+      if (fb.uid && result.user && result.user.uid !== fb.uid) toast('⚠️ Elegiste otra cuenta de Google; se cambió la sesión.');
+      if (!this.captureFromResult(result)) toast('⚠️ Google no entregó permiso para el calendario.');
+    } catch (e) { fb._handleAuthError(e); }
+  },
+  disconnect() {
+    this.clear(); toast('📅 Calendario desconectado de este dispositivo');
+    if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
+  },
+  async _api(path, params, token) {
+    const url = new URL('https://www.googleapis.com/calendar/v3/' + path);
+    Object.entries(params || {}).forEach(([k, v]) => url.searchParams.append(k, v));
+    const r = await fetch(url.toString(), { headers: { Authorization: 'Bearer ' + token } });
+    if (r.ok) return r.json();
+    const j = await r.json().catch(() => ({}));
+    const reason = j.error && j.error.errors && j.error.errors[0] && j.error.errors[0].reason;
+    const err = new Error('gcal_http_' + r.status); err.http = r.status; err.reason = reason || ''; err.detail = (j.error && j.error.message) || '';
+    throw err;
+  },
+  _map(ev, cal) {
+    if (!ev || ev.status === 'cancelled' || !ev.start) return [];
+    const me = (ev.attendees || []).find(a => a.self);
+    if (me && me.responseStatus === 'declined') return [];
+    const base = { title: ev.summary || '(Sin título)', color: cal.backgroundColor || '#4285F4', google: true, calName: cal.summaryOverride || cal.summary || '', location: ev.location || '', link: ev.htmlLink || '' };
+    if (ev.start.date) {   // todo el día (el fin es exclusivo)
+      const out = []; const d = new Date(ev.start.date + 'T12:00:00'); const end = new Date((ev.end && ev.end.date || ev.start.date) + 'T12:00:00');
+      for (let i = 0; i < 31 && (d < end || i === 0); i++) { out.push({ ...base, id: 'g_' + ev.id + '_' + localDateStr(d), date: localDateStr(d), start: '', end: '' }); d.setDate(d.getDate() + 1); }
+      return out;
+    }
+    const s = new Date(ev.start.dateTime), e = new Date((ev.end && ev.end.dateTime) || ev.start.dateTime);
+    const hm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const same = localDateStr(s) === localDateStr(e);
+    return [{ ...base, id: 'g_' + ev.id, date: localDateStr(s), start: hm(s), end: same ? hm(e) : '23:59' }];
+  },
+  async sync(force) {
+    if (this._busy) return;
+    const token = this._token();
+    if (!token) { if (this.status !== 'off') this.status = 'expired'; this.refreshUI(); return; }
+    if (!force && Date.now() - this.lastSync < 60 * 1000) return;
+    this._busy = true; if (!this.events.length) this.status = 'loading'; this.refreshUI();
+    try {
+      const from = new Date(); from.setDate(from.getDate() - 31); from.setHours(0, 0, 0, 0);
+      const to = new Date(); to.setDate(to.getDate() + 90); to.setHours(23, 59, 59, 999);
+      const list = await this._api('users/me/calendarList', { minAccessRole: 'reader', maxResults: 50 }, token);
+      const cals = (list.items || []).filter(c => c.selected !== false).slice(0, 10);
+      const all = [];
+      for (const cal of (cals.length ? cals : [{ id: 'primary' }])) {
+        try {
+          const data = await this._api('calendars/' + encodeURIComponent(cal.id) + '/events', { timeMin: from.toISOString(), timeMax: to.toISOString(), singleEvents: 'true', orderBy: 'startTime', maxResults: 250 }, token);
+          (data.items || []).forEach(ev => all.push(...this._map(ev, cal)));
+        } catch (e) { if (e.http === 401 || e.http === 403) throw e; console.warn('[NOVA HUB] Calendario omitido:', cal.id, e.message); }
+      }
+      this.events = all; this.lastSync = Date.now(); this.status = 'ok';
+      this._write(this.CACHE_KEY, { uid: fb.uid, at: this.lastSync, events: all });
+    } catch (e) {
+      console.warn('[NOVA HUB] Google Calendar:', e.http, e.reason, e.detail);
+      if (e.http === 401) { try { localStorage.removeItem(this.TOKEN_KEY); } catch (_) {} this.status = 'expired'; }
+      else if (e.http === 403 && /accessNotConfigured|SERVICE_DISABLED/i.test(e.reason + ' ' + e.detail)) this.status = 'api-disabled';
+      else if (e.http === 403) { try { localStorage.removeItem(this.TOKEN_KEY); } catch (_) {} this.status = 'no-scope'; }
+      else this.status = this.events.length ? 'ok' : 'error';
+    }
+    this._busy = false; this.refreshUI();
+  },
+  // Todos los eventos de un día (propios + Google), ordenados por hora
+  forDate(ds) {
+    return [...(state.events || []).filter(e => e.date === ds), ...this.events.filter(e => e.date === ds)]
+      .sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+  },
+  statusText() {
+    return ({ off: 'No conectado', loading: 'Cargando eventos…', ok: 'Conectado' + (this.lastSync ? ' · actualizado ' + new Date(this.lastSync).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : ''),
+      expired: 'Permiso vencido: toca “Reconectar”', 'api-disabled': 'Falta activar Google Calendar API en el proyecto de Google Cloud', 'no-scope': 'Google no dio permiso al calendario: reconecta y marca la casilla del calendario', error: 'No se pudo leer el calendario' })[this.status] || '';
+  },
+  refreshUI() {
+    const view = document.querySelector('.nav-item.active')?.dataset.view;
+    if (view === 'dashboard' || !view) {
+      if (document.getElementById('calGrid')) renderCalendar(); else if (document.getElementById('eventsList')) renderTodayEvents();
+      this.paintAgenda();
+    } else if (view === 'calendar' && typeof renderCalendarView === 'function') renderCalendarView();
+    else if (view === 'settings' && typeof renderSettingsView === 'function' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) renderSettingsView();
+  },
+  // Agenda de hoy dentro de la tarjeta "Resumen del Día"
+  paintAgenda() {
+    const box = document.getElementById('gcalAgenda'); if (!box) return;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const head = '<div style="font-size:.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:8px">📅 Agenda de hoy · Google Calendar</div>';
+    const btn = (id, txt) => `<button class="btn btn-primary btn-sm" id="${id}">${txt}</button>`;
+    let body;
+    if (this.status === 'off') {
+      body = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div style="font-size:.82rem;color:var(--text2)">Conecta tu Google Calendar para ver aquí tus eventos.</div>${btn('gcalConnectBtn', fb.enabled ? 'Conectar calendario' : 'Iniciar sesión con Google')}</div>`;
+    } else {
+      const ds = localDateStr(new Date());
+      const evs = this.forDate(ds);
+      const rows = evs.map(ev => `<div style="display:flex;gap:10px;align-items:baseline;padding:3px 0"><span style="width:8px;height:8px;border-radius:50%;background:${esc(ev.color || 'var(--accent)')};flex-shrink:0;position:relative;top:-1px"></span><span style="font-size:.78rem;color:var(--text3);min-width:84px;font-variant-numeric:tabular-nums">${ev.start ? esc(ev.start) + (ev.end ? '–' + esc(ev.end) : '') : 'Todo el día'}</span><span style="font-size:.88rem;font-weight:600;color:var(--text);min-width:0;overflow-wrap:anywhere">${esc(ev.title)}</span></div>`).join('');
+      const warn = (this.status === 'expired' || this.status === 'no-scope') ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px"><div style="font-size:.76rem;color:var(--text3)">${esc(this.statusText())}</div>${btn('gcalConnectBtn', 'Reconectar')}</div>`
+        : (this.status === 'api-disabled' || this.status === 'error') ? `<div style="font-size:.76rem;color:var(--red);margin-top:8px">${esc(this.statusText())}</div>` : '';
+      body = (rows || `<div style="font-size:.82rem;color:var(--text3)">${this.status === 'loading' ? 'Cargando tus eventos…' : 'Sin eventos hoy'}</div>`) + warn;
+    }
+    box.innerHTML = head + body;
+    box.querySelector('#gcalConnectBtn')?.addEventListener('click', () => { fb.enabled ? gcal.connect() : fb.login(); });
+  }
+};
+
+// ══════════════════════════════════════════════
 // FIREBASE MODULE
 // ══════════════════════════════════════════════
 const fb = {
@@ -2528,6 +2682,8 @@ const fb = {
     }
     const provider = new window.fbSDK.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+    // Pide también permiso (solo lectura) para ver tus eventos de Google Calendar.
+    provider.addScope(gcal.SCOPE);
     // IMPORTANTE: el inicio de sesión por REDIRECCIÓN (signInWithRedirect) ya no es
     // confiable cuando la app vive en otro dominio que el authDomain de Firebase
     // (aquí: github.io vs firebaseapp.com). Safari, Chrome y Firefox modernos aíslan
@@ -2536,7 +2692,8 @@ const fb = {
     // la ventana emergente (popup).
     try {
       setSyncStatus('syncing', 'Iniciando sesión…');
-      await window.fbSDK.signInWithPopup(window.fbSDK.auth, provider);
+      const result = await window.fbSDK.signInWithPopup(window.fbSDK.auth, provider);
+      gcal.captureFromResult(result);
     } catch (e) {
       this._handleAuthError(e);
     }
@@ -2562,6 +2719,7 @@ const fb = {
   },
   async logout() {
     await window.fbSDK.signOut(window.fbSDK.auth);
+    gcal.clear();
     this.stopRealtimeSync();
     this.enabled = false;
     this.syncReady = false;
@@ -2854,6 +3012,7 @@ const autoConnectFirebase = () => {
           fb._hold = false;
           fb.uid = user.uid;
           fb.email = user.email || '';
+          gcal.init();   // eventos de Google Calendar (independiente de la sincronización de Firestore)
           const hadUnsyncedChanges = hasUnsynced();   // cambios de una sesión anterior que no llegaron a la nube
           if (user.displayName) { state.settings.username = user.displayName; }
           state.settings.photoURL = user.photoURL || '';
@@ -2885,6 +3044,7 @@ const autoConnectFirebase = () => {
           fb.enabled = false;
           fb.syncReady = false;
           fb.uid = null;
+          gcal.clear();
           state.settings.photoURL = '';
           applyAvatarPhoto('');
           setSyncStatus('error', 'Sin sesión');
@@ -3110,7 +3270,7 @@ const renderCalendar = () => {
   const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), prevDays=new Date(y,m,0).getDate(), grid=document.getElementById('calGrid');
   if (!grid) return; grid.innerHTML='';
   const today=new Date();
-  const eventDays=new Set(state.events.filter(e=>{const ed=new Date(e.date+'T12:00:00'); return ed.getFullYear()===y && ed.getMonth()===m;}).map(e=>new Date(e.date+'T12:00:00').getDate()));
+  const eventDays=new Set([...state.events, ...gcal.events].filter(e=>{const ed=new Date(e.date+'T12:00:00'); return ed.getFullYear()===y && ed.getMonth()===m;}).map(e=>new Date(e.date+'T12:00:00').getDate()));
   for(let i=0;i<first;i++){ const el=document.createElement('div'); el.className='cal-day other-month'; el.textContent=prevDays-first+1+i; grid.appendChild(el); }
   for(let i=1;i<=days;i++){
     const el=document.createElement('div'); el.className='cal-day';
@@ -3123,7 +3283,7 @@ const renderCalendar = () => {
 };
 const selectDay=(y,m,d)=>{
   const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  const dayEvents=state.events.filter(e=>e.date===dateStr).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const dayEvents=gcal.forDate(dateStr);
   const routines=(state.routines||[]).filter(r=>{
     const dow=new Date(dateStr+'T12:00:00').getDay();
     return !r.repeatDays || r.repeatDays.includes(dow);
@@ -3140,9 +3300,9 @@ const selectDay=(y,m,d)=>{
   alert(info);
 };
 const renderTodayEvents=()=>{
-  const today=new Date().toISOString().split('T')[0], todayEvs=state.events.filter(e=>e.date===today).sort((a,b)=>a.start.localeCompare(b.start));
+  const todayEvs=gcal.forDate(localDateStr(new Date()));
   const list=document.getElementById('eventsList'); if(!list) return;
-  list.innerHTML = todayEvs.length ? todayEvs.map(ev=>`<div class="event-item" style="--c:${ev.color||'var(--accent)'}"><div class="event-time">${ev.start}${ev.end?'–'+ev.end:''}</div><div class="event-name">${ev.title}</div></div>`).join('') : '<div style="text-align:center;color:var(--text3);font-size:.82rem;padding:12px">Sin eventos hoy</div>';
+  list.innerHTML = todayEvs.length ? todayEvs.map(ev=>{ const t=ev.google?String(ev.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):ev.title; return `<div class="event-item" style="--c:${ev.google?String(ev.color).replace(/[^#\w(),.% -]/g,''):(ev.color||'var(--accent)')}"><div class="event-time">${ev.start?ev.start+(ev.end?'–'+ev.end:''):'Todo el día'}</div><div class="event-name">${ev.google?'<span title="Google Calendar" style="opacity:.7">🗓 </span>':''}${t}</div></div>`; }).join('') : '<div style="text-align:center;color:var(--text3);font-size:.82rem;padding:12px">Sin eventos hoy</div>';
 };
 
 // ══════════════════════════════════════════════
@@ -4360,9 +4520,9 @@ const renderBriefingView = () => {
 // ── Widget mini en el dashboard ───────────────
 // ── Resumen del Día generado por IA: junta agenda + hábitos + actividad en 2 líneas ──
 const buildDaySummaryContext = () => {
-  const now = new Date(), todayStr = now.toISOString().split('T')[0], dow = now.getDay();
+  const now = new Date(), todayStr = localDateStr(now), dow = now.getDay();
   const schedule = (state.routines||[]).filter(b => blockRepeatsToday(b, dow)).sort((a,b)=>a.start.localeCompare(b.start)).map(b => `${b.start}-${b.end} ${b.title}`);
-  const events = (state.events||[]).filter(e => e.date === todayStr).map(e => `${e.start||''} ${e.title}`.trim());
+  const events = gcal.forDate(todayStr).map(e => `${e.start||'todo el día'} ${e.title}`.trim());
   const reminders = (state.reminders||[]).filter(r => { const d=new Date(r.datetime); return d.toISOString().split('T')[0]===todayStr || (!r.notified && d < now); }).map(r => r.title);
   const habitsTotal = (state.habits||[]).length;
   const habitsDone = (state.habits||[]).filter(h => (h.logs||[]).includes(todayStr)).length;
@@ -4383,6 +4543,15 @@ const generateDaySummary = async () => {
 };
 
 const renderDaySummary = async (container) => {
+  if (!container) return;
+  await renderDaySummaryCore(container);
+  const agenda = document.createElement('div');
+  agenda.id = 'gcalAgenda';
+  agenda.style.cssText = 'border-top:1px solid rgba(124,106,247,.2);padding:12px 20px 14px';
+  container.appendChild(agenda);
+  gcal.paintAgenda();
+};
+const renderDaySummaryCore = async (container) => {
   if (!container) return;
   const apiKey = state.settings.aiApiKey || '';
   const todayStr = new Date().toISOString().split('T')[0];
@@ -4533,6 +4702,7 @@ const renderSettingsView=()=>{
     </div>
     <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div>${fb.enabled?'<div id="syncMeta" style="font-size:.72rem;color:var(--text3);margin-top:4px">'+syncMetaText()+'</div>':''}</div></div>
     <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div>${fb.enabled ? fbDiagHtml() : ''}</div>
+    <div class="settings-section"><h3>📅 Google Calendar</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${gcal.status==='ok'?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${gcal.statusText()}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">Tus eventos de Google Calendar (solo lectura) aparecen en el Dashboard, el resumen del día y el Calendario. No se modifica nada en tu Google Calendar.</div></div></div><div style="display:flex;gap:10px;margin-top:14px">${fb.enabled ? `<button class="btn btn-primary btn-sm" id="gcalConnectBtn">${gcal.status==='off'?'Conectar calendario':'Reconectar'}</button>${gcal.status==='off'?'':'<button class="btn btn-ghost btn-sm" id="gcalSyncBtn">↻ Actualizar</button><button class="btn btn-ghost btn-sm" id="gcalOffBtn">Desconectar</button>'}` : '<button class="btn btn-primary btn-sm" id="fbLoginBtn2">🔑 Iniciar sesión con Google</button>'}</div></div>
     <div class="settings-section"><h3>🤖 IA Asistente</h3>
       <div class="settings-row">
         <div><div class="settings-label">Proveedor de IA</div><div class="settings-sub">Selecciona el servicio que quieres usar</div></div>
@@ -4603,6 +4773,10 @@ const renderSettingsView=()=>{
   });
   document.getElementById('fbLoginBtn')?.addEventListener('click', async () => { await fb.login(); });
   document.getElementById('fbLogoutBtn')?.addEventListener('click', async () => { await fb.logout(); });
+  document.getElementById('fbLoginBtn2')?.addEventListener('click', async () => { await fb.login(); });
+  document.getElementById('gcalConnectBtn')?.addEventListener('click', () => gcal.connect());
+  document.getElementById('gcalSyncBtn')?.addEventListener('click', () => { toast('📅 Actualizando…'); gcal.sync(true); });
+  document.getElementById('gcalOffBtn')?.addEventListener('click', () => gcal.disconnect());
   document.getElementById('restoreSafetyBtn')?.addEventListener('click', () => { restoreSafetyCopy(); renderSettingsView(); });
   document.getElementById('fbPushBtn')?.addEventListener('click',async()=>{
     if(!fb.enabled) return;
@@ -5007,8 +5181,8 @@ function _renderWeekStrip() {
     const ds  = localDateStr(d);
     const dow = d.getDay();
     const items = [];
-    state.events.filter(e=>e.date===ds).forEach(e=>{
-      items.push({ kind:'event', id:e.id, title:e.title, start:e.start||'', end:e.end||'', color:e.color||'var(--green)' });
+    gcal.forDate(ds).forEach(e=>{
+      items.push({ kind:'event', id:e.id, title:(e.google?String(e.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):e.title), start:e.start||'', end:e.end||'', color:e.color||'var(--green)' });
     });
     (state.routines||[]).filter(b=>blockRepeatsToday(b, dow)).forEach(b=>{
       items.push({ kind:'block', id:b.id, title:b.title, start:b.start||'', end:b.end||'', color:b.color||'var(--accent)' });
