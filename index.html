@@ -5490,7 +5490,7 @@ const ROUTINE_SLOTS = [
     label: 'Rutina Matutina',
     emoji: '🌅',
     desc: 'Empieza el día con energía',
-    startH: 5, endH: 12,
+    startH: 0, endH: 12, range: '08:00 – 12:00',
     canvasId: 'canvasMorn',
     draw: (c) => {
       const ctx = c.getContext('2d');
@@ -5531,7 +5531,7 @@ const ROUTINE_SLOTS = [
     label: 'Rutina de la Tarde',
     emoji: '☀️',
     desc: 'Mantén el momentum del día',
-    startH: 12, endH: 19,
+    startH: 12, endH: 19, range: '12:00 – 19:00',
     canvasId: 'canvasAftern',
     draw: (c) => {
       const ctx = c.getContext('2d');
@@ -5560,7 +5560,7 @@ const ROUTINE_SLOTS = [
     label: 'Rutina Nocturna',
     emoji: '🌙',
     desc: 'Cierra el día y descansa',
-    startH: 19, endH: 24,
+    startH: 19, endH: 24, range: '19:00 – 23:59',
     canvasId: 'canvasNight',
     draw: (c) => {
       const ctx = c.getContext('2d');
@@ -5598,21 +5598,26 @@ const renderRoutinesSections = () => {
   if(!wrap) return;
 
   const dow = new Date().getDay();
-  const todayBlocks = [...(state.routines||[])].filter(b=>blockRepeatsToday(b, dow)).sort((a,b)=>a.start.localeCompare(b.start));
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Todo lo de HOY con hora: bloques de horario + eventos (propios y de Google Calendar), cada uno en su turno según su hora de inicio
+  const items = [
+    ...(state.routines||[]).filter(b=>blockRepeatsToday(b, dow)).map(b => ({ kind:'block', title:esc(b.title), start:b.start, end:b.end, color:b.color||'var(--accent)', meta:scheduleDaysLabel(b) })),
+    ...gcal.forDate(localDateStr(new Date())).filter(e => e.start).map(e => ({ kind:'event', title:(gcal.isTattoo(e)?'🖋 ':'') + esc(e.title), start:e.start, end:e.end, color:gcal.isTattoo(e)?'#FFD700':(e.color||'var(--accent)'), meta:e.google ? 'Google Calendar' : 'Evento', tattoo:gcal.isTattoo(e) }))
+  ].filter(it => it.start).sort((a,b)=>a.start.localeCompare(b.start));
 
   let html = '';
   ROUTINE_SLOTS.forEach(slot => {
-    const blocks = todayBlocks.filter(b => {
+    const blocks = items.filter(b => {
       const h = Math.floor(timeToMin(b.start)/60);
       return h >= slot.startH && h < slot.endH;
     });
     const blocksHTML = blocks.length
       ? blocks.map(b => `
-          <div class="routine-block-item">
-            <div class="routine-block-dot" style="background:${b.color||'var(--accent)'}"></div>
+          <div class="routine-block-item"${b.tattoo?' style="border-color:rgba(255,215,0,.45);background:linear-gradient(90deg,rgba(255,215,0,.12),transparent 80%)"':''}>
+            <div class="routine-block-dot" style="background:${esc(b.color)}"></div>
             <div class="routine-block-info">
               <div class="routine-block-name">${b.title}</div>
-              <div class="routine-block-time">${b.start} – ${b.end} &nbsp;·&nbsp; ${scheduleDaysLabel(b)}</div>
+              <div class="routine-block-time">${esc(b.start)}${b.end?' – '+esc(b.end):''} &nbsp;·&nbsp; ${esc(b.meta)}</div>
             </div>
           </div>`).join('')
       : `<div class="routine-empty"><span>✦</span> Sin bloques en este turno</div>`;
@@ -5624,7 +5629,7 @@ const renderRoutinesSections = () => {
           <div class="routine-hero-overlay"></div>
           <div class="routine-hero-text">
             <h3>${slot.label}</h3>
-            <p>${slot.desc}</p>
+            <p>${slot.range} &nbsp;·&nbsp; ${blocks.length ? blocks.length + (blocks.length>1?' actividades':' actividad') : 'libre'}</p>
           </div>
           <div class="routine-hero-icon">${slot.emoji}</div>
         </div>
