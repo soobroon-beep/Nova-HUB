@@ -1584,6 +1584,7 @@ html{-webkit-tap-highlight-color:transparent}
         
     </div>
     <div class="modal-btns">
+      <button class="btn btn-ghost" id="evDelete" style="display:none;color:var(--red);margin-right:auto">🗑 Eliminar</button>
       <button class="btn btn-ghost" id="evCancel">Cancelar</button>
       <button class="btn btn-primary" id="evSave">Guardar</button>
     </div>
@@ -1670,6 +1671,7 @@ html{-webkit-tap-highlight-color:transparent}
         
     </div>
     <div class="modal-btns">
+      <button class="btn btn-ghost" id="blockDelete" style="display:none;color:var(--red);margin-right:auto">🗑 Eliminar</button>
       <button class="btn btn-ghost" onclick="closeModal('blockModal')">Cancelar</button>
       <button class="btn btn-primary" id="blockSave">Guardar</button>
     </div>
@@ -2616,8 +2618,8 @@ const gcal = {
           (data.items || []).forEach(ev => all.push(...this._map(ev, cal)));
         } catch (e) { if (e.http === 401 || e.http === 403) throw e; console.warn('[NOVA HUB] Calendario omitido:', cal.id, e.message); }
       }
-      this.events = all; this.lastSync = Date.now(); this.status = 'ok';
-      this._write(this.CACHE_KEY, { uid: fb.uid, at: this.lastSync, events: all });
+      const hid = this._hidden(); this.events = all.filter(e => !hid.has(e.id)); this.lastSync = Date.now(); this.status = 'ok';
+      this._write(this.CACHE_KEY, { uid: fb.uid, at: this.lastSync, events: this.events });
     } catch (e) {
       console.warn('[NOVA HUB] Google Calendar:', e.http, e.reason, e.detail);
       if (e.http === 401) { try { localStorage.removeItem(this.TOKEN_KEY); } catch (_) {} this.status = 'expired'; }
@@ -2629,6 +2631,16 @@ const gcal = {
     try { this.tattooReminders(); } catch (e) { console.warn(e); }
   },
   // Citas del calendario de tatuajes (cualquier calendario de Google cuyo nombre contenga "tatuaj")
+  _hidden() { try { const a = JSON.parse(localStorage.getItem('nh_gcal_hidden') || '[]'); return new Set(Array.isArray(a) ? a : []); } catch (e) { return new Set(); } },
+  // Google Calendar es de solo lectura: "eliminar" aquí = ocultar el evento en Nova Hub (no se borra en Google)
+  confirmHide(id) {
+    const ev = this.events.find(e => e.id === id); if (!ev) return;
+    if (!confirm('"' + ev.title + '" viene de tu Google Calendar, que Nova Hub solo puede leer.\n\n¿Ocultarlo de Nova Hub? (No se borra de Google Calendar.)')) return;
+    const h = this._hidden(); h.add(id); try { localStorage.setItem('nh_gcal_hidden', JSON.stringify([...h].slice(-500))); } catch (e) {}
+    this.events = this.events.filter(e => e.id !== id);
+    this._write(this.CACHE_KEY, { uid: fb.uid, at: this.lastSync, events: this.events });
+    this.refreshUI(); toast('🙈 Evento oculto en Nova Hub');
+  },
   isTattoo(e) { return !!(e && e.google && /tatuaj/i.test(e.calName || '')); },
   tattooFor(ds) { return this.events.filter(e => e.date === ds && this.isTattoo(e)).sort((a, b) => (a.start || '').localeCompare(b.start || '')); },
   _tdone() { try { const o = JSON.parse(localStorage.getItem('nh_tt_done') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } },
@@ -3446,7 +3458,28 @@ const renderProjects=()=>{
 // ══════════════════════════════════════════════
 // MODALS
 // ══════════════════════════════════════════════
-const openModal=id=>document.getElementById(id)?.classList.add('open');
+const openModal=id=>{
+  const m=document.getElementById(id); if(!m) return;
+  const del = id==='eventModal' ? ['evDelete','evId'] : id==='blockModal' ? ['blockDelete','blockId'] : null;
+  if(del){ const b=document.getElementById(del[0]); if(b) b.style.display = document.getElementById(del[1])?.value ? '' : 'none'; }
+  m.classList.add('open');
+};
+// Refresca la vista activa después de borrar un evento/bloque
+const _afterCalDelete = () => {
+  const v=document.querySelector('.nav-item.active')?.dataset.view;
+  if(v==='calendar') renderCalendarView(); else renderDashboard();
+  updateStats && updateStats();
+};
+document.getElementById('evDelete')?.addEventListener('click',()=>{
+  const id=document.getElementById('evId').value; const e=state.events.find(x=>x.id==id); if(!e) return;
+  if(!confirm('¿Eliminar el evento "'+e.title+'"?')) return;
+  addToTrash('event', e); state.events=state.events.filter(x=>x.id!=id); save(); closeModal('eventModal'); _afterCalDelete(); toast('🗑️ Movido a la papelera');
+});
+document.getElementById('blockDelete')?.addEventListener('click',()=>{
+  const id=document.getElementById('blockId').value; const b=(state.routines||[]).find(x=>x.id==id); if(!b) return;
+  if(!confirm('¿Eliminar el bloque "'+b.title+'"? Se quita de todos los días en que se repite.')) return;
+  addToTrash('routine', b); state.routines=state.routines.filter(x=>x.id!=id); save(); closeModal('blockModal'); _afterCalDelete(); toast('🗑️ Movido a la papelera');
+});
 const closeModal=id=>document.getElementById(id)?.classList.remove('open');
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
 document.getElementById('blockDayPills')?.addEventListener('click', e => { const p = e.target.closest('.day-pill'); if(p) p.classList.toggle('active'); });
@@ -5329,6 +5362,7 @@ function _renderWeekStrip() {
   // click en bloque → editar (evento) o editar bloque (rutina)
   wrapEl.querySelectorAll('.wg-block, .wg-allday').forEach(bl=>bl.addEventListener('click',e=>{
     e.stopPropagation();
+    if(bl.dataset.kind==='event' && String(bl.dataset.id).startsWith('g_')) { gcal.confirmHide(bl.dataset.id); return; }
     if(bl.dataset.kind==='event') _editEvent(bl.dataset.id);
     else _editBlockFromWeek(bl.dataset.id);
   }));
