@@ -1581,6 +1581,116 @@ html{-webkit-tap-highlight-color:transparent}
 [data-theme="light"] .sw-item.sw-drag{background:#ececf8!important}
 .sw-item.sw-anim{transition:transform .22s cubic-bezier(.22,1,.36,1),opacity .22s!important}
 
+/* ═══════════════════════════════════════════════════════════════
+   MOVIMIENTO Y DETALLES: transiciones, tarjeta que se expande,
+   confeti dorado y barra inferior flotante
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Transición entre pantallas con dirección (adelante entra desde la derecha) ── */
+@keyframes viewSlideFwd{from{opacity:0;transform:translateX(34px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes viewSlideBack{from{opacity:0;transform:translateX(-34px) scale(.985)}to{opacity:1;transform:none}}
+#content.view-anim[data-dir="fwd"]{animation:viewSlideFwd .36s cubic-bezier(.22,1,.36,1) backwards}
+#content.view-anim[data-dir="back"]{animation:viewSlideBack .36s cubic-bezier(.22,1,.36,1) backwards}
+
+/* ── Tarjeta que se expande desde su posición (notas y proyectos) ── */
+@keyframes cardExpand{
+  0%{opacity:.35;transform:translate(var(--ex,0px),var(--ey,0px)) scale(var(--esx,.6),var(--esy,.4));border-radius:14px}
+  100%{opacity:1;transform:translate(0,0) scale(1,1);border-radius:20px}
+}
+.modal-overlay.open .modal.expand-from-card{
+  animation:cardExpand .44s cubic-bezier(.22,1,.36,1) both;
+  transform-origin:center center;will-change:transform,opacity;
+}
+
+/* ── Confeti dorado ── */
+.confetti-piece{width:7px;height:7px}
+.confetti-piece.rect{width:9px;height:4px;border-radius:1px}
+.confetti-piece.round{border-radius:50%}
+.confetti-piece{box-shadow:0 0 6px rgba(255,215,0,.35)}
+.gold-rain{position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden}
+.gold-rain i{position:absolute;top:-16px;width:8px;height:12px;border-radius:2px;opacity:0;
+  animation:goldFall var(--t,2.4s) cubic-bezier(.3,.1,.5,1) var(--d,0s) forwards}
+.gold-rain i.round{width:8px;height:8px;border-radius:50%}
+@keyframes goldFall{
+  0%{opacity:1;transform:translate3d(0,0,0) rotate(0deg)}
+  80%{opacity:1}
+  100%{opacity:0;transform:translate3d(var(--sx,0px),105vh,0) rotate(var(--r,540deg))}
+}
+@media(prefers-reduced-motion:reduce){.gold-rain{display:none}}
+
+/* ── Barra inferior flotante (solo móvil/tablet, donde el sidebar está oculto) ── */
+#tabbar,#tabSheet,#tabSheetScrim{display:none}
+@media(max-width:900px){
+  .fab{display:none!important}
+  #tabbar{
+    display:flex;align-items:center;justify-content:space-between;
+    position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    width:min(92vw,420px);height:66px;padding:0 8px;z-index:55;
+    transform:translateX(-50%);border-radius:26px;
+    background:rgba(18,18,32,.72);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+    border:1px solid rgba(255,255,255,.13);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 14px 38px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.2);
+    transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .25s;
+    animation:tabbarIn .55s .15s cubic-bezier(.34,1.56,.64,1) backwards;
+  }
+  @keyframes tabbarIn{from{transform:translate(-50%,120%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+  #tabbar.tb-hide{transform:translate(-50%,calc(100% + 30px));opacity:.0}
+  body.kb-open #tabbar{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
+  [data-theme="light"] #tabbar{background:rgba(255,255,255,.78);border-color:rgba(0,0,0,.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
+  .tb-item{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;color:var(--text3);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;
+    cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;min-width:0;padding:0}
+  .tb-item svg{width:24px;height:24px;fill:currentColor;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  .tb-item.active{color:var(--gold)}
+  .tb-item.active svg{transform:translateY(-2px) scale(1.12)}
+  .tb-item.active::after{content:'';position:absolute;bottom:7px;width:16px;height:3px;border-radius:3px;
+    background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  .tb-item:active svg{transform:scale(.86)}
+  .tb-item.dot::before{content:'';position:absolute;top:13px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;
+    background:var(--crimson);box-shadow:0 0 6px var(--crimson)}
+  .tb-plus{flex:0 0 auto;width:58px;height:58px;margin:-22px 4px 0;border-radius:50%;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:#1a1200;
+    background:linear-gradient(145deg,#FFE88A,#FFD700 45%,#FFB300);
+    box-shadow:0 10px 26px rgba(255,200,0,.42),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
+    animation:plusGlow 2.8s ease-in-out infinite;-webkit-tap-highlight-color:transparent}
+  .tb-plus svg{width:30px;height:30px;fill:currentColor;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+  .tb-plus:active{transform:scale(.9)}
+  .tb-plus.open svg{transform:rotate(135deg)}
+  @keyframes plusGlow{0%,100%{box-shadow:0 10px 26px rgba(255,200,0,.38),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35)}
+    50%{box-shadow:0 12px 34px rgba(255,200,0,.62),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35)}}
+
+  #tabSheetScrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.45);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
+  #tabSheetScrim.open{opacity:1;pointer-events:auto}
+  #tabSheet{display:flex;flex-direction:column;align-items:center;gap:10px;position:fixed;left:50%;
+    bottom:calc(98px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:57;pointer-events:none}
+  #tabSheet button{display:flex;align-items:center;gap:12px;min-width:210px;padding:12px 20px;border-radius:18px;
+    border:1px solid rgba(255,255,255,.14);color:var(--text);font:inherit;font-size:.92rem;font-weight:600;cursor:pointer;
+    background:rgba(24,24,40,.86);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    box-shadow:0 10px 28px rgba(0,0,0,.4);opacity:0;transform:translateY(24px) scale(.9);
+    transition:opacity .2s,transform .32s cubic-bezier(.34,1.56,.64,1)}
+  #tabSheet button span.em{font-size:1.15rem;width:24px;text-align:center}
+  #tabSheet.open{pointer-events:auto}
+  #tabSheet.open button{opacity:1;transform:none}
+  #tabSheet.open button:nth-last-child(1){transition-delay:.02s}
+  #tabSheet.open button:nth-last-child(2){transition-delay:.05s}
+  #tabSheet.open button:nth-last-child(3){transition-delay:.08s}
+  #tabSheet.open button:nth-last-child(4){transition-delay:.11s}
+  #tabSheet.open button:nth-last-child(5){transition-delay:.14s}
+  #tabSheet.open button:nth-last-child(6){transition-delay:.17s}
+  #tabSheet button:active{transform:scale(.96)}
+  [data-theme="light"] #tabSheet button{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.08)}
+
+  /* La barra no tapa lo último de cada pantalla; el menú y los avisos suben por encima de ella */
+  body.has-tabbar #content{padding-bottom:112px!important}
+  body.has-tabbar .fab-menu{right:14px;bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  body.has-tabbar .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+}
+@media(prefers-reduced-motion:reduce){#tabbar{animation:none}.tb-plus{animation:none}}
+
 </style>
 </head>
 <body>
@@ -1647,6 +1757,24 @@ html{-webkit-tap-highlight-color:transparent}
 <div class="fab-menu-scrim" id="fabMenuScrim"></div>
 <nav class="fab-menu" id="fabMenu" aria-hidden="true"></nav>
 <button class="fab" id="fab" title="Menú" aria-haspopup="true" aria-expanded="false">☰</button>
+
+<!-- BARRA INFERIOR FLOTANTE (móvil/tablet): atajos + botón central (+) -->
+<div id="tabSheetScrim"></div>
+<div id="tabSheet" aria-hidden="true">
+  <button type="button" data-qc="ai"><span class="em">✦</span>IA rápida</button>
+  <button type="button" data-qc="note"><span class="em">🗒️</span>Nueva nota</button>
+  <button type="button" data-qc="project"><span class="em">🚀</span>Nuevo proyecto</button>
+  <button type="button" data-qc="reminder"><span class="em">⏰</span>Recordatorio</button>
+  <button type="button" data-qc="event"><span class="em">📅</span>Evento</button>
+  <button type="button" data-qc="habit"><span class="em">🔥</span>Hábito</button>
+</div>
+<nav id="tabbar" aria-label="Navegación principal">
+  <button class="tb-item" type="button" data-tab="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Inicio</span></button>
+  <button class="tb-item" type="button" data-tab="notes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg><span>Notas</span></button>
+  <button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+  <button class="tb-item" type="button" data-tab="projects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/></svg><span>Proyectos</span></button>
+  <button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Más</span></button>
+</nav>
 <div class="toast" id="toast"></div>
 
 <!-- MODALS -->
@@ -2011,24 +2139,69 @@ const renderStreakPill = () => {
 
 // ── PULIDO VISUAL: confeti de hito (racha) ──
 const HABIT_MILESTONES = [3,7,14,30,60,100,200,365];
-const fireConfetti = (x, y) => {
-  const colors = ['var(--accent)','var(--accent2)','var(--accent3)','var(--green)','var(--yellow)','var(--pink)'];
+// Paleta dorada (con toques de carmesí, jade y marfil de tu identidad)
+const GOLD_CONFETTI = ['#FFD700','#FFD700','#FFC83D','#FFE88A','#F5F0E8','#DC143C','#00A86B'];
+const _reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fireConfetti = (x, y, opts = {}) => {
+  if (_reduceMotion()) return;
+  const n = opts.count || 18, spread = opts.spread || 1;
   const wrap = document.createElement('div');
   wrap.className = 'confetti-burst';
   wrap.style.left = x + 'px'; wrap.style.top = y + 'px';
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < n; i++) {
     const p = document.createElement('div');
-    p.className = 'confetti-piece';
-    const ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 70;
+    p.className = 'confetti-piece' + (i % 3 === 1 ? ' rect' : i % 3 === 2 ? ' round' : '');
+    const ang = Math.random() * Math.PI * 2, dist = (60 + Math.random() * 70) * spread;
     p.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
     p.style.setProperty('--dy', Math.sin(ang) * dist - 30 + 'px');
     p.style.setProperty('--rot', (Math.random() * 400 - 200) + 'deg');
-    p.style.background = colors[i % colors.length];
+    p.style.background = GOLD_CONFETTI[i % GOLD_CONFETTI.length];
     p.style.animationDelay = (Math.random() * 0.08) + 's';
     wrap.appendChild(p);
   }
   document.body.appendChild(wrap);
   setTimeout(() => wrap.remove(), 1100);
+};
+// Lluvia dorada a pantalla completa: para logros grandes (proyecto terminado, subir de nivel)
+const goldRain = (count = 46) => {
+  if (_reduceMotion()) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'gold-rain';
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('i');
+    if (i % 3 === 0) p.className = 'round';
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.background = GOLD_CONFETTI[i % GOLD_CONFETTI.length];
+    p.style.setProperty('--sx', (Math.random() * 120 - 60) + 'px');
+    p.style.setProperty('--r', (360 + Math.random() * 540) + 'deg');
+    p.style.setProperty('--t', (1.9 + Math.random() * 1.3) + 's');
+    p.style.setProperty('--d', (Math.random() * 0.55) + 's');
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 4200);
+};
+// ── Hápticos: patrones cortos y consistentes (Android/Chrome). Se pueden apagar en Ajustes. ──
+const HAPTIC_PATTERNS = { tap: 8, select: 12, success: [12, 40, 18], warn: 22, heavy: 30, big: [20, 50, 20, 50, 40] };
+const haptic = (kind = 'tap') => {
+  try {
+    if (!navigator.vibrate || _reduceMotion()) return;
+    if (localStorage.getItem('nn_haptics') === '0') return;
+    navigator.vibrate(HAPTIC_PATTERNS[kind] || HAPTIC_PATTERNS.tap);
+  } catch (_) {}
+};
+// Última posición tocada: sirve para lanzar el confeti justo donde completaste algo
+const _lastPointer = { x: innerWidth / 2, y: innerHeight / 2, t: 0 };
+document.addEventListener('pointerdown', e => { _lastPointer.x = e.clientX; _lastPointer.y = e.clientY; _lastPointer.t = Date.now(); }, true);
+const burstAtLastTap = (opts) => {
+  if (Date.now() - _lastPointer.t < 1500) fireConfetti(_lastPointer.x, _lastPointer.y, opts);
+};
+// ¿Quedó el proyecto completo? Celebración grande
+const celebrateIfProjectDone = (p) => {
+  const ts = (p && p.tasks) || [];
+  if (ts.length && ts.every(t => t.done)) {
+    haptic('big'); goldRain(); toast('🏆 ¡Proyecto completado!');
+  }
 };
 
 // ── PULIDO VISUAL: genera grid de heatmap (últimas N semanas) ──
@@ -2125,11 +2298,13 @@ const addXP = (amount) => {
     state.settings.xp -= nextLevelXP;
     state.settings.level = (state.settings.level || 1) + 1;
     toast(`🎉 ¡Has alcanzado el Nivel ${state.settings.level}!`);
+    haptic('big'); goldRain(60);
     const root = document.documentElement;
     root.style.setProperty('--accent', `hsl(${Math.random()*360},80%,60%)`);
     applyAccent(root.style.getPropertyValue('--accent'));
   } else {
     toast(`⭐ +${amount} XP`);
+    haptic('success'); burstAtLastTap({ count: 14, spread: .8 });
   }
   save();
   updateXPUI();
@@ -2458,7 +2633,7 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       dragEl.classList.remove('reorder-pending');
       dragEl.classList.add('reorder-grab');
       container.classList.add('reorder-mode-active');
-      if (navigator.vibrate) navigator.vibrate(12);
+      haptic('select');
       positionDrag(startX, startY);
     }, LONGPRESS_MS);
   });
@@ -3692,11 +3867,32 @@ const renderProjects=()=>{
 // ══════════════════════════════════════════════
 // MODALS
 // ══════════════════════════════════════════════
+// Guarda la tarjeta tocada para que la ventana se expanda desde ella
+let _tapCard = null;
+document.addEventListener('click', e => {
+  const c = e.target.closest && e.target.closest('.note-card,.proj-full-card,.project-item');
+  _tapCard = c ? { r: c.getBoundingClientRect(), t: Date.now() } : null;
+}, true);
+const _prepareCardExpand = (overlay) => {
+  const modal = overlay.querySelector('.modal'); if(!modal) return;
+  const ok = (overlay.id === 'noteDetailModal' || overlay.id === 'projDetailModal') && _tapCard && Date.now() - _tapCard.t < 600;
+  modal.classList.remove('expand-from-card');
+  if(!ok) return;
+  const r = _tapCard.r, w = modal.offsetWidth || 400, h = modal.offsetHeight || 400;
+  const s = modal.style;
+  s.setProperty('--ex', (r.left + r.width/2 - innerWidth/2) + 'px');
+  s.setProperty('--ey', (r.top + r.height/2 - innerHeight/2) + 'px');
+  s.setProperty('--esx', Math.max(.12, Math.min(1, r.width / w)).toFixed(3));
+  s.setProperty('--esy', Math.max(.08, Math.min(1, r.height / h)).toFixed(3));
+  modal.classList.add('expand-from-card');
+};
 const openModal=id=>{
   const m=document.getElementById(id); if(!m) return;
   const del = id==='eventModal' ? ['evDelete','evId'] : id==='blockModal' ? ['blockDelete','blockId'] : null;
   if(del){ const b=document.getElementById(del[0]); if(b) b.style.display = document.getElementById(del[1])?.value ? '' : 'none'; }
+  _prepareCardExpand(m);
   m.classList.add('open');
+  haptic('tap');
 };
 // Refresca la vista activa después de borrar un evento/bloque
 const _afterCalDelete = () => {
@@ -3714,8 +3910,20 @@ document.getElementById('blockDelete')?.addEventListener('click',()=>{
   if(!confirm('¿Eliminar el bloque "'+b.title+'"? Se quita de todos los días en que se repite.')) return;
   addToTrash('routine', b); state.routines=state.routines.filter(x=>x.id!=id); save(); closeModal('blockModal'); _afterCalDelete(); toast('🗑️ Movido a la papelera');
 });
-const closeModal=id=>document.getElementById(id)?.classList.remove('open');
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+const closeModal=id=>{
+  const m=document.getElementById(id); if(!m) return;
+  const modal=m.querySelector('.modal');
+  // Si se abrió desde una tarjeta, se encoge de vuelta hacia ella
+  if(modal && m.classList.contains('open') && modal.classList.contains('expand-from-card') && modal.animate && !_reduceMotion()){
+    const cs=modal.style, g=k=>cs.getPropertyValue(k)||'0';
+    modal.animate([
+      {transform:'translate(0,0) scale(1,1)',opacity:1},
+      {transform:`translate(${g('--ex')},${g('--ey')}) scale(${g('--esx')},${g('--esy')})`,opacity:0}
+    ],{duration:240,easing:'cubic-bezier(.4,0,.6,1)'});
+  }
+  m.classList.remove('open');
+};
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);});});
 document.getElementById('blockDayPills')?.addEventListener('click', e => { const p = e.target.closest('.day-pill'); if(p) p.classList.toggle('active'); });
 
 const showAuthSetupModal=(title,msg)=>{
@@ -3866,6 +4074,9 @@ document.querySelectorAll('.nav-item,[data-view]').forEach(el=>{
     if(v==='notes'||v==='projects') ct.classList.add('masonry-view');
     else ct.classList.remove('masonry-view');
     rerenderView(v);
+    const order=[...document.querySelectorAll('#sidebar .nav-item[data-view]')].map(n=>n.dataset.view);
+    const idx=order.indexOf(v), prev=window._lastViewIdx ?? idx;
+    ct.dataset.dir = idx>=prev ? 'fwd' : 'back'; window._lastViewIdx = idx;
     ct.classList.remove('view-anim'); void ct.offsetWidth; ct.classList.add('view-anim');
     closeSidebar();
     ct.scrollTop = 0;
@@ -3964,6 +4175,111 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
   fab.addEventListener('click', () => { isOpen() ? closeMenu() : openMenu(); });
   scrim.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && isOpen()) closeMenu(); });
+})();
+
+// ── BARRA INFERIOR FLOTANTE (móvil/tablet) + botón central (+) + hápticos globales ──
+(function(){
+  const bar = document.getElementById('tabbar'), plus = document.getElementById('tbPlus');
+  const sheet = document.getElementById('tabSheet'), scrim = document.getElementById('tabSheetScrim');
+  const fab = document.getElementById('fab'), ct = document.getElementById('content');
+  if(!bar || !plus || !sheet || !scrim) return;
+  document.body.classList.add('has-tabbar');
+  const navTo = v => document.querySelector(`#sidebar .nav-item[data-view="${v}"]`)?.click();
+  const MAIN = ['dashboard','notes','projects'];
+
+  // Pestaña activa sincronizada con el sidebar (que es quien manda en la navegación)
+  const syncActive = () => {
+    const cur = document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
+    bar.querySelectorAll('[data-tab]').forEach(b => {
+      const t = b.dataset.tab;
+      if (t === 'more') b.classList.toggle('dot', !MAIN.includes(cur));   // punto = estás en otra pestaña
+      else b.classList.toggle('active', t === cur);
+    });
+  };
+  new MutationObserver(syncActive).observe(document.getElementById('sidebar'), { subtree:true, attributes:true, attributeFilter:['class'] });
+  if (fab) new MutationObserver(() => bar.querySelector('[data-tab="more"]')?.classList.toggle('active', fab.classList.contains('menu-open')))
+    .observe(fab, { attributes:true, attributeFilter:['class'] });
+  syncActive();
+
+  const openSheet = () => {
+    if (fab && fab.classList.contains('menu-open')) fab.click();
+    sheet.classList.add('open'); scrim.classList.add('open'); plus.classList.add('open');
+    plus.setAttribute('aria-expanded','true'); sheet.setAttribute('aria-hidden','false');
+  };
+  const closeSheet = () => {
+    sheet.classList.remove('open'); scrim.classList.remove('open'); plus.classList.remove('open');
+    plus.setAttribute('aria-expanded','false'); sheet.setAttribute('aria-hidden','true');
+  };
+  plus.addEventListener('click', () => sheet.classList.contains('open') ? closeSheet() : openSheet());
+  scrim.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    closeSheet();
+    const t = b.dataset.tab;
+    if (t === 'more') { fab && fab.click(); return; }
+    if (b.classList.contains('active') && ct) ct.scrollTo({ top: 0, behavior: 'smooth' });   // tocar la activa = subir al inicio
+    navTo(t);
+  });
+
+  // Crear algo nuevo: mismos formularios que ya usa la app
+  const actions = {
+    ai(){ navTo('dashboard'); setTimeout(() => document.getElementById('quickAddTrigger')?.click(), 420); },
+    note(){
+      document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
+      document.getElementById('noteId').value = '';
+      ['noteTitle','noteBody','noteTags'].forEach(id => document.getElementById(id).value = '');
+      openModal('noteModal');
+    },
+    project(){
+      document.getElementById('projModalTitle').textContent = '🚀 Nuevo Proyecto';
+      document.getElementById('projId').value = '';
+      document.getElementById('projName').value = '';
+      document.getElementById('projDesc').value = '';
+      renderIconPicker('rocket_launch');
+      openModal('projModal');
+    },
+    reminder(){
+      document.getElementById('remModalTitle').textContent = '⏰ Nuevo Recordatorio';
+      document.getElementById('remId').value = '';
+      ['remTitle','remDesc','remTags','remDateTime'].forEach(id => document.getElementById(id).value = '');
+      openModal('reminderModal');
+    },
+    event(){
+      document.getElementById('evModalTitle').textContent = '📅 Nuevo Evento';
+      document.getElementById('evId').value = '';
+      const d = document.getElementById('evDate'); if (d) d.value = new Date().toISOString().split('T')[0];
+      openModal('eventModal');
+    },
+    habit(){
+      document.getElementById('habitModalTitle').textContent = '🔥 Nuevo Hábito';
+      document.getElementById('habitId').value = ''; document.getElementById('habitName').value = '';
+      openModal('habitModal');
+    }
+  };
+  sheet.addEventListener('click', e => {
+    const b = e.target.closest('[data-qc]'); if (!b) return;
+    closeSheet();
+    setTimeout(() => actions[b.dataset.qc]?.(), 140);
+  });
+
+  // La barra se esconde al bajar y reaparece al subir; también cuando aparece el teclado
+  let lastY = 0;
+  ct && ct.addEventListener('scroll', () => {
+    const y = ct.scrollTop, d = y - lastY;
+    if (Math.abs(d) < 10) return;
+    bar.classList.toggle('tb-hide', d > 0 && y > 140);
+    lastY = y;
+  }, { passive:true });
+  const isField = el => el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && !/checkbox|radio|button|range|file/.test(el.type || '');
+  document.addEventListener('focusin', e => { if (isField(e.target)) document.body.classList.add('kb-open'); });
+  document.addEventListener('focusout', () => setTimeout(() => { if (!isField(document.activeElement)) document.body.classList.remove('kb-open'); }, 120));
+
+  // Háptico suave en cualquier control tocable
+  document.addEventListener('click', e => {
+    if (e.target.closest('.nav-item,.fab,.fab-menu-item,.tb-item,.tb-plus,#tabSheet button,.btn,.sec-action,.toggle-sw,.hb-check,.focus-check,.cal-day,.pd-check,.pin-note-btn,.qa-icon-btn')) haptic('tap');
+  }, true);
 })();
 
 // ── Topbar auto-hide al hacer scroll (solo en móvil) ──
@@ -4094,7 +4410,7 @@ const attachSwipe = (el, { onRight, onLeft, rightLabel = '✓ Hecho', leftLabel 
     el.style.transform = `translateX(${dx}px)`;
     bgR && bgR.classList.toggle('show', dx > 4); bgL && bgL.classList.toggle('show', dx < -4);
     const nowArmed = Math.abs(dx) >= t;
-    if (nowArmed !== armed) { armed = nowArmed; if (armed && navigator.vibrate) navigator.vibrate(8); }
+    if (nowArmed !== armed) { armed = nowArmed; if (armed) haptic('tap'); }
     bgR && bgR.classList.toggle('armed', armed && dx > 0); bgL && bgL.classList.toggle('armed', armed && dx < 0);
   });
   const end = e => {
@@ -4106,7 +4422,7 @@ const attachSwipe = (el, { onRight, onLeft, rightLabel = '✓ Hecho', leftLabel 
     suppress = true; setTimeout(() => { suppress = false; }, 60);   // evita el click fantasma tras arrastrar
     const dir = dx > 0 ? 1 : -1;
     if (Math.abs(dx) >= T() && ((dir > 0 && onRight) || (dir < 0 && onLeft))) {
-      if (navigator.vibrate) navigator.vibrate(14);
+      haptic('warn');
       el.classList.add('sw-anim'); el.style.transform = `translateX(${dir * (w + 20)}px)`; el.style.opacity = '0';
       setTimeout(() => { (dir > 0 ? onRight : onLeft)(); }, 200);
       setTimeout(() => { if (el.isConnected) reset(); }, 700);   // por si la acción no vuelve a pintar la lista
@@ -4197,7 +4513,7 @@ const renderFocusCard = () => {
       const el = btn.closest('.focus-item'), kind = el.dataset.kind, id = el.dataset.id;
       if (kind==='task') {
         const p = state.projects.find(x=>String(x.id)===id), idx = Number(el.dataset.idx);
-        if (p && p.tasks[idx]) { p.tasks[idx].done = true; addXP(10); }
+        if (p && p.tasks[idx]) { p.tasks[idx].done = true; addXP(10); celebrateIfProjectDone(p); }
       } else if (kind==='habit') {
         const h = state.habits.find(x=>String(x.id)===id), todayStr = new Date().toISOString().split('T')[0];
         if (h) { h.logs = h.logs||[]; if(!h.logs.includes(todayStr)){ h.logs.push(todayStr); addXP(10); } }
@@ -5136,6 +5452,13 @@ const renderSettingsView=()=>{
         </div>
         <label class="toggle-sw"><input type="checkbox" id="notifToggle" ${(window.Notification && Notification.permission==='granted' && state.settings.notificationsEnabled)?'checked':''} ${(!window.Notification || Notification.permission==='denied')?'disabled':''}/><span class="slider"></span></label>
       </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Vibración háptica</div>
+          <div class="settings-sub">Una vibración corta al tocar, completar, borrar y celebrar logros.${navigator.vibrate ? '' : ' Tu navegador no la soporta.'}</div>
+        </div>
+        <label class="toggle-sw"><input type="checkbox" id="hapticToggle" ${localStorage.getItem('nn_haptics')==='0'?'':'checked'} ${navigator.vibrate?'':'disabled'}/><span class="slider"></span></label>
+      </div>
     </div>
     <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div>${fb.enabled?'<div id="syncMeta" style="font-size:.72rem;color:var(--text3);margin-top:4px">'+syncMetaText()+'</div>':''}</div></div>
     <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div>${fb.enabled ? fbDiagHtml() : ''}</div>
@@ -5198,6 +5521,10 @@ const renderSettingsView=()=>{
     save();
     toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
   }));
+  document.getElementById('hapticToggle')?.addEventListener('change', e => {
+    localStorage.setItem('nn_haptics', e.target.checked ? '1' : '0');
+    if (e.target.checked) haptic('success');
+  });
   document.getElementById('notifToggle')?.addEventListener('change', async e => {
     if(e.target.checked){
       const ok = await enableNotifications();
@@ -5362,7 +5689,7 @@ const renderProjectDetail = () => {
     const t = p.tasks[Number(c.dataset.idx)]; if (!t) return;
     t.done = c.checked; save();
     renderProjectDetail(); refreshProjectsBehind();
-    if (c.checked) addXP(10);
+    if (c.checked) { addXP(10); celebrateIfProjectDone(p); }
   }));
 
   box.querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', () => {
@@ -5386,7 +5713,7 @@ const renderProjectDetail = () => {
         const t = p.tasks[idx]; if (!t) return;
         t.done = !t.done; save();
         renderProjectDetail(); refreshProjectsBehind();
-        if (t.done) addXP(10);
+        if (t.done) { addXP(10); celebrateIfProjectDone(p); }
       },
       onLeft: () => {
         const t = p.tasks[idx]; if (!t) return;
@@ -6170,7 +6497,7 @@ const renderHabitsView=()=>{
             if (HABIT_MILESTONES.includes(newStreak)) {
               const r = btn.getBoundingClientRect();
               fireConfetti(r.left + r.width / 2, r.top + r.height / 2);
-              if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+              haptic('success');
               toast(`🔥 ¡${newStreak} días de racha en "${h.name}"!`);
             }
           }
