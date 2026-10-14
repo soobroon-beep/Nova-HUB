@@ -29,7 +29,7 @@ if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector(
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" />
 <style>
 :root {
   --bg: rgba(15, 15, 26, 0.4);
@@ -64,7 +64,7 @@ if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector(
    un borde (parallax, barra del navegador, rotación), se ve oscuro y no blanco. */
 html{height:100%;background:#080811}
 html[data-theme="light"]{background:#f7f7fc}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:transparent;color:var(--text);height:100vh;height:100dvh;margin:0;padding:0}
+body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent;color:var(--text);height:100vh;height:100dvh;margin:0;padding:0}
 /* #appShell asume el flex layout que antes tenía body.
    Al sacarlo de body, position:fixed usa el viewport real (no el body) en iOS/Android.
    NO ponemos overflow:hidden aquí para no cortar el sidebar fixed en mobile */
@@ -1491,16 +1491,16 @@ html{-webkit-tap-highlight-color:transparent}
    (va al final a propósito: sobrescribe sin tocar las reglas base)
    ═══════════════════════════════════════════════════════════════ */
 :root{
-  --font-display:'Shippori Mincho','Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --font-display:'Roboto','Google Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --gold:#FFD700; --jade:#00A86B; --crimson:#DC143C;
 }
 
-/* ── Tipografía distintiva: serif de aire japonés en títulos y cifras ── */
+/* ── Tipografía: Roboto (estilo Android/Google) en toda la app ── */
 .logo,.greeting h2,.sec-title,.focus-title,.cal-month,.stat-card .value,
 .note-card .note-title,.proj-card-title,.pd-title,.rings-title{
-  font-family:var(--font-display);letter-spacing:.2px;
+  font-family:var(--font-display);letter-spacing:0;
 }
-.greeting h2{font-weight:800;letter-spacing:.3px}
+.greeting h2{font-weight:700;letter-spacing:0}
 .stat-card .value{font-weight:800}
 
 /* ── Textura de fondo: olas seigaiha (oro, casi invisibles) + grano fino ── */
