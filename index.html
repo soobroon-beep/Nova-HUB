@@ -1745,7 +1745,7 @@ html{-webkit-tap-highlight-color:transparent}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager, runTransaction, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as isMessagingSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 const firebaseConfig = {
@@ -1779,7 +1779,7 @@ try {
   db = getFirestore(app);
 }
 
-window.fbSDK = { auth, db, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove };
+window.fbSDK = { auth, db, runTransaction, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove };
 window.onAuthStateChanged = onAuthStateChanged;
 
 // ── Push real (FCM) — registra/elimina el token de ESTE dispositivo ────
@@ -2052,25 +2052,24 @@ const schedulePush = () => {
   // save() al iniciar sesión subía el estado viejo del celular en ~1 s (si la
   // descarga tardaba más) y borraba en la nube lo creado en otro dispositivo,
   // por ejemplo un hábito nuevo.
-  if (!fb.syncReady) { _dirtyBeforeReady = true; return; }
+  if (!fb.syncReady) { markUnsynced(); _dirtyBeforeReady = true; return; }   // la marca persiste aunque cierres la app antes de la primera descarga
   markUnsynced();
   _pushPending = true;
   clearTimeout(_pushDebounce);
   _pushDebounce = setTimeout(() => { _pushPending = false; fb.pushAll(); }, 1000);
 };
 
+let _quotaWarned = false;
 const save = () => {
-  localStorage.setItem('nn_notes',      JSON.stringify(state.notes));
-  localStorage.setItem('nn_events',     JSON.stringify(state.events));
-  localStorage.setItem('nn_projects',   JSON.stringify(state.projects));
-  localStorage.setItem('nn_habits',     JSON.stringify(state.habits));
-  localStorage.setItem('nn_routines',   JSON.stringify(state.routines));
-  localStorage.setItem('nn_reminders',  JSON.stringify(state.reminders));
-  localStorage.setItem('nn_diary',      JSON.stringify(state.diary));
-  localStorage.setItem('nn_trash',      JSON.stringify(state.trash||[]));
-  localStorage.setItem('nn_ai_history', JSON.stringify(state.aiHistory.slice(-60)));
-  localStorage.setItem('nn_briefing_history', JSON.stringify((state.briefingHistory||[]).slice(-30)));
-  localStorage.setItem('nn_settings',   JSON.stringify(state.settings));
+  // Cada clave se guarda por separado: si una falla (almacenamiento lleno) las demás se guardan igual
+  // y SIEMPRE se programa la subida a la nube, que es la copia que cuenta.
+  const put = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {
+    console.error('[NOVA HUB] No se pudo guardar', key, e.name);
+    if (!_quotaWarned) { _quotaWarned = true; toast('⚠️ El almacenamiento de este dispositivo está lleno. Tus datos se siguen subiendo a la nube, pero libera espacio (papelera, imágenes grandes).'); }
+  } };
+  put('nn_notes', state.notes); put('nn_events', state.events); put('nn_projects', state.projects); put('nn_habits', state.habits);
+  put('nn_routines', state.routines); put('nn_reminders', state.reminders); put('nn_diary', state.diary); put('nn_trash', state.trash || []);
+  put('nn_ai_history', state.aiHistory.slice(-60)); put('nn_briefing_history', (state.briefingHistory || []).slice(-30)); put('nn_settings', state.settings);
   schedulePush();
 };
 
@@ -2485,6 +2484,107 @@ const realCounts = src => {
 const sumCounts = c => DATA_KEYS.filter(k => k !== 'trash').reduce((a, k) => a + (c[k] || 0), 0);
 const countsText = c => `${c.notes} notas · ${c.projects} proyectos · ${c.habits} hábitos · ${c.reminders} recordatorios · ${c.diary} entradas de diario`;
 
+// ══════════════════════════════════════════════
+// FUSIÓN SEGURA DE 3 VÍAS (nunca se pierde nada por una subida vieja)
+// Antes cada dispositivo subía sus listas COMPLETAS y reemplazaba lo que hubiera
+// en la nube: si un dispositivo se había quedado atrás (o estuvo sin internet),
+// al subir borraba lo que creaste en otro. Ahora, antes de subir, se lee la nube
+// y se fusiona elemento por elemento comparando con la última versión de la nube
+// que este dispositivo vio ("base"):
+//   · nuevo aquí o allá            → se conserva
+//   · cambiado solo aquí / solo allá → gana el que cambió
+//   · cambiado en los dos           → gana el más reciente (updatedAt) o este dispositivo
+//   · borrado a propósito           → solo si estaba en la base sin cambios (o está en la papelera)
+// Un elemento que no se puede explicar como "borrado a propósito" NUNCA se elimina.
+// ══════════════════════════════════════════════
+const _stable = v => (v === null || typeof v !== 'object') ? JSON.stringify(v)
+  : Array.isArray(v) ? '[' + v.map(_stable).join(',') + ']'
+  : '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + _stable(v[k])).join(',') + '}';
+const _h53 = str => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };
+const _ih = x => _h53(_stable(x));
+const _idOf = (k, x) => k === 'trash' ? (x && x.trashId) : (x && x.id);
+const _hasIds = (k, arr) => Array.isArray(arr) && arr.every(x => x && typeof x === 'object' && _idOf(k, x) !== undefined && _idOf(k, x) !== null);
+const _ts = x => { const t = x && (x.updatedAt || x.updated || 0); const n = typeof t === 'number' ? t : Date.parse(t); return isNaN(n) ? 0 : n; };
+const hashMaps = src => {
+  const m = {};
+  DATA_KEYS.forEach(k => { const o = {}; if (Array.isArray(src && src[k])) src[k].forEach(x => { if (x && typeof x === 'object' && _idOf(k, x) != null) o[String(_idOf(k, x))] = _ih(x); }); m[k] = o; });
+  return m;
+};
+const _TRASH_TYPE_KEY = { note: 'notes', project: 'projects', reminder: 'reminders', diary: 'diary', event: 'events', routine: 'routines', habit: 'habits' };
+const mergeArray = (k, local, remote, base, cx) => {
+  local = Array.isArray(local) ? local : []; remote = Array.isArray(remote) ? remote : [];
+  if (!_hasIds(k, local) || !_hasIds(k, remote)) {            // sin ids: unión sin duplicados exactos (nunca se descarta nada distinto)
+    const seen = new Set(), out = [];
+    [...local, ...remote].forEach(x => { const h = _ih(x); if (!seen.has(h)) { seen.add(h); out.push(x); } });
+    return out;
+  }
+  const b = base || {};
+  const lm = new Map(local.map(x => [String(_idOf(k, x)), x])), rm = new Map(remote.map(x => [String(_idOf(k, x)), x]));
+  const res = new Map(), remoteOnlyIds = [], localIds = [];
+  rm.forEach((r, id) => {
+    if (lm.has(id)) return;
+    if (b[id] !== undefined && b[id] === _ih(r)) return;      // estaba en la base, sin cambios en la nube y aquí ya no está: lo borraste aquí
+    if (cx.trashed.has(k + ':' + id)) return;                 // está en la papelera (borrado a propósito)
+    res.set(id, r); remoteOnlyIds.push(id);                   // nuevo (o editado) en otro dispositivo
+  });
+  local.forEach(l => {
+    const id = String(_idOf(k, l)), r = rm.get(id), lh = _ih(l);
+    const keep = x => { res.set(id, x); localIds.push(id); };
+    if (!r) { if (b[id] !== undefined && b[id] === lh) return; keep(l); return; }   // solo aquí: si estaba en la base sin cambios, lo borraron en otro dispositivo
+    const rh = _ih(r);
+    if (lh === rh) { keep(l); return; }
+    if (b[id] !== undefined && b[id] === lh) { keep(r); return; }   // aquí sin cambios → versión de la nube
+    if (b[id] !== undefined && b[id] === rh) { keep(l); return; }   // nube sin cambios → versión de este dispositivo
+    const win = _ts(r) > _ts(l) ? r : l;                            // cambiaron los dos
+    cx.conflicts.push({ k, id, lost: win === l ? r : l });
+    keep(win);
+  });
+  // Orden: si este dispositivo tiene cambios propios (p. ej. reordenaste notas) manda su orden; si no, el de la nube.
+  // Así dos dispositivos nunca se "devuelven" el orden el uno al otro.
+  const ids = cx.localOrder
+    ? [...remoteOnlyIds, ...localIds]
+    : [...remote.map(x => String(_idOf(k, x))).filter(id => res.has(id)), ...localIds.filter(id => !rm.has(id))];
+  const seen = new Set();
+  return ids.filter(id => !seen.has(id) && seen.add(id)).map(id => res.get(id));
+};
+const mergeStates = (local, remote, baseMaps, localOrder = true) => {
+  const cx = { conflicts: [], trashed: new Set(), localOrder }, out = {};
+  const realRemote = k => Array.isArray(remote[k]) && remote[k].some(x => !_isSeedItem(x));
+  const loc = {};
+  DATA_KEYS.forEach(k => { loc[k] = Array.isArray(local[k]) ? (k !== 'trash' && realRemote(k) ? local[k].filter(x => !_isSeedItem(x)) : local[k]) : []; });
+  out.trash = Array.isArray(remote.trash) ? mergeArray('trash', loc.trash, remote.trash, baseMaps && baseMaps.trash, cx) : loc.trash;
+  out.trash.forEach(t => { const kk = _TRASH_TYPE_KEY[t && t.type]; if (kk && t.data && t.data.id != null) cx.trashed.add(kk + ':' + t.data.id); });
+  DATA_KEYS.filter(k => k !== 'trash').forEach(k => { out[k] = Array.isArray(remote[k]) ? mergeArray(k, loc[k], remote[k], baseMaps && baseMaps[k], cx) : loc[k]; });
+  return { merged: out, conflicts: cx.conflicts };
+};
+// "Base": hashes de la última versión de la nube que ESTE dispositivo vio (por cuenta). Persiste entre sesiones.
+const CLOUD_BASE_KEY = 'nn_cloud_base';
+// La base vive EN MEMORIA de cada pestaña (coherente con lo que esa pestaña ve y tiene) y se respalda en localStorage
+// solo para recuperarla al abrir la app. Así dos pestañas abiertas en el mismo dispositivo no se pisan la base.
+let _baseMem = null;
+const getCloudBase = uid => {
+  if (_baseMem && _baseMem.uid === uid) return _baseMem.maps;
+  try { const o = JSON.parse(localStorage.getItem(CLOUD_BASE_KEY) || 'null'); if (o && o.uid === uid && o.maps) { _baseMem = o; return o.maps; } } catch (e) {}
+  return null;
+};
+const DATA_OWNER_KEY = 'nn_data_uid';   // cuenta a la que pertenecen los datos guardados en este dispositivo
+const setCloudBase = (uid, src) => {
+  try { localStorage.setItem(DATA_OWNER_KEY, uid); } catch (e) {}
+  _baseMem = { uid, maps: hashMaps(src) };
+  try { localStorage.setItem(CLOUD_BASE_KEY, JSON.stringify(_baseMem)); } catch (e) {}
+};
+// Si una misma cosa se editó en 2 dispositivos, la versión que perdió se guarda aquí (no se pierde).
+const noteConflicts = cs => {
+  if (!cs || !cs.length) return;
+  try {
+    const old = JSON.parse(localStorage.getItem('nn_conflicts') || '[]');
+    localStorage.setItem('nn_conflicts', JSON.stringify([...old, ...cs.map(c => ({ at: Date.now(), k: c.k, id: c.id, lost: c.lost }))].slice(-50)));
+  } catch (e) {}
+  toast('⚠️ Algo se editó en 2 dispositivos a la vez: se conservó la versión más reciente y la otra quedó guardada en este dispositivo.');
+};
+
 // Copia local de seguridad: antes de que lo que llega de la nube reemplace datos
 // reales de este dispositivo con MENOS datos (p. ej. una nube que quedó vacía),
 // se guarda aquí lo que había. Solo se conserva la copia más completa.
@@ -2796,52 +2896,78 @@ const fb = {
     // Nunca se sube nada hasta haber CONFIRMADO la descarga de la nube: si la descarga
     // falló y se subía el estado local (p. ej. los datos de ejemplo), se borraban tus datos reales.
     if (!this.enabled || !this.uid || !this.syncReady) return;
-    setSyncStatus('syncing', navigator.onLine ? 'Subiendo…' : '📴 Guardando offline…');
+    // Sin internet no se intenta: la subida correcta necesita leer la nube para fusionar. Todo queda
+    // guardado en el dispositivo (marca de pendiente) y se sube solo en cuanto vuelve la conexión.
+    if (!navigator.onLine) { setSyncStatus('syncing', '📴 Guardado en el dispositivo — se subirá al conectar'); return; }
+    setSyncStatus('syncing', 'Subiendo…');
     const unsyncedAtStart = localStorage.getItem(UNSYNCED_KEY);
+    const uid = this.uid;
     try {
-      const ref = window.fbSDK.doc(window.fbSDK.db, 'users', this.uid);
-      const payload = {
-        notes:     state.notes,
-        events:    state.events,
-        projects:  state.projects,
-        habits:    state.habits,
-        routines:  state.routines,
-        reminders: state.reminders,
-        diary:     state.diary,
-        trash:     state.trash||[],
-        settings:  state.settings,
-        _at:       Date.now(),
-        _uid:      this.uid,
-        _deviceId: DEVICE_ID,
-      };
-      // Firestore guarda todo en UN documento con tope de 1 MiB: avisamos antes de llegar al límite.
-      try { this.lastSize = new Blob([JSON.stringify(payload)]).size; } catch(e) {}
+      const ref = window.fbSDK.doc(window.fbSDK.db, 'users', uid);
+      const localSnap = {}; DATA_KEYS.forEach(k => { localSnap[k] = JSON.parse(JSON.stringify(state[k] || [])); });
+      const pushedHashes = hashMaps(localSnap);
+      // La base se toma JUNTO con la copia local: si mientras se sube llega algo de otro dispositivo, la base
+      // del listener sería más nueva que esta copia y lo recién llegado parecería "borrado aquí".
+      const baseAtStart = getCloudBase(uid);
+      const settingsSnap = JSON.parse(JSON.stringify(state.settings || {}));
+      const out = await window.fbSDK.runTransaction(window.fbSDK.db, async tx => {
+        const snap = await tx.get(ref);
+        const cloud = snap.exists() ? snap.data() : {};
+        const { merged, conflicts } = mergeStates(localSnap, cloud, baseAtStart);
+        const payload = { ...merged, settings: settingsSnap, _at: Date.now(), _uid: uid, _deviceId: DEVICE_ID };
+        // Firestore guarda todo en UN documento con tope de 1 MiB: si no cabe, NO se intenta (y se avisa claro).
+        const size = new Blob([JSON.stringify(payload)]).size;
+        if (size > 1000 * 1024) { const e = new Error('too-big'); e.code = 'too-big'; e.size = size; throw e; }
+        tx.set(ref, payload, { merge: true });
+        return { merged, conflicts, size };
+      });
+      this.lastSize = out.size;
       if (this.lastSize > 900 * 1024 && !this._sizeWarned) {
         this._sizeWarned = true;
         toast('⚠️ Tus datos ya ocupan ' + Math.round(this.lastSize / 1024) + ' KB de 1024 KB en la nube. Exporta un respaldo y libera espacio (papelera/diario antiguo).');
       }
-      await window.fbSDK.setDoc(ref, payload, { merge: true });
+      setCloudBase(uid, out.merged);
+      noteConflicts(out.conflicts);
+      // Lo que llegó de otros dispositivos durante la fusión se incorpora aquí (sin pisar lo que editaste mientras subía).
+      this._reconcileAfterPush(out.merged, pushedHashes);
       // Confirmado por el servidor: si no hubo cambios nuevos mientras subía, ya no hay nada pendiente.
       if (localStorage.getItem(UNSYNCED_KEY) === unsyncedAtStart) { try { localStorage.removeItem(UNSYNCED_KEY); } catch(e) {} }
+      this._tooBig = false;
       this.lastSyncAt = Date.now();
       if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') {
         const el = document.getElementById('syncMeta'); if (el) el.textContent = syncMetaText();
       }
-      // Con caché persistente, setDoc() resuelve aunque no haya internet:
-      // el cambio queda guardado en IndexedDB y Firestore lo sube solo al reconectar.
-      if (navigator.onLine) {
-        setSyncStatus('connected', 'Sincronizado ✓');
-      } else {
-        setSyncStatus('syncing', '📴 Guardado offline — se sincronizará al conectar');
-      }
+      setSyncStatus('connected', 'Sincronizado ✓');
     } catch(e) {
       console.error('[NOVA HUB] pushAll error', e.code, e.message);
+      if (e.code === 'too-big') {
+        this._tooBig = true;
+        setSyncStatus('error', 'Datos demasiado grandes para la nube');
+        if (!this._bigWarned) { this._bigWarned = true; toast('⚠️ Tus datos (' + Math.round(e.size / 1024) + ' KB) superan el límite de la nube (1 MB). Siguen guardados en este dispositivo pero NO se están subiendo. Borra o exporta lo más pesado (imágenes, diario antiguo, papelera).'); }
+        return;
+      }
       setSyncStatus('error', 'Error al subir');
       toast('❌ Firestore: ' + (e.code || e.message) + ' — tus cambios siguen guardados en este dispositivo y se reintentarán.');
       // Los cambios quedan marcados como pendientes; reintento automático en 20 s.
       clearTimeout(this._retryTimer);
       this._retryTimer = setTimeout(() => { if (this.enabled && hasUnsynced()) schedulePush(); }, 20000);
     }
+  },
+  // Incorpora a este dispositivo lo fusionado en la nube (cosas nuevas de otros dispositivos) conservando
+  // cualquier edición hecha MIENTRAS se subía.
+  _reconcileAfterPush(merged, pushedHashes) {
+    const cur = {}; DATA_KEYS.forEach(k => { cur[k] = state[k]; });
+    const { merged: next } = mergeStates(cur, merged, pushedHashes);
+    let changed = false;
+    DATA_KEYS.forEach(k => {
+      if (_stable(next[k]) === _stable(state[k])) return;
+      state[k] = next[k]; changed = true;
+      try { localStorage.setItem('nn_' + k, JSON.stringify(next[k])); } catch (e) {}
+    });
+    if (!changed) return;
+    const av = document.querySelector('.nav-item.active')?.dataset.view;
+    if (av) rerenderView(av);
+    updateStats && updateStats();
   },
 
   // ── Lee del SERVIDOR (no caché) y aplica al state ───────────────────────
@@ -2866,6 +2992,7 @@ const fb = {
           saveSafetyCopy('la nube estaba vacía');
           const upload = confirm(`La nube de tu cuenta${this.email ? ' (' + this.email + ')' : ''} está VACÍA, pero este dispositivo tiene datos:\n${countsText(mine)}\n\n¿Subirlos a la nube ahora?\n\nAceptar = subir lo de este dispositivo\nCancelar = no tocar nada por ahora`);
           if (upload) {
+            setCloudBase(this.uid, data);
             this._hold = false;
             this.syncReady = true;
             await this.pushAll();
@@ -2888,7 +3015,7 @@ const fb = {
         return false;
       }
       this.syncReady = true;
-      if (!snap.exists()) await this.pushAll();   // cuenta nueva: primera subida
+      if (!snap.exists()) { setCloudBase(this.uid, {}); await this.pushAll(); }   // cuenta nueva: primera subida
       setSyncStatus('connected', 'Sincronizado ✓');
       return true;
     } catch(e) {
@@ -3019,27 +3146,36 @@ function rerenderView(v) {
 
 // Aplica datos recibidos de Firestore al state local y re-renderiza
 function applyRemoteData(data) {
-  const keys = ['notes','events','projects','habits','routines','reminders','diary','trash'];
   let changed = false;
-  // Si ESTE dispositivo tiene cambios sin subir (p. ej. acabas de crear un hábito),
-  // no los pisamos con lo que llegó de la nube: se conserva lo local y solo se
-  // agregan los elementos nuevos que vienen de afuera.
-  const keepLocal = _pushPending || _dirtyBeforeReady;
-  const hasIds = arr => Array.isArray(arr) && arr.every(x => x && typeof x === 'object' && x.id !== undefined);
-  const trashedIds = new Set((state.trash || []).map(t => String(t?.data?.id)));
-  keys.forEach(k => {
-    if (!Array.isArray(data[k])) return;
-    let next = data[k];
-    if (keepLocal && k !== 'trash' && hasIds(state[k]) && hasIds(next)) {
-      // Los datos de ejemplo (ids 1-6 creados por seed()) nunca se mezclan con los reales de la nube.
-      const localReal = state[k].filter(x => !_isSeedItem(x));
-      const localIds = new Set(localReal.map(x => String(x.id)));
-      next = [...localReal, ...next.filter(x => !localIds.has(String(x.id)) && !trashedIds.has(String(x.id)))];
-    } else if (keepLocal && k === 'trash') {
-      return;   // la papelera local manda mientras haya cambios sin subir
-    }
-    state[k] = next; localStorage.setItem('nn_' + k, JSON.stringify(next)); changed = true;
-  });
+  // Con la "base" (última versión de la nube que este dispositivo vio) se fusiona SIEMPRE elemento por elemento:
+  // lo que cambiaste aquí se conserva, lo nuevo/cambiado en otros dispositivos entra, y solo se quita lo que
+  // alguien borró a propósito (estaba en la base sin cambios, o está en la papelera).
+  // Sin base (primera vez en este dispositivo) y sin cambios locales pendientes, se reemplaza por lo de la nube.
+  const owner = (() => { try { return localStorage.getItem(DATA_OWNER_KEY); } catch (e) { return null; } })();
+  const foreign = !!owner && owner !== fb.uid;                 // los datos de este dispositivo son de OTRA cuenta de Google: no se mezclan
+  if (foreign && sumCounts(realCounts(state)) > 0) saveSafetyCopy('datos de otra cuenta');
+  const keepLocal = !foreign && (_pushPending || _dirtyBeforeReady);
+  const base = foreign ? null : getCloudBase(fb.uid);
+  // Sin base pero con datos propios reales (p. ej. creados sin sesión) se UNEN con los de la nube: nunca se reemplaza ni se pierde nada.
+  const unionLocal = !foreign && !base && sumCounts(realCounts(state)) > 0;
+  if (base || keepLocal || unionLocal) {
+    const cur = {}; DATA_KEYS.forEach(k => { cur[k] = state[k]; });
+    const { merged, conflicts } = mergeStates(cur, data, base, keepLocal || unionLocal);
+    noteConflicts(conflicts);
+    DATA_KEYS.forEach(k => {
+      if (!Array.isArray(data[k])) return;
+      if (_stable(merged[k]) === _stable(state[k])) return;
+      state[k] = merged[k]; try { localStorage.setItem('nn_' + k, JSON.stringify(merged[k])); } catch (e) {} changed = true;
+    });
+    // Lo fusionado difiere de la nube (hay cosas locales que aún no están allá): queda pendiente de subir.
+    if (DATA_KEYS.some(k => Array.isArray(data[k]) && _stable(merged[k]) !== _stable(data[k]))) { if (fb.syncReady) schedulePush(); else { markUnsynced(); _dirtyBeforeReady = true; } }
+  } else {
+    DATA_KEYS.forEach(k => {
+      if (!Array.isArray(data[k])) return;
+      state[k] = data[k]; try { localStorage.setItem('nn_' + k, JSON.stringify(data[k])); } catch (e) {} changed = true;
+    });
+  }
+  setCloudBase(fb.uid, data);
   if (data.settings && typeof data.settings === 'object') {
     // preservar API key local si la nube no la tiene
     const localKey = state.settings.anthropicApiKey || '';
@@ -3076,6 +3212,7 @@ const autoConnectFirebase = () => {
           if (user.displayName) { state.settings.username = user.displayName; }
           state.settings.photoURL = user.photoURL || '';
           save(); applyUsername(state.settings.username); applyAvatarPhoto(state.settings.photoURL);
+          if (!hadUnsyncedChanges) { try { localStorage.removeItem(UNSYNCED_KEY); } catch (e) {} }   // ese save() es solo de arranque: no cuenta como cambio pendiente
           _dirtyBeforeReady = hadUnsyncedChanges;   // ese save() es solo de arranque; si quedaron cambios sin subir, se conservan y se suben
           // 1) Descargar del servidor primero
           let pulled = await fb.pullAll();

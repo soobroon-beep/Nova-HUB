@@ -91,3 +91,26 @@ En la vista de **Notas** y **Proyectos**, mantén presionada una tarjeta
 arrástrala a la posición que quieras. El orden se guarda solo y se
 sincroniza entre dispositivos igual que el resto de tus datos. Esto es
 100% cliente, no depende de ningún paso de arriba.
+
+## 7. Sincronización segura (por qué ya no se pierden datos) y cómo probarlo
+
+Todo se guarda en UN documento por cuenta: `users/{uid}`. Reglas que cumple el código:
+
+- **Nada se sube hasta confirmar la descarga** de la nube. Si la descarga falla o llega solo de caché, no se escribe nada.
+- **Subir = fusionar, no reemplazar.** Cada subida es una transacción: lee la nube, fusiona elemento por elemento
+  (3 vías, comparando con la última versión de la nube que ese dispositivo vio) y escribe. Lo nuevo de otro dispositivo
+  nunca se borra por subir desde uno atrasado o que estuvo sin internet.
+- **Solo se borra lo que alguien borró a propósito** (va a la papelera, que lo conserva 5 días). Si algo se editó en un
+  dispositivo y se borró en otro, gana la edición.
+- Si una misma cosa se edita en 2 dispositivos a la vez, gana la más reciente y la otra versión queda en `nn_conflicts` (local).
+- Sin internet no se intenta subir: todo queda guardado en el dispositivo con una marca de "pendiente" que sobrevive a cerrar la app.
+- Si los datos superan ~1 MB (límite de Firestore por documento) **no se sube** y la app avisa claro; nada se borra.
+- Los datos de otra cuenta de Google en el mismo dispositivo no se mezclan con la cuenta nueva (quedan en una copia local).
+
+Pruebas automáticas (ejecutan el código real de `index.html` contra una nube Firestore simulada):
+
+```
+npm run test:sync                          # o: node tests/sync.test.js
+FUZZ_SEED=42 FUZZ_RUNS=2000 npm run test:sync   # más secuencias aleatorias
+TRACE=1 npm run test:sync                  # si algo falla, imprime la bitácora de cada dispositivo
+```

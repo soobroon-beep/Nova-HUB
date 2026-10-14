@@ -4,7 +4,8 @@
   "private": true,
   "description": "Job que revisa recordatorios vencidos y envía push real vía FCM",
   "scripts": {
-    "check-reminders": "node scripts/check-reminders.js"
+    "check-reminders": "node scripts/check-reminders.js",
+    "test:sync": "node tests/sync.test.js"
   },
   "dependencies": {
     "firebase-admin": "^12.6.0"
