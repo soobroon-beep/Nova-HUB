@@ -1648,7 +1648,7 @@ html{-webkit-tap-highlight-color:transparent}
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
   /* Dos lados de IGUAL ancho: el (+) queda siempre exactamente en el centro, sean las pestañas que sean */
   .tb-side{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:center;justify-content:space-around}
-  .tb-item{flex:1 1 0;max-width:76px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  .tb-item{flex:1 1 0;max-width:96px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     background:none;border:none;color:var(--text2);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 6px rgba(0,0,0,.35);
     cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;min-width:0;padding:0}
   .tb-item span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1885,9 +1885,9 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
   </div>
 </aside>
 <nav id="tabbar" aria-label="Navegación principal">
-  <div class="tb-side" id="tbLeft"></div>
+  <div class="tb-side" id="tbLeft"><button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Menú</span></button></div>
   <button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-  <div class="tb-side" id="tbRight"><button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Más</span></button></div>
+  <div class="tb-side" id="tbRight"></div>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -4304,7 +4304,7 @@ const DOCK_META = {
   ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['calendar', 'notes', 'projects'];
+const DOCK_DEFAULT = ['calendar'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -4312,15 +4312,12 @@ const DOCK_COLORS = [
   { id: '#FFD700', name: 'Dorado',          c: '#FFD700' },
   { id: '#38bdf8', name: 'Cian',            c: '#38bdf8' }
 ];
-// Pestañas elegidas (2 a 4), en el orden del menú; si no hay nada válido, las de siempre
+// Acceso rápido: UNA pestaña a la derecha del (+); «Menú» a la izquierda abre todas las secciones
 const getDockTabs = () => {
   const saved = state.settings && state.settings.dockTabs;
-  let valid = Array.isArray(saved) ? Object.keys(DOCK_META).filter(k => saved.includes(k)).slice(0, 5) : [];
-  if (valid.length === 4) valid = valid.slice(0, 3);          // siempre impar (3 o 5) + «Más» = lados simétricos
-  return (valid.length === 3 || valid.length === 5) ? valid : DOCK_DEFAULT;
+  const v = Array.isArray(saved) ? saved.find(k => DOCK_META[k]) : null;
+  return [v || DOCK_DEFAULT[0]];
 };
-let _dockPending = null;   // selección a medias en Ajustes (hasta completar 3 o 5)
-let _dockCap = null;
 
 // ── Tocar el saludo (arriba) lleva al Dashboard; si ya estás ahí, sube al inicio ──
 (function(){
@@ -4348,17 +4345,14 @@ let _dockCap = null;
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
     bar.querySelectorAll('.tb-dyn').forEach(n => n.remove());
-    const tabs = getDockTabs(), k = (tabs.length + 1) / 2;   // pestañas + «Más» = par → mitad a cada lado del (+)
-    const left = document.getElementById('tbLeft'), right = document.getElementById('tbRight');
-    bar.classList.toggle('dense', tabs.length >= 4);
+    const tabs = getDockTabs(), right = document.getElementById('tbRight');
     const mk = v => {
       const m = DOCK_META[v], b = document.createElement('button');
       b.type = 'button'; b.className = 'tb-item tb-dyn'; b.dataset.tab = v;
       b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span>`;
       return b;
     };
-    tabs.slice(0, k).forEach(v => left.appendChild(mk(v)));
-    tabs.slice(k).forEach(v => right.insertBefore(mk(v), moreEl));
+    tabs.forEach(v => right.appendChild(mk(v)));
     syncActive();
   };
   // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
@@ -5742,10 +5736,9 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">Elige 3 o 5 pestañas para la barra del celular (así queda simétrica: mitad a cada lado del botón (+)). «Más» siempre está; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
-      ${(_dockPending=null,_dockCap=null,'')}<div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
-      <div class="dock-picker" id="dockCap" style="margin:10px 0 0">${[3,5].map(n => `<button type="button" class="dock-chip${getDockTabs().length===n?' on':''}" data-dockn="${n}">${n} pestañas</button>`).join('')}</div>
-      <div class="settings-sub" id="dockCount" style="margin:10px 0 0">${getDockTabs().length} de ${getDockTabs().length} pestañas</div>
+      <div class="settings-sub" style="margin-bottom:12px">Elige tu acceso rápido: la pestaña que va junto al botón (+). «Menú» (a la izquierda) abre todas las secciones; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
+      <div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
+      
       <div class="settings-label" style="margin:16px 0 10px">Color del botón (+)</div>
       <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
     </div>
@@ -5826,35 +5819,11 @@ const renderSettingsView=()=>{
     save();
     toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
   }));
-  const dockUI = () => {
-    const cap = _dockCap || getDockTabs().length, sel = _dockPending || getDockTabs();
-    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', sel.includes(c.dataset.dock)));
-    document.querySelectorAll('#dockCap [data-dockn]').forEach(c => c.classList.toggle('on', +c.dataset.dockn === cap));
-    const n = document.getElementById('dockCount');
-    if (n) n.textContent = sel.length === cap ? cap + ' de ' + cap + ' pestañas' : sel.length + ' de ' + cap + ' · elige ' + (cap - sel.length) + ' más para aplicar';
-  };
-  const dockApply = () => {
-    const cap = _dockCap || getDockTabs().length, sel = _dockPending || getDockTabs();
-    if (sel.length === cap) { state.settings.dockTabs = sel; save(); window.ensureDock && window.ensureDock(); }
-    dockUI();
-  };
-  document.getElementById('dockCap')?.addEventListener('click', e => {
-    const b = e.target.closest('[data-dockn]'); if (!b) return;
-    _dockCap = +b.dataset.dockn;
-    _dockPending = (_dockPending || getDockTabs()).slice(0, _dockCap);
-    dockApply();
-  });
   document.getElementById('dockPicker')?.addEventListener('click', e => {
     const b = e.target.closest('[data-dock]'); if (!b) return;
-    const k = b.dataset.dock, cap = _dockCap || getDockTabs().length; let tabs = _dockPending || getDockTabs();
-    if (tabs.includes(k)) {
-      if (tabs.length <= 1) { toast('Deja al menos 1 pestaña'); haptic('warn'); return; }
-      tabs = tabs.filter(x => x !== k);
-    } else {
-      if (tabs.length >= cap) { toast('Ya tienes ' + cap + ': quita una para cambiarla'); haptic('warn'); return; }
-      tabs = Object.keys(DOCK_META).filter(x => tabs.includes(x) || x === k);
-    }
-    _dockPending = tabs; dockApply();
+    state.settings.dockTabs = [b.dataset.dock]; save();
+    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', c === b));
+    window.ensureDock && window.ensureDock();
   });
   document.getElementById('dockColors')?.addEventListener('click', e => {
     const b = e.target.closest('[data-dc]'); if (!b) return;
