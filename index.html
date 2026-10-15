@@ -369,7 +369,7 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 /* FAB & TOAST */
 .fab{position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));border:none;color:#fff;font-size:1.6rem;cursor:pointer;box-shadow:0 8px 24px rgba(124,106,247,.4);transition:var(--trans);z-index:50;display:flex;align-items:center;justify-content:center}
 .fab:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(124,106,247,.5)}
-.toast{position:fixed;bottom:90px;right:28px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:.85rem;color:var(--text);z-index:2000;transform:translateY(20px);opacity:0;transition:var(--trans);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast{position:fixed;bottom:90px;right:28px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:.85rem;color:var(--text);z-index:2000;transform:translateY(20px);opacity:0;pointer-events:none;transition:var(--trans);box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.show{transform:translateY(0);opacity:1}
 
 @media(max-width:900px){
@@ -1666,6 +1666,7 @@ html{-webkit-tap-highlight-color:transparent}
     background:var(--dock);box-shadow:0 6px 18px color-mix(in srgb,var(--dock) 40%,transparent),0 2px 6px rgba(0,0,0,.35);
     transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s,bottom .34s cubic-bezier(.22,1,.36,1);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .tb-plus::before{content:'';position:absolute;inset:-8px;border-radius:50%}   /* zona táctil más generosa que el dibujo */
   .tb-plus.open{z-index:58}
   .tb-plus.low{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
   .tb-plus.gone{transform:scale(.4);opacity:0;pointer-events:none}
