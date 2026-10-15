@@ -1661,17 +1661,14 @@ html{-webkit-tap-highlight-color:transparent}
   .tb-item:active svg{transform:scale(.86)}
   .tb-item.dot::before{content:'';position:absolute;top:13px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;
     background:var(--crimson);box-shadow:0 0 6px var(--crimson)}
-  .tb-plus{flex:0 0 auto;width:58px;height:58px;margin:-22px 2px 0;border-radius:50%;border:none;cursor:pointer;
+  .tb-plus{flex:0 0 auto;width:56px;height:56px;margin:-20px 2px 0;border-radius:50%;border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;color:var(--dock-ink);
-    background:linear-gradient(145deg,var(--dock-hi),var(--dock) 48%,var(--dock-lo));
-    box-shadow:0 10px 26px var(--dock-glow),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25);
-    transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
-    animation:plusGlow 2.8s ease-in-out infinite;-webkit-tap-highlight-color:transparent}
-  .tb-plus svg{width:30px;height:30px;fill:currentColor;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
-  .tb-plus:active{transform:scale(.9)}
+    background:var(--dock);box-shadow:0 4px 14px color-mix(in srgb,var(--dock) 38%,transparent);
+    transition:transform .2s cubic-bezier(.2,.8,.2,1);
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .tb-plus svg{width:38px;height:38px;fill:currentColor;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  .tb-plus:active{transform:scale(.92)}
   .tb-plus.open svg{transform:rotate(135deg)}
-  @keyframes plusGlow{0%,100%{box-shadow:0 10px 26px var(--dock-glow),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25)}
-    50%{box-shadow:0 12px 36px var(--dock-glow),0 0 0 4px color-mix(in srgb,var(--dock) 18%,transparent),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25)}}
 
   #tabSheetScrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.45);
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
@@ -1700,7 +1697,7 @@ html{-webkit-tap-highlight-color:transparent}
   body.has-tabbar .fab-menu{right:14px;bottom:calc(92px + env(safe-area-inset-bottom,0px))}
   body.has-tabbar .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
-@media(prefers-reduced-motion:reduce){#tabbar{animation:none}.tb-plus{animation:none}}
+@media(prefers-reduced-motion:reduce){#tabbar{animation:none}}
 
 /* ── Traslúcido en toda la app: superficies más transparentes, con desenfoque donde se encima contenido ── */
 .greeting{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:10px;transition:opacity .15s,transform .15s}
@@ -1784,6 +1781,23 @@ html{-webkit-tap-highlight-color:transparent}
 }
 @media(prefers-reduced-motion:reduce){#moreDrawer,.md-tile,.md-chip{transition-duration:.01ms!important}}
 
+
+/* ── FLUIDEZ ── */
+html{-webkit-tap-highlight-color:transparent}
+button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{touch-action:manipulation}
+#novaTexture::after{mix-blend-mode:normal;opacity:.035}
+[data-theme="light"] #novaTexture::after{mix-blend-mode:normal;opacity:.04}
+.cal-day.today{animation:none;box-shadow:0 0 12px 2px rgba(124,106,247,.22)}
+.logo-icon{animation:none}
+.modal-overlay{-webkit-backdrop-filter:none;backdrop-filter:none}
+#content{-webkit-overflow-scrolling:touch}
+@media(max-width:900px){
+  #tabbar{-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
+  #topbar{-webkit-backdrop-filter:blur(12px) saturate(140%);backdrop-filter:blur(12px) saturate(140%)}
+  .modal{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(20,20,38,.94)}
+  .toast,.fab-menu{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  #novaTexture::after{display:none}
+}
 </style>
 </head>
 <body>
@@ -6930,6 +6944,7 @@ initNotifications();
     const dt = Math.min(now - lastFrame, 100);
     lastFrame = now;
 
+    if (document.querySelector('.modal-overlay.open,.modal-overlay.active,#moreDrawer.open')) return; // pausa con paneles abiertos
     if (isScrolling || touching) return; // congelado mientras se hace scroll o hay un dedo en pantalla
 
     // La velocidad depende del tiempo real (antes dependía de cuántos frames se
