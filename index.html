@@ -1632,7 +1632,7 @@ html{-webkit-tap-highlight-color:transparent}
   #tabbar{
     display:flex;align-items:center;justify-content:space-between;
     position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));
-    width:min(92vw,420px);height:66px;padding:0 8px;z-index:55;
+    width:min(96vw,440px);height:64px;padding:0 4px;z-index:55;
     transform:translateX(-50%);border-radius:26px;
     background:rgba(18,18,32,.34);
     -webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);
@@ -1648,12 +1648,12 @@ html{-webkit-tap-highlight-color:transparent}
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
   /* Dos lados de IGUAL ancho: el (+) queda siempre exactamente en el centro, sean las pestañas que sean */
   .tb-side{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:center;justify-content:space-around}
-  .tb-item{flex:1 1 0;max-width:96px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-    background:none;border:none;color:var(--text2);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 6px rgba(0,0,0,.35);
+  .tb-item{flex:1 1 0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:none;border:none;color:var(--text2);font:inherit;font-size:.55rem;font-weight:700;letter-spacing:0;text-shadow:0 1px 6px rgba(0,0,0,.35);
     cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;min-width:0;padding:0}
   .tb-item span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #tabbar.dense .tb-item{font-size:.56rem;letter-spacing:0}
-  .tb-item svg{width:24px;height:24px;fill:currentColor;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  .tb-item svg{width:23px;height:23px;fill:currentColor;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
   .tb-item.active{color:var(--dock-tx)}
   .tb-item.active svg{transform:translateY(-2px) scale(1.12)}
   .tb-item.active::after{content:'';position:absolute;bottom:7px;width:16px;height:3px;border-radius:3px;
@@ -1661,20 +1661,24 @@ html{-webkit-tap-highlight-color:transparent}
   .tb-item:active svg{transform:scale(.86)}
   .tb-item.dot::before{content:'';position:absolute;top:13px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;
     background:var(--crimson);box-shadow:0 0 6px var(--crimson)}
-  .tb-plus{flex:0 0 auto;width:56px;height:56px;margin:-20px 2px 0;border-radius:50%;border:none;cursor:pointer;
+  .tb-plus{position:fixed;right:18px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:54;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;color:var(--dock-ink);
-    background:var(--dock);box-shadow:0 4px 14px color-mix(in srgb,var(--dock) 38%,transparent);
-    transition:transform .2s cubic-bezier(.2,.8,.2,1);
+    background:var(--dock);box-shadow:0 6px 18px color-mix(in srgb,var(--dock) 40%,transparent),0 2px 6px rgba(0,0,0,.35);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s,bottom .34s cubic-bezier(.22,1,.36,1);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-  .tb-plus svg{width:38px;height:38px;fill:currentColor;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  .tb-plus.open{z-index:58}
+  .tb-plus.low{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+  .tb-plus.gone{transform:scale(.4);opacity:0;pointer-events:none}
+  body.kb-open .tb-plus{opacity:0;pointer-events:none}
+  .tb-plus svg{width:36px;height:36px;fill:currentColor;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
   .tb-plus:active{transform:scale(.92)}
   .tb-plus.open svg{transform:rotate(135deg)}
 
   #tabSheetScrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.45);
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
   #tabSheetScrim.open{opacity:1;pointer-events:auto}
-  #tabSheet{display:flex;flex-direction:column;align-items:center;gap:10px;position:fixed;left:50%;
-    bottom:calc(98px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:57;pointer-events:none}
+  #tabSheet{display:flex;flex-direction:column;align-items:flex-end;gap:10px;position:fixed;right:18px;
+    bottom:calc(166px + env(safe-area-inset-bottom,0px));z-index:57;pointer-events:none}
   #tabSheet button{display:flex;align-items:center;gap:12px;min-width:210px;padding:12px 20px;border-radius:18px;
     border:1px solid rgba(255,255,255,.14);color:var(--text);font:inherit;font-size:.92rem;font-weight:600;cursor:pointer;
     background:rgba(24,24,40,.86);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
@@ -1884,11 +1888,8 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
     <div class="md-foot" id="mdFoot"></div>
   </div>
 </aside>
-<nav id="tabbar" aria-label="Navegación principal">
-  <div class="tb-side" id="tbLeft"><button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Menú</span></button></div>
-  <button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-  <div class="tb-side" id="tbRight"></div>
-</nav>
+<nav id="tabbar" aria-label="Navegación principal"></nav>
+<button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
 <div class="toast" id="toast"></div>
 
 <!-- MODALS -->
@@ -4304,7 +4305,7 @@ const DOCK_META = {
   ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['calendar'];
+const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','settings'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -4312,12 +4313,8 @@ const DOCK_COLORS = [
   { id: '#FFD700', name: 'Dorado',          c: '#FFD700' },
   { id: '#38bdf8', name: 'Cian',            c: '#38bdf8' }
 ];
-// Acceso rápido: UNA pestaña a la derecha del (+); «Menú» a la izquierda abre todas las secciones
-const getDockTabs = () => {
-  const saved = state.settings && state.settings.dockTabs;
-  const v = Array.isArray(saved) ? saved.find(k => DOCK_META[k]) : null;
-  return [v || DOCK_DEFAULT[0]];
-};
+// Pestañas fijas de la barra inferior (el Dashboard = tocar el saludo; el resto de secciones = tocar tu avatar)
+const getDockTabs = () => DOCK_DEFAULT;
 
 // ── Tocar el saludo (arriba) lleva al Dashboard; si ya estás ahí, sube al inicio ──
 (function(){
@@ -4340,20 +4337,15 @@ const getDockTabs = () => {
   if(!bar || !plus || !sheet || !scrim) return;
   document.body.classList.add('has-tabbar');
   const navTo = v => document.querySelector(`#sidebar .nav-item[data-view="${v}"]`)?.click();
-  const moreEl = bar.querySelector('[data-tab="more"]');
   let lastSig = null;
+  const curView = () => document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
+  // El (+) flotante crea lo de la sección en la que estás; en Ajustes se esconde
+  function syncFab(){ plus.classList.toggle('gone', curView() === 'settings'); }
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
-    bar.querySelectorAll('.tb-dyn').forEach(n => n.remove());
-    const tabs = getDockTabs(), right = document.getElementById('tbRight');
-    const mk = v => {
-      const m = DOCK_META[v], b = document.createElement('button');
-      b.type = 'button'; b.className = 'tb-item tb-dyn'; b.dataset.tab = v;
-      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span>`;
-      return b;
-    };
-    tabs.forEach(v => right.appendChild(mk(v)));
-    syncActive();
+    bar.innerHTML = getDockTabs().map(v => { const m = DOCK_META[v];
+      return `<button type="button" class="tb-item" data-tab="${v}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span></button>`; }).join('');
+    syncActive(); syncFab();
   };
   // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
   const applyDockColor = () => {
@@ -4373,13 +4365,11 @@ const getDockTabs = () => {
     const cur = document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
     bar.querySelectorAll('[data-tab]').forEach(b => {
       const t = b.dataset.tab;
-      if (t === 'more') b.classList.toggle('dot', cur !== 'dashboard' && !getDockTabs().includes(cur));   // punto = estás en otra pestaña (el Dashboard es la casa: sin punto)
-      else b.classList.toggle('active', t === cur);
+      b.classList.toggle('active', t === cur);
     });
+    syncFab();
   };
   new MutationObserver(() => { ensureDock(); syncActive(); }).observe(document.getElementById('sidebar'), { subtree:true, attributes:true, attributeFilter:['class'] });
-  if (fab) new MutationObserver(() => bar.querySelector('[data-tab="more"]')?.classList.toggle('active', fab.classList.contains('menu-open')))
-    .observe(fab, { attributes:true, attributeFilter:['class'] });
   ensureDock();
 
   // ── Menú flotante inferior: resumen del día + todas las secciones (se arma desde el sidebar, siempre sincronizado) ──
@@ -4501,7 +4491,15 @@ const getDockTabs = () => {
     sheet.classList.remove('open'); scrim.classList.remove('open'); plus.classList.remove('open');
     plus.setAttribute('aria-expanded','false'); sheet.setAttribute('aria-hidden','true');
   };
-  plus.addEventListener('click', () => sheet.classList.contains('open') ? closeSheet() : openSheet());
+  const CTX = { calendar:'event', notes:'note', projects:'project', reminders:'reminder', habits:'habit',
+    diary(){ ct && ct.scrollTo({ top:0, behavior:'smooth' }); setTimeout(() => document.getElementById('diaryBody')?.focus({ preventScroll:true }), 350); } };
+  plus.addEventListener('click', () => {
+    if (sheet.classList.contains('open')) { closeSheet(); return; }
+    const a = CTX[curView()];
+    if (typeof a === 'function') { a(); return; }
+    if (a) { closeDrawer(); actions[a](); return; }
+    openSheet();   // Dashboard, Briefing, IA: menú de creación rápida
+  });
   scrim.addEventListener('click', closeSheet);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
@@ -4513,6 +4511,9 @@ const getDockTabs = () => {
     if (b.classList.contains('active') && ct) ct.scrollTo({ top: 0, behavior: 'smooth' });   // tocar la activa = subir al inicio
     navTo(t);
   });
+
+  document.getElementById('avatarEl')?.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
+  document.getElementById('avatarEl')?.setAttribute('role','button');
 
   // Crear algo nuevo: mismos formularios que ya usa la app
   const actions = {
@@ -4560,7 +4561,7 @@ const getDockTabs = () => {
   ct && ct.addEventListener('scroll', () => {
     const y = ct.scrollTop, d = y - lastY;
     if (Math.abs(d) < 10) return;
-    bar.classList.toggle('tb-hide', d > 0 && y > 140);
+    const hide = d > 0 && y > 140; bar.classList.toggle('tb-hide', hide); plus.classList.toggle('low', hide);
     lastY = y;
   }, { passive:true });
   const isField = el => el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && !/checkbox|radio|button|range|file/.test(el.type || '');
@@ -4569,7 +4570,7 @@ const getDockTabs = () => {
 
   // Háptico suave en cualquier control tocable
   document.addEventListener('click', e => {
-    if (e.target.closest('.nav-item,.fab,.fab-menu-item,.tb-item,.tb-plus,#tabSheet button,.btn,.sec-action,.toggle-sw,.hb-check,.focus-check,.cal-day,.pd-check,.pin-note-btn,.qa-icon-btn,.greeting')) haptic('tap');
+    if (e.target.closest('.nav-item,.fab,.fab-menu-item,.tb-item,.tb-plus,.avatar,#tabSheet button,.btn,.sec-action,.toggle-sw,.hb-check,.focus-check,.cal-day,.pd-check,.pin-note-btn,.qa-icon-btn,.greeting')) haptic('tap');
   }, true);
 })();
 
@@ -5736,10 +5737,8 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">Elige tu acceso rápido: la pestaña que va junto al botón (+). «Menú» (a la izquierda) abre todas las secciones; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
-      <div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
-      
-      <div class="settings-label" style="margin:16px 0 10px">Color del botón (+)</div>
+      <div class="settings-sub" style="margin-bottom:12px">La barra tiene Calendario, Notas, Proyectos, Avisos, Diario, Hábitos y Ajustes. El botón (+) flotante crea lo de la sección donde estás. Dashboard: toca tu saludo. Todas las secciones y el resumen: toca tu avatar.</div>
+      <div class="settings-label" style="margin:4px 0 10px">Color del botón (+)</div>
       <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
     </div>
     <div class="settings-section"><h3>🔔 Notificaciones</h3>
@@ -5819,12 +5818,6 @@ const renderSettingsView=()=>{
     save();
     toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
   }));
-  document.getElementById('dockPicker')?.addEventListener('click', e => {
-    const b = e.target.closest('[data-dock]'); if (!b) return;
-    state.settings.dockTabs = [b.dataset.dock]; save();
-    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', c === b));
-    window.ensureDock && window.ensureDock();
-  });
   document.getElementById('dockColors')?.addEventListener('click', e => {
     const b = e.target.closest('[data-dc]'); if (!b) return;
     state.settings.dockColor = b.dataset.dc; save();
