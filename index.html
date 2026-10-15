@@ -1493,8 +1493,14 @@ html{-webkit-tap-highlight-color:transparent}
 :root{
   --font-display:'Roboto','Google Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --gold:#FFD700; --jade:#00A86B; --crimson:#DC143C;
+  /* Color del botón (+) y de la pestaña activa: por defecto sigue el color de la app; se cambia en Ajustes */
+  --dock:var(--accent); --dock-ink:#fff;
+  --dock-hi:color-mix(in srgb,var(--dock) 62%,#fff);
+  --dock-lo:color-mix(in srgb,var(--dock) 68%,#000);
+  --dock-glow:color-mix(in srgb,var(--dock) 55%,transparent);
+  --dock-tx:color-mix(in srgb,var(--dock) 55%,#fff);
 }
-[data-theme="light"]{--gold:#B8860B}
+[data-theme="light"]{--gold:#B8860B;--dock-tx:color-mix(in srgb,var(--dock) 85%,#000)}
 
 /* ── Tipografía: Roboto (estilo Android/Google) en toda la app ── */
 .logo,.greeting h2,.sec-title,.focus-title,.cal-month,.stat-card .value,
@@ -1628,9 +1634,9 @@ html{-webkit-tap-highlight-color:transparent}
     position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));
     width:min(92vw,420px);height:66px;padding:0 8px;z-index:55;
     transform:translateX(-50%);border-radius:26px;
-    background:rgba(18,18,32,.72);
-    -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
-    border:1px solid rgba(255,255,255,.13);
+    background:rgba(18,18,32,.34);
+    -webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);
+    border:1px solid rgba(255,255,255,.17);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 14px 38px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.2);
     transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .25s;
     animation:tabbarIn .55s .15s cubic-bezier(.34,1.56,.64,1) backwards;
@@ -1638,30 +1644,30 @@ html{-webkit-tap-highlight-color:transparent}
   @keyframes tabbarIn{from{transform:translate(-50%,120%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
   #tabbar.tb-hide{transform:translate(-50%,calc(100% + 30px));opacity:.0}
   body.kb-open #tabbar{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
-  [data-theme="light"] #tabbar{background:rgba(255,255,255,.78);border-color:rgba(0,0,0,.08);
+  [data-theme="light"] #tabbar{background:rgba(255,255,255,.46);border-color:rgba(0,0,0,.08);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
   .tb-item{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-    background:none;border:none;color:var(--text3);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;
+    background:none;border:none;color:var(--text2);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 6px rgba(0,0,0,.35);
     cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;min-width:0;padding:0}
   .tb-item svg{width:24px;height:24px;fill:currentColor;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-  .tb-item.active{color:var(--gold)}
+  .tb-item.active{color:var(--dock-tx)}
   .tb-item.active svg{transform:translateY(-2px) scale(1.12)}
   .tb-item.active::after{content:'';position:absolute;bottom:7px;width:16px;height:3px;border-radius:3px;
-    background:var(--gold);box-shadow:0 0 8px var(--gold)}
+    background:var(--dock-tx);box-shadow:0 0 8px var(--dock-tx)}
   .tb-item:active svg{transform:scale(.86)}
   .tb-item.dot::before{content:'';position:absolute;top:13px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;
     background:var(--crimson);box-shadow:0 0 6px var(--crimson)}
   .tb-plus{flex:0 0 auto;width:58px;height:58px;margin:-22px 4px 0;border-radius:50%;border:none;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;color:#1a1200;
-    background:linear-gradient(145deg,#FFE88A,#FFD700 45%,#FFB300);
-    box-shadow:0 10px 26px rgba(255,200,0,.42),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35);
+    display:flex;align-items:center;justify-content:center;color:var(--dock-ink);
+    background:linear-gradient(145deg,var(--dock-hi),var(--dock) 48%,var(--dock-lo));
+    box-shadow:0 10px 26px var(--dock-glow),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25);
     transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
     animation:plusGlow 2.8s ease-in-out infinite;-webkit-tap-highlight-color:transparent}
   .tb-plus svg{width:30px;height:30px;fill:currentColor;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
   .tb-plus:active{transform:scale(.9)}
   .tb-plus.open svg{transform:rotate(135deg)}
-  @keyframes plusGlow{0%,100%{box-shadow:0 10px 26px rgba(255,200,0,.38),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35)}
-    50%{box-shadow:0 12px 34px rgba(255,200,0,.62),inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(160,100,0,.35)}}
+  @keyframes plusGlow{0%,100%{box-shadow:0 10px 26px var(--dock-glow),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25)}
+    50%{box-shadow:0 12px 36px var(--dock-glow),0 0 0 4px color-mix(in srgb,var(--dock) 18%,transparent),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25)}}
 
   #tabSheetScrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.45);
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
@@ -1691,6 +1697,18 @@ html{-webkit-tap-highlight-color:transparent}
   body.has-tabbar .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){#tabbar{animation:none}.tb-plus{animation:none}}
+
+/* ── Ajustes: barra inferior ── */
+.dock-picker{display:flex;flex-wrap:wrap;gap:8px}
+.dock-chip{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:999px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text2);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--trans)}
+.dock-chip.on{border-color:var(--accent);color:var(--text);background:color-mix(in srgb,var(--accent) 22%,transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.dock-chip:active{transform:scale(.95)}
+.dock-colors{display:flex;gap:12px;flex-wrap:wrap}
+.dock-sw{width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 4px 12px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.dock-sw.on{border-color:var(--text);transform:scale(1.12)}
 
 /* ── Menú flotante inferior: resumen del día + todas las secciones ── */
 #moreDrawer,#moreScrim{display:none}
@@ -1833,10 +1851,7 @@ html{-webkit-tap-highlight-color:transparent}
   </div>
 </aside>
 <nav id="tabbar" aria-label="Navegación principal">
-  <button class="tb-item" type="button" data-tab="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Inicio</span></button>
-  <button class="tb-item" type="button" data-tab="notes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg><span>Notas</span></button>
   <button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-  <button class="tb-item" type="button" data-tab="projects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/></svg><span>Proyectos</span></button>
   <button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Más</span></button>
 </nav>
 <div class="toast" id="toast"></div>
@@ -3519,6 +3534,7 @@ function applyRemoteData(data) {
     if (localKey && !state.settings.anthropicApiKey) state.settings.anthropicApiKey = localKey;
     localStorage.setItem('nn_settings', JSON.stringify(state.settings));
     if (data.settings.username) applyUsername(data.settings.username);
+    window.ensureDock && window.ensureDock();
     applyAccent(state.settings.accentColor || '#7c6af7');
     applyAppIcon(state.settings.appIcon || 'nova');
     changed = true;
@@ -4241,6 +4257,34 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && isOpen()) closeMenu(); });
 })();
 
+// ── Pestañas que pueden ir en la barra inferior (s = etiqueta corta, f = nombre completo, p = icono SVG) ──
+const DOCK_META = {
+  dashboard: { s:'Inicio',     f:'Dashboard',      i:'⊞',  p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
+  calendar:  { s:'Calendario', f:'Calendario',     i:'📅', p:'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z' },
+  notes:     { s:'Notas',      f:'Notas',          i:'🗒️', p:'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z' },
+  projects:  { s:'Proyectos',  f:'Proyectos',      i:'🚀', p:'M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z' },
+  reminders: { s:'Avisos',     f:'Recordatorios',  i:'⏰', p:'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z' },
+  diary:     { s:'Diario',     f:'Diario',         i:'📖', p:'M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z' },
+  habits:    { s:'Hábitos',    f:'Hábitos',        i:'🔥', p:'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z' },
+  briefing:  { s:'Briefing',   f:'Daily Briefing', i:'🗞️', p:'M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14H5v-4h6v4zm0-6H5V7h6v4zm8 6h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V7h6v2z' },
+  ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
+  settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
+};
+const DOCK_DEFAULT = ['dashboard', 'notes', 'projects'];
+const DOCK_COLORS = [
+  { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
+  { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
+  { id: '#00A86B', name: 'Jade',            c: '#00A86B' },
+  { id: '#FFD700', name: 'Dorado',          c: '#FFD700' },
+  { id: '#38bdf8', name: 'Cian',            c: '#38bdf8' }
+];
+// Pestañas elegidas (2 a 4), en el orden del menú; si no hay nada válido, las de siempre
+const getDockTabs = () => {
+  const saved = state.settings && state.settings.dockTabs;
+  const valid = Array.isArray(saved) ? Object.keys(DOCK_META).filter(k => saved.includes(k)).slice(0, 4) : [];
+  return valid.length >= 2 ? valid : DOCK_DEFAULT;
+};
+
 // ── BARRA INFERIOR FLOTANTE (móvil/tablet) + botón central (+) + hápticos globales ──
 (function(){
   const bar = document.getElementById('tabbar'), plus = document.getElementById('tbPlus');
@@ -4249,21 +4293,48 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
   if(!bar || !plus || !sheet || !scrim) return;
   document.body.classList.add('has-tabbar');
   const navTo = v => document.querySelector(`#sidebar .nav-item[data-view="${v}"]`)?.click();
-  const MAIN = ['dashboard','notes','projects'];
+  const moreEl = bar.querySelector('[data-tab="more"]');
+  let lastSig = null;
+  // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
+  const renderDock = () => {
+    bar.querySelectorAll('.tb-dyn').forEach(n => n.remove());
+    const tabs = getDockTabs(), k = Math.ceil(tabs.length / 2);
+    const mk = v => {
+      const m = DOCK_META[v], b = document.createElement('button');
+      b.type = 'button'; b.className = 'tb-item tb-dyn'; b.dataset.tab = v;
+      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span>`;
+      return b;
+    };
+    tabs.slice(0, k).forEach(v => bar.insertBefore(mk(v), plus));
+    tabs.slice(k).forEach(v => bar.insertBefore(mk(v), moreEl));
+    syncActive();
+  };
+  // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
+  const applyDockColor = () => {
+    const c = (state.settings && state.settings.dockColor) || 'app', st = document.documentElement.style;
+    if (c === 'app' || !/^#[0-9a-f]{6}$/i.test(c)) { st.removeProperty('--dock'); st.removeProperty('--dock-ink'); }
+    else { st.setProperty('--dock', c); st.setProperty('--dock-ink', c.toLowerCase() === '#ffd700' ? '#1a1200' : '#fff'); }
+  };
+  const ensureDock = () => {
+    const sig = getDockTabs().join(',') + '|' + ((state.settings && state.settings.dockColor) || 'app');
+    if (sig === lastSig) return;
+    lastSig = sig; applyDockColor(); renderDock();
+  };
+  window.ensureDock = ensureDock;
 
   // Pestaña activa sincronizada con el sidebar (que es quien manda en la navegación)
   const syncActive = () => {
     const cur = document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
     bar.querySelectorAll('[data-tab]').forEach(b => {
       const t = b.dataset.tab;
-      if (t === 'more') b.classList.toggle('dot', !MAIN.includes(cur));   // punto = estás en otra pestaña
+      if (t === 'more') b.classList.toggle('dot', !getDockTabs().includes(cur));   // punto = estás en otra pestaña
       else b.classList.toggle('active', t === cur);
     });
   };
-  new MutationObserver(syncActive).observe(document.getElementById('sidebar'), { subtree:true, attributes:true, attributeFilter:['class'] });
+  new MutationObserver(() => { ensureDock(); syncActive(); }).observe(document.getElementById('sidebar'), { subtree:true, attributes:true, attributeFilter:['class'] });
   if (fab) new MutationObserver(() => bar.querySelector('[data-tab="more"]')?.classList.toggle('active', fab.classList.contains('menu-open')))
     .observe(fab, { attributes:true, attributeFilter:['class'] });
-  syncActive();
+  ensureDock();
 
   // ── Menú flotante inferior: resumen del día + todas las secciones (se arma desde el sidebar, siempre sincronizado) ──
   const drawer = document.getElementById('moreDrawer'), dScrim = document.getElementById('moreScrim');
@@ -4345,6 +4416,7 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
   const moreBtn = bar.querySelector('[data-tab="more"]');
   const openDrawer = () => {
     closeSheet();
+    ensureDock();
     buildDrawer();
     drawer.style.transform = '';
     drawer.classList.add('open'); dScrim.classList.add('open'); moreBtn && moreBtn.classList.add('active');
@@ -5617,6 +5689,13 @@ const renderSettingsView=()=>{
         </div>
       `).join('')}
     </div>
+    <div class="settings-section"><h3>🧭 Barra inferior</h3>
+      <div class="settings-sub" style="margin-bottom:12px">Elige de 2 a 4 pestañas para la barra del celular. El botón (+) y «Más» siempre están, y desde «Más» llegas a todo lo demás.</div>
+      <div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
+      <div class="settings-sub" id="dockCount" style="margin:10px 0 0">${getDockTabs().length} de 4 pestañas</div>
+      <div class="settings-label" style="margin:16px 0 10px">Color del botón (+)</div>
+      <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
+    </div>
     <div class="settings-section"><h3>🔔 Notificaciones</h3>
       <div class="settings-row">
         <div>
@@ -5694,6 +5773,28 @@ const renderSettingsView=()=>{
     save();
     toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
   }));
+  document.getElementById('dockPicker')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-dock]'); if (!b) return;
+    const k = b.dataset.dock; let tabs = getDockTabs();
+    if (tabs.includes(k)) {
+      if (tabs.length <= 2) { toast('Deja al menos 2 pestañas'); haptic('warn'); return; }
+      tabs = tabs.filter(x => x !== k);
+    } else {
+      if (tabs.length >= 4) { toast('Máximo 4 pestañas en la barra'); haptic('warn'); return; }
+      tabs = Object.keys(DOCK_META).filter(x => tabs.includes(x) || x === k);
+    }
+    state.settings.dockTabs = tabs; save();
+    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', tabs.includes(c.dataset.dock)));
+    const n = document.getElementById('dockCount'); if (n) n.textContent = tabs.length + ' de 4 pestañas';
+    window.ensureDock && window.ensureDock();
+  });
+  document.getElementById('dockColors')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-dc]'); if (!b) return;
+    state.settings.dockColor = b.dataset.dc; save();
+    document.querySelectorAll('#dockColors .dock-sw').forEach(s => s.classList.toggle('on', s === b));
+    window.ensureDock && window.ensureDock();
+    haptic('select');
+  });
   document.getElementById('hapticToggle')?.addEventListener('change', e => {
     localStorage.setItem('nn_haptics', e.target.checked ? '1' : '0');
     if (e.target.checked) haptic('success');
