@@ -6937,6 +6937,32 @@ initNotifications();
   const ctx = canvas.getContext('2d');
   let w, h, time = 0, lastFrame = 0;
 
+  // ── Fondo según la hora del día: amanecer/mañana (azul, naranja, amarillo) → tarde (ámbar) → atardecer (naranja/rosa) → noche (azul profundo) ──
+  // Cada parada: [hora, base oscura, base clara, [4 colores de orbes]]. Entre paradas se mezcla suave.
+  const SKY = [
+    [0,  [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]]],
+    [5,  [11,14,38],  [236,236,250], [[67,56,202],[190,90,140],[37,99,235],[99,102,241]]],
+    [7,  [18,38,78],  [255,244,230], [[56,189,248],[251,146,60],[250,204,21],[45,212,191]]],
+    [11, [16,40,84],  [238,247,255], [[56,189,248],[250,204,21],[34,211,238],[251,146,60]]],
+    [15, [18,24,46],  [255,248,232], [[56,160,248],[250,176,40],[251,146,60],[250,204,21]]],
+    [17.5,[30,20,36], [255,240,226], [[251,146,60],[245,158,11],[236,72,153],[250,204,21]]],
+    [19, [30,16,44],  [253,236,236], [[249,115,22],[236,72,153],[124,58,237],[245,158,11]]],
+    [21, [12,14,40],  [236,236,250], [[79,70,229],[124,58,237],[37,99,235],[190,70,150]]],
+    [24, [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]]]
+  ];
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  let _skyAt = 0, _sky = null;
+  const skyNow = (now) => {
+    if (_sky && window.__bgHour == null && now - _skyAt < 15000) return _sky;
+    const d = new Date(); let hr = window.__bgHour != null ? window.__bgHour : d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+    let i = 0; while (i < SKY.length - 2 && hr >= SKY[i + 1][0]) i++;
+    const A = SKY[i], B = SKY[i + 1], t0 = (hr - A[0]) / (B[0] - A[0]), t = t0 * t0 * (3 - 2 * t0);
+    _sky = { dark: mix(A[1], B[1], t), light: mix(A[2], B[2], t), orbs: A[3].map((c, k) => mix(c, B[3][k], t)) };
+    _skyAt = now; return _sky;
+  };
+  const rgba = (c, a) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
+  const ORB_A_DARK = [0.36, 0.30, 0.22, 0.15], ORB_A_LIGHT = [0.40, 0.32, 0.26, 0.18];
+
   // En móvil se pinta a media resolución: son degradados difusos y se ve igual,
   // pero hay 4 veces menos píxeles que repintar por frame.
   const quality = () => window.innerWidth <= 900 ? 0.5 : 1;
@@ -6995,22 +7021,19 @@ initNotifications();
     const theme = document.documentElement.getAttribute('data-theme') || 'dark';
     
     // Fill base
-    if (theme === 'light') {
-      ctx.fillStyle = '#f7f7fc';
-    } else {
-      ctx.fillStyle = '#080811';
-    }
+    const sky = skyNow(now);
+    ctx.fillStyle = rgba(theme === 'light' ? sky.light : sky.dark, 1);
     ctx.fillRect(0, 0, w, h);
 
     ctx.globalCompositeOperation = theme === 'light' ? 'multiply' : 'screen';
     
     // Draw flowing gradient orbs (menos orbes en móvil: son lo más costoso de pintar)
     const allOrbs = [
-      { x: Math.sin(time*0.5)*0.3+0.5, y: Math.cos(time*0.4)*0.3+0.5, r: 0.6, cL: 'rgba(124,106,247,0.4)', cD: 'rgba(124,106,247,0.15)' },
-      { x: Math.cos(time*0.3)*0.4+0.5, y: Math.sin(time*0.6)*0.4+0.5, r: 0.7, cL: 'rgba(56,189,248,0.3)', cD: 'rgba(56,189,248,0.1)' },
-      { x: Math.sin(time*0.7)*0.2+0.5, y: Math.cos(time*0.5)*0.2+0.5, r: 0.5, cL: 'rgba(236,72,153,0.3)', cD: 'rgba(236,72,153,0.08)' },
-      { x: Math.cos(time*0.2)*0.35+0.5, y: Math.sin(time*0.25)*0.35+0.5, r: 0.55, cL: 'rgba(52,211,153,0.18)', cD: 'rgba(52,211,153,0.06)' }
-    ];
+      { x: Math.sin(time*0.5)*0.3+0.5, y: Math.cos(time*0.4)*0.3+0.5, r: 0.6 },
+      { x: Math.cos(time*0.3)*0.4+0.5, y: Math.sin(time*0.6)*0.4+0.5, r: 0.7 },
+      { x: Math.sin(time*0.7)*0.2+0.5, y: Math.cos(time*0.5)*0.2+0.5, r: 0.5 },
+      { x: Math.cos(time*0.2)*0.35+0.5, y: Math.sin(time*0.25)*0.35+0.5, r: 0.55 }
+    ].map((o, k) => ({ ...o, cL: rgba(sky.orbs[k], ORB_A_LIGHT[k]), cD: rgba(sky.orbs[k], ORB_A_DARK[k]) }));
     const orbs = mobile ? allOrbs.slice(0, 2) : allOrbs;
 
     orbs.forEach(orb => {
