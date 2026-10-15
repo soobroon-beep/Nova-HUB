@@ -4315,9 +4315,12 @@ const DOCK_COLORS = [
 // Pestañas elegidas (2 a 4), en el orden del menú; si no hay nada válido, las de siempre
 const getDockTabs = () => {
   const saved = state.settings && state.settings.dockTabs;
-  const valid = Array.isArray(saved) ? Object.keys(DOCK_META).filter(k => saved.includes(k)).slice(0, 4) : [];
-  return valid.length >= 2 ? valid : DOCK_DEFAULT;
+  let valid = Array.isArray(saved) ? Object.keys(DOCK_META).filter(k => saved.includes(k)).slice(0, 5) : [];
+  if (valid.length === 4) valid = valid.slice(0, 3);          // siempre impar (3 o 5) + «Más» = lados simétricos
+  return (valid.length === 3 || valid.length === 5) ? valid : DOCK_DEFAULT;
 };
+let _dockPending = null;   // selección a medias en Ajustes (hasta completar 3 o 5)
+let _dockCap = null;
 
 // ── Tocar el saludo (arriba) lleva al Dashboard; si ya estás ahí, sube al inicio ──
 (function(){
@@ -4345,7 +4348,7 @@ const getDockTabs = () => {
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
     bar.querySelectorAll('.tb-dyn').forEach(n => n.remove());
-    const tabs = getDockTabs(), k = Math.ceil((tabs.length + 1) / 2);   // «Más» cuenta como uno del lado derecho
+    const tabs = getDockTabs(), k = (tabs.length + 1) / 2;   // pestañas + «Más» = par → mitad a cada lado del (+)
     const left = document.getElementById('tbLeft'), right = document.getElementById('tbRight');
     bar.classList.toggle('dense', tabs.length >= 4);
     const mk = v => {
@@ -5739,9 +5742,10 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">Elige de 2 a 4 pestañas para la barra del celular. El botón (+) y «Más» siempre están; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
-      <div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
-      <div class="settings-sub" id="dockCount" style="margin:10px 0 0">${getDockTabs().length} de 4 pestañas</div>
+      <div class="settings-sub" style="margin-bottom:12px">Elige 3 o 5 pestañas para la barra del celular (así queda simétrica: mitad a cada lado del botón (+)). «Más» siempre está; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
+      ${(_dockPending=null,_dockCap=null,'')}<div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
+      <div class="dock-picker" id="dockCap" style="margin:10px 0 0">${[3,5].map(n => `<button type="button" class="dock-chip${getDockTabs().length===n?' on':''}" data-dockn="${n}">${n} pestañas</button>`).join('')}</div>
+      <div class="settings-sub" id="dockCount" style="margin:10px 0 0">${getDockTabs().length} de ${getDockTabs().length} pestañas</div>
       <div class="settings-label" style="margin:16px 0 10px">Color del botón (+)</div>
       <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
     </div>
@@ -5822,20 +5826,35 @@ const renderSettingsView=()=>{
     save();
     toast(e.target.checked ? '🧩 Widget activado' : '🧩 Widget ocultado');
   }));
+  const dockUI = () => {
+    const cap = _dockCap || getDockTabs().length, sel = _dockPending || getDockTabs();
+    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', sel.includes(c.dataset.dock)));
+    document.querySelectorAll('#dockCap [data-dockn]').forEach(c => c.classList.toggle('on', +c.dataset.dockn === cap));
+    const n = document.getElementById('dockCount');
+    if (n) n.textContent = sel.length === cap ? cap + ' de ' + cap + ' pestañas' : sel.length + ' de ' + cap + ' · elige ' + (cap - sel.length) + ' más para aplicar';
+  };
+  const dockApply = () => {
+    const cap = _dockCap || getDockTabs().length, sel = _dockPending || getDockTabs();
+    if (sel.length === cap) { state.settings.dockTabs = sel; save(); window.ensureDock && window.ensureDock(); }
+    dockUI();
+  };
+  document.getElementById('dockCap')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-dockn]'); if (!b) return;
+    _dockCap = +b.dataset.dockn;
+    _dockPending = (_dockPending || getDockTabs()).slice(0, _dockCap);
+    dockApply();
+  });
   document.getElementById('dockPicker')?.addEventListener('click', e => {
     const b = e.target.closest('[data-dock]'); if (!b) return;
-    const k = b.dataset.dock; let tabs = getDockTabs();
+    const k = b.dataset.dock, cap = _dockCap || getDockTabs().length; let tabs = _dockPending || getDockTabs();
     if (tabs.includes(k)) {
-      if (tabs.length <= 2) { toast('Deja al menos 2 pestañas'); haptic('warn'); return; }
+      if (tabs.length <= 1) { toast('Deja al menos 1 pestaña'); haptic('warn'); return; }
       tabs = tabs.filter(x => x !== k);
     } else {
-      if (tabs.length >= 4) { toast('Máximo 4 pestañas en la barra'); haptic('warn'); return; }
+      if (tabs.length >= cap) { toast('Ya tienes ' + cap + ': quita una para cambiarla'); haptic('warn'); return; }
       tabs = Object.keys(DOCK_META).filter(x => tabs.includes(x) || x === k);
     }
-    state.settings.dockTabs = tabs; save();
-    document.querySelectorAll('#dockPicker .dock-chip').forEach(c => c.classList.toggle('on', tabs.includes(c.dataset.dock)));
-    const n = document.getElementById('dockCount'); if (n) n.textContent = tabs.length + ' de 4 pestañas';
-    window.ensureDock && window.ensureDock();
+    _dockPending = tabs; dockApply();
   });
   document.getElementById('dockColors')?.addEventListener('click', e => {
     const b = e.target.closest('[data-dc]'); if (!b) return;
