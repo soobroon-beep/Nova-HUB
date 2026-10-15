@@ -1494,6 +1494,7 @@ html{-webkit-tap-highlight-color:transparent}
   --font-display:'Roboto','Google Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --gold:#FFD700; --jade:#00A86B; --crimson:#DC143C;
 }
+[data-theme="light"]{--gold:#B8860B}
 
 /* ── Tipografía: Roboto (estilo Android/Google) en toda la app ── */
 .logo,.greeting h2,.sec-title,.focus-title,.cal-month,.stat-card .value,
@@ -1691,6 +1692,60 @@ html{-webkit-tap-highlight-color:transparent}
 }
 @media(prefers-reduced-motion:reduce){#tabbar{animation:none}.tb-plus{animation:none}}
 
+/* ── Menú flotante inferior: resumen del día + todas las secciones ── */
+#moreDrawer,#moreScrim{display:none}
+@media(max-width:900px){
+  #moreScrim{display:block;position:fixed;inset:0;z-index:57;background:rgba(0,0,0,.5);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
+  #moreScrim.open{opacity:1;pointer-events:auto}
+  #moreDrawer{display:flex;flex-direction:column;position:fixed;left:50%;
+    bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(92vw,420px);
+    max-height:calc(100dvh - 130px - env(safe-area-inset-bottom,0px));z-index:58;touch-action:pan-x;
+    transform:translate(-50%,36px) scale(.9);transform-origin:50% 100%;opacity:0;visibility:hidden;pointer-events:none;
+    background:rgba(18,18,32,.84);-webkit-backdrop-filter:blur(24px) saturate(165%);backdrop-filter:blur(24px) saturate(165%);
+    border:1px solid rgba(255,255,255,.13);border-radius:30px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 26px 64px rgba(0,0,0,.55);
+    transition:transform .42s cubic-bezier(.34,1.35,.64,1),opacity .2s,visibility 0s .42s}
+  #moreDrawer.open{transform:translate(-50%,0) scale(1);opacity:1;visibility:visible;pointer-events:auto;
+    transition:transform .42s cubic-bezier(.34,1.35,.64,1),opacity .2s,visibility 0s}
+  #moreDrawer.dragging{transition:none}
+  [data-theme="light"] #moreDrawer{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.08);box-shadow:0 26px 60px rgba(40,40,90,.3)}
+  .md-grab{box-sizing:content-box;width:38px;height:4px;padding:10px 40px 6px;background:rgba(255,255,255,.28);background-clip:content-box;border-radius:0;margin:0 auto;flex-shrink:0;touch-action:none;cursor:grab}
+  .md-grab{-webkit-mask:none}
+  [data-theme="light"] .md-grab{background:rgba(0,0,0,.2);background-clip:content-box}
+  .md-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:8px 14px 16px;touch-action:pan-y}
+  .md-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding-bottom:12px}
+  .md-chip{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:16px;cursor:pointer;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);-webkit-tap-highlight-color:transparent;
+    opacity:0;transform:translateY(10px);transition:opacity .3s,transform .4s cubic-bezier(.34,1.56,.64,1)}
+  .md-chip b{font-size:1.2rem;font-weight:900;line-height:1;color:var(--chip,var(--gold))}
+  .md-chip small{font-size:.56rem;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);font-weight:800;text-align:center;line-height:1.15}
+  .md-chip:active{transform:scale(.95)!important}
+  #moreDrawer.open .md-chip{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 35ms + 90ms)}
+  .md-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .md-sec{grid-column:1/-1;font-size:.62rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);font-weight:800;margin:6px 2px 0}
+  .md-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:82px;padding:10px 6px;
+    border-radius:18px;cursor:pointer;color:var(--text2);font-size:.72rem;font-weight:700;line-height:1.15;text-align:center;
+    background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1);user-select:none;-webkit-tap-highlight-color:transparent;min-width:0;
+    opacity:0;transform:translateY(16px) scale(.92);
+    transition:opacity .28s,transform .42s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s}
+  #moreDrawer.open .md-tile{opacity:1;transform:none;transition-delay:calc(var(--i,0) * 28ms + 120ms)}
+  .md-tile:active{transform:scale(.94)!important}
+  .md-tile .md-ico{font-size:1.45rem;line-height:1}
+  .md-tile .md-sub{font-size:.6rem;font-weight:700;color:var(--text3);letter-spacing:.2px}
+  .md-tile.wide{grid-column:1/-1;flex-direction:row;gap:12px;min-height:60px;font-size:.8rem}
+  .md-tile.active{color:var(--gold);border-color:rgba(255,215,0,.55);
+    background:linear-gradient(145deg,rgba(255,215,0,.18),rgba(255,215,0,.04));box-shadow:0 0 0 1px rgba(255,215,0,.2),0 6px 20px rgba(255,200,0,.12)}
+  .md-tile.active .md-sub{color:rgba(255,215,0,.75)}
+  [data-theme="light"] .md-tile,[data-theme="light"] .md-chip{background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(255,255,255,.5));border-color:rgba(0,0,0,.08)}
+  .md-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .md-foot > *{margin:0!important}
+  .md-foot > *:first-child{flex:1 1 100%}
+  .md-foot > *:not(:first-child){flex:1 1 calc(50% - 4px);min-width:0}
+}
+@media(prefers-reduced-motion:reduce){#moreDrawer,.md-tile,.md-chip{transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
@@ -1768,6 +1823,15 @@ html{-webkit-tap-highlight-color:transparent}
   <button type="button" data-qc="event"><span class="em">📅</span>Evento</button>
   <button type="button" data-qc="habit"><span class="em">🔥</span>Hábito</button>
 </div>
+<div id="moreScrim"></div>
+<aside id="moreDrawer" aria-hidden="true" aria-label="Todas las secciones">
+  <div class="md-grab" id="mdGrab" aria-hidden="true"></div>
+  <div class="md-body">
+    <div class="md-sum" id="mdSum"></div>
+    <div class="md-grid" id="mdGrid"></div>
+    <div class="md-foot" id="mdFoot"></div>
+  </div>
+</aside>
 <nav id="tabbar" aria-label="Navegación principal">
   <button class="tb-item" type="button" data-tab="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Inicio</span></button>
   <button class="tb-item" type="button" data-tab="notes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg><span>Notas</span></button>
@@ -4201,7 +4265,116 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
     .observe(fab, { attributes:true, attributeFilter:['class'] });
   syncActive();
 
+  // ── Menú flotante inferior: resumen del día + todas las secciones (se arma desde el sidebar, siempre sincronizado) ──
+  const drawer = document.getElementById('moreDrawer'), dScrim = document.getElementById('moreScrim');
+  const dGrid = document.getElementById('mdGrid'), dFoot = document.getElementById('mdFoot'), dSum = document.getElementById('mdSum');
+  const getSummary = () => {
+    const s = { pend: 0, hDone: 0, hTot: 0, rem: 0, citas: 0, notes: 0, projActive: 0 };
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const end = new Date(); end.setHours(23, 59, 59, 999);
+      s.pend = (state.projects || []).reduce((a, p) => a + (p.tasks || []).filter(t => !t.done).length, 0);
+      const hs = state.habits || []; s.hTot = hs.length; s.hDone = hs.filter(x => (x.logs || []).includes(todayStr)).length;
+      s.rem = (state.reminders || []).filter(r => !r.notified && new Date(r.datetime) <= end).length;
+      s.notes = (state.notes || []).length;
+      s.projActive = (state.projects || []).filter(p => p.status === 'active').length;
+    } catch (_) {}
+    try { s.citas = gcal.tattooFor(localDateStr(new Date())).filter(e => !gcal.isTattooDone(e.id)).length; } catch (_) {}
+    return s;
+  };
+  const buildDrawer = () => {
+    dGrid.innerHTML = ''; dFoot.innerHTML = ''; dSum.innerHTML = '';
+    const s = getSummary();
+    // Resumen del día: toca un dato para ir a esa sección
+    [
+      { n: s.pend, l: 'Tareas pendientes', go: 'projects', c: 'var(--gold)' },
+      { n: s.hTot ? s.hDone + '/' + s.hTot : '—', l: 'Hábitos hoy', go: 'habits', c: 'var(--jade)' },
+      { n: s.rem, l: 'Recordatorios hoy', go: 'reminders', c: 'var(--crimson)' },
+      { n: s.citas, l: 'Citas hoy', go: 'calendar', c: 'var(--gold)' }
+    ].forEach((c, i) => {
+      const el = document.createElement('div');
+      el.className = 'md-chip'; el.style.setProperty('--i', i); el.style.setProperty('--chip', c.c);
+      el.innerHTML = `<b>${c.n}</b><small>${c.l}</small>`;
+      el.addEventListener('click', () => { closeDrawer(); setTimeout(() => navTo(c.go), 200); });
+      dSum.appendChild(el);
+    });
+    const subs = {
+      notes: s.notes ? s.notes + (s.notes === 1 ? ' nota' : ' notas') : '',
+      projects: s.projActive ? s.projActive + (s.projActive === 1 ? ' activo' : ' activos') : '',
+      reminders: s.rem ? s.rem + ' hoy' : '',
+      habits: s.hTot ? s.hDone + '/' + s.hTot + ' hoy' : '',
+      calendar: s.citas ? s.citas + (s.citas === 1 ? ' cita hoy' : ' citas hoy') : ''
+    };
+    let i = 0, cur = [];
+    const closeRow = () => { if (cur.length % 3 === 1) cur[cur.length - 1].classList.add('wide'); cur = []; };
+    document.querySelectorAll('#sidebar .nav-section, #sidebar .nav-item[data-view]').forEach(src => {
+      if (src.classList.contains('nav-section')) {
+        closeRow();
+        const sec = document.createElement('div'); sec.className = 'md-sec'; sec.textContent = src.textContent; dGrid.appendChild(sec); return;
+      }
+      const ico = src.querySelector('.nav-icon')?.textContent || '•';
+      const label = src.textContent.replace(ico, '').trim();
+      const v = src.dataset.view;
+      const t = document.createElement('div');
+      t.className = 'md-tile' + (src.classList.contains('active') ? ' active' : '');
+      t.style.setProperty('--i', i++);
+      t.setAttribute('role', 'button'); t.tabIndex = 0;
+      t.innerHTML = `<span class="md-ico">${ico}</span><span>${label}</span>${subs[v] ? `<span class="md-sub">${subs[v]}</span>` : ''}`;
+      const go = () => { closeDrawer(); setTimeout(() => src.click(), 200); };
+      t.addEventListener('click', go);
+      t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      dGrid.appendChild(t); cur.push(t);
+    });
+    closeRow();
+    // Nivel/XP, estado de la nube y modo claro/oscuro (copias frescas del sidebar)
+    const bottom = document.querySelector('#sidebar .sidebar-bottom');
+    if (bottom) [...bottom.children].forEach(src => {
+      const clone = src.cloneNode(true);
+      clone.removeAttribute('id'); clone.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+      if (src.id === 'themeToggle') {
+        clone.style.cursor = 'pointer';
+        clone.addEventListener('click', () => {
+          src.click();
+          const live = src.querySelectorAll('span');
+          clone.querySelectorAll('span').forEach((sp, k) => { if (live[k]) sp.textContent = live[k].textContent; });
+        });
+      } else clone.style.cursor = 'default';
+      dFoot.appendChild(clone);
+    });
+  };
+  const moreBtn = bar.querySelector('[data-tab="more"]');
+  const openDrawer = () => {
+    closeSheet();
+    buildDrawer();
+    drawer.style.transform = '';
+    drawer.classList.add('open'); dScrim.classList.add('open'); moreBtn && moreBtn.classList.add('active');
+    drawer.setAttribute('aria-hidden', 'false');
+  };
+  function closeDrawer() {
+    drawer.classList.remove('open'); dScrim.classList.remove('open'); moreBtn && moreBtn.classList.remove('active');
+    drawer.style.transform = ''; drawer.setAttribute('aria-hidden', 'true');
+  }
+  dScrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+  // Arrastrar la manija hacia abajo cierra el menú
+  (() => {
+    const grab = document.getElementById('mdGrab'); if (!grab) return;
+    let sy = 0, dy = 0, on = false;
+    const start = e => { sy = e.clientY; dy = 0; on = true; drawer.classList.add('dragging'); try { grab.setPointerCapture(e.pointerId); } catch (_) {} };
+    grab.addEventListener('pointerdown', start);
+    grab.addEventListener('pointermove', e => {
+      if (!on) return;
+      dy = Math.max(0, e.clientY - sy); drawer.style.transform = `translate(-50%,${dy}px)`;
+    });
+    const end = () => {
+      if (!on) return; on = false; drawer.classList.remove('dragging');
+      if (dy > 80) closeDrawer(); else drawer.style.transform = '';
+    };
+    grab.addEventListener('pointerup', end); grab.addEventListener('pointercancel', end);
+  })();
+
   const openSheet = () => {
+    closeDrawer();
     if (fab && fab.classList.contains('menu-open')) fab.click();
     sheet.classList.add('open'); scrim.classList.add('open'); plus.classList.add('open');
     plus.setAttribute('aria-expanded','true'); sheet.setAttribute('aria-hidden','false');
@@ -4218,7 +4391,7 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
     const b = e.target.closest('[data-tab]'); if (!b) return;
     closeSheet();
     const t = b.dataset.tab;
-    if (t === 'more') { fab && fab.click(); return; }
+    if (t === 'more') { drawer.classList.contains('open') ? closeDrawer() : openDrawer(); return; }
     if (b.classList.contains('active') && ct) ct.scrollTo({ top: 0, behavior: 'smooth' });   // tocar la activa = subir al inicio
     navTo(t);
   });
