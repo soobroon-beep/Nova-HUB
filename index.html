@@ -7069,16 +7069,19 @@ initNotifications();
 
   // ── Fondo según la hora del día: amanecer/mañana (azul, naranja, amarillo) → tarde (ámbar) → atardecer (naranja/rosa) → noche (azul profundo) ──
   // Cada parada: [hora, base oscura, base clara, [4 colores de orbes]]. Entre paradas se mezcla suave.
+  // Colores calcados de las portadas de Rutina Matutina / Tarde / Nocturna:
+  //   mañana → azul claro arriba con amarillo y naranja abajo; tarde → naranja que se va a azul oscuro;
+  //   noche → azul profundo con estrellitas amarillas. [5] = degradado cielo (arriba), [6] = (abajo).
   const SKY = [
-    [0,  [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]]],
-    [5,  [11,14,38],  [236,236,250], [[67,56,202],[190,90,140],[37,99,235],[99,102,241]]],
-    [7,  [18,40,92],  [255,244,230], [[40,150,255],[120,200,255],[251,146,60],[255,205,90]]],
-    [11, [18,46,100],  [238,247,255], [[50,160,255],[135,206,255],[90,180,255],[255,190,90]]],
-    [15, [18,24,46],  [255,248,232], [[56,160,248],[250,176,40],[251,146,60],[250,204,21]]],
-    [17.5,[30,20,36], [255,240,226], [[251,146,60],[245,158,11],[236,72,153],[250,204,21]]],
-    [19, [30,16,44],  [253,236,236], [[249,115,22],[236,72,153],[124,58,237],[245,158,11]]],
-    [21, [12,14,40],  [236,236,250], [[79,70,229],[124,58,237],[37,99,235],[190,70,150]]],
-    [24, [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]]]
+    [0,  [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]],   [5,5,15],     [13,21,53]],
+    [5,  [11,14,38],  [236,236,250], [[67,56,202],[190,90,140],[37,99,235],[99,102,241]],   [20,26,76],   [120,64,96]],
+    [7,  [18,40,92],  [255,244,230], [[40,150,255],[120,200,255],[251,146,60],[255,205,90]],[96,176,240],  [255,176,72]],
+    [11, [18,46,100], [238,247,255], [[50,160,255],[135,206,255],[90,180,255],[255,200,70]],[72,164,244],  [255,214,98]],
+    [15, [18,24,46],  [255,248,232], [[251,146,60],[250,176,40],[56,130,230],[250,204,21]], [44,112,206],  [255,160,56]],
+    [17.5,[30,20,36], [255,240,226], [[251,120,50],[245,158,11],[60,90,200],[250,204,21]],  [28,52,132],   [255,112,48]],
+    [19, [30,16,44],  [253,236,236], [[249,115,22],[200,70,90],[40,60,170],[245,158,11]],   [18,26,84],    [226,86,48]],
+    [21, [12,14,40],  [236,236,250], [[37,64,160],[79,70,229],[37,99,235],[60,60,170]],     [8,10,34],     [14,24,64]],
+    [24, [7,10,26],   [233,236,250], [[37,64,160],[79,70,229],[14,116,144],[124,58,237]],   [5,5,15],     [13,21,53]]
   ];
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
   let _skyAt = 0, _sky = null;
@@ -7087,9 +7090,17 @@ initNotifications();
     const d = new Date(); let hr = window.__bgHour != null ? window.__bgHour : d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
     let i = 0; while (i < SKY.length - 2 && hr >= SKY[i + 1][0]) i++;
     const A = SKY[i], B = SKY[i + 1], t0 = (hr - A[0]) / (B[0] - A[0]), t = t0 * t0 * (3 - 2 * t0);
-    _sky = { dark: mix(A[1], B[1], t), light: mix(A[2], B[2], t), orbs: A[3].map((c, k) => mix(c, B[3][k], t)) };
+    // Cuánto se ven las estrellas: llenas de las 20:30 a las 5:00, se apagan con el amanecer.
+    const stars = hr >= 20.5 || hr <= 5 ? 1 : hr > 19 ? (hr - 19) / 1.5 : hr > 5 && hr < 6.5 ? 1 - (hr - 5) / 1.5 : 0;
+    _sky = { dark: mix(A[1], B[1], t), light: mix(A[2], B[2], t), orbs: A[3].map((c, k) => mix(c, B[3][k], t)),
+             top: mix(A[4], B[4], t), bottom: mix(A[5], B[5], t), stars };
     _skyAt = now; return _sky;
   };
+  // Estrellitas amarillas fijas (posición pseudo-aleatoria estable) que titilan de noche.
+  const STAR_FIELD = Array.from({ length: 64 }, (_, i) => {
+    const r = (n) => { const x = Math.sin(i * 127.1 + n * 311.7) * 43758.5453; return x - Math.floor(x); };
+    return { x: r(1), y: r(2) * 0.85, s: 0.6 + r(3) * 1.4, p: r(4) * Math.PI * 2, v: 0.6 + r(5) * 1.6 };
+  });
   const rgba = (c, a) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
   const ORB_A_DARK = [0.36, 0.30, 0.22, 0.15], ORB_A_LIGHT = [0.40, 0.32, 0.26, 0.18];
 
@@ -7155,6 +7166,18 @@ initNotifications();
     ctx.fillStyle = rgba(theme === 'light' ? sky.light : sky.dark, 1);
     ctx.fillRect(0, 0, w, h);
 
+    // Degradado de cielo (como las portadas de las rutinas): se atenúa en tema oscuro
+    // y se aclara en tema claro para que el texto siga leyéndose bien.
+    ctx.globalCompositeOperation = 'source-over';
+    const skyG = ctx.createLinearGradient(0, 0, 0, h);
+    const tune = (c) => theme === 'light' ? mix(c, sky.light, 0.55) : c.map(v => v * 0.62);
+    skyG.addColorStop(0, rgba(tune(sky.top), 1));
+    skyG.addColorStop(1, rgba(tune(sky.bottom), 1));
+    ctx.globalAlpha = theme === 'light' ? 0.7 : 0.85;
+    ctx.fillStyle = skyG;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalAlpha = 1;
+
     ctx.globalCompositeOperation = theme === 'light' ? 'multiply' : 'screen';
     
     // Draw flowing gradient orbs (menos orbes en móvil: son lo más costoso de pintar)
@@ -7195,6 +7218,25 @@ initNotifications();
        ctx.fill();
     }
     
+    // Estrellitas amarillas que titilan de noche (se desvanecen con el amanecer)
+    if (sky.stars > 0.01) {
+      const n = mobile ? 30 : STAR_FIELD.length, k = canvas.width / window.innerWidth;
+      for (let i = 0; i < n; i++) {
+        const st = STAR_FIELD[i];
+        const tw = 0.5 + 0.5 * Math.sin(time * 14 * st.v + st.p);
+        const a = sky.stars * (0.25 + 0.75 * tw) * (theme === 'light' ? 0.7 : 1);
+        const sx = st.x * w, sy = st.y * h, rad = st.s * k;
+        ctx.beginPath(); ctx.arc(sx, sy, rad, 0, Math.PI * 2);
+        ctx.fillStyle = theme === 'light' ? 'rgba(235,170,0,' + a + ')' : 'rgba(255,214,64,' + a + ')';
+        ctx.fill();
+        if (!mobile && st.s > 1.5) { // halo suave en las más grandes
+          const hg = ctx.createRadialGradient(sx, sy, 0, sx, sy, rad * 4.5);
+          hg.addColorStop(0, 'rgba(255,214,64,' + (a * 0.35) + ')'); hg.addColorStop(1, 'rgba(255,214,64,0)');
+          ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(sx, sy, rad * 4.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+
     // Subtle dot grid overlay for depth
     if (!mobile) {
       ctx.globalCompositeOperation = 'source-over';
