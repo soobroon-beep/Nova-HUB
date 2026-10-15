@@ -19,6 +19,17 @@ const cloudIds = (cloud, k) => (cloud.docs['users/' + UID][k] || []).map(x => x.
     sameSet(A.ids('notes'), [101, 102]); sameSet(cloudIds(cloud, 'notes'), [101, 102]);
   });
 
+  await t('1b. Cuenta de Google distinta en el mismo dispositivo: los datos de una NO pasan a la otra', async () => {
+    const cloud = new Cloud(), A = makeDevice(html, cloud, UID);
+    await A.login(); A.add('notes', note(901)); A.add('diary', { id: 902, content: 'privado' }); await A.flush();
+    const B = makeDevice(html, cloud, 'user2', A.ls);      // otra persona inicia sesión en este mismo teléfono
+    await B.login(); await B.flush();
+    sameSet(B.ids('notes'), []); sameSet(B.ids('diary'), []);
+    const d2 = cloud.docs['users/user2'] || {};
+    assert.deepStrictEqual((d2.notes || []).map(x => x.id), []); assert.deepStrictEqual((d2.diary || []).map(x => x.id), []);
+    sameSet(cloudIds(cloud, 'notes'), [901]);                // la cuenta original queda intacta
+  });
+
   await t('2. Dispositivo atrasado/sin internet NO borra lo que creaste en otro (el bug principal)', async () => {
     const cloud = new Cloud(), A = makeDevice(html, cloud, UID), B = makeDevice(html, cloud, UID);
     await A.login(); A.add('notes', note(1)); await A.flush(); await B.login();
