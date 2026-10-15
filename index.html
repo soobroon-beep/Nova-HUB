@@ -1646,9 +1646,13 @@ html{-webkit-tap-highlight-color:transparent}
   body.kb-open #tabbar{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
   [data-theme="light"] #tabbar{background:rgba(255,255,255,.46);border-color:rgba(0,0,0,.08);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
-  .tb-item{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  /* Dos lados de IGUAL ancho: el (+) queda siempre exactamente en el centro, sean las pestañas que sean */
+  .tb-side{flex:1 1 0;min-width:0;height:100%;display:flex;align-items:center;justify-content:space-around}
+  .tb-item{flex:1 1 0;max-width:76px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     background:none;border:none;color:var(--text2);font:inherit;font-size:.62rem;font-weight:700;letter-spacing:.3px;text-shadow:0 1px 6px rgba(0,0,0,.35);
     cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;min-width:0;padding:0}
+  .tb-item span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #tabbar.dense .tb-item{font-size:.56rem;letter-spacing:0}
   .tb-item svg{width:24px;height:24px;fill:currentColor;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
   .tb-item.active{color:var(--dock-tx)}
   .tb-item.active svg{transform:translateY(-2px) scale(1.12)}
@@ -1657,7 +1661,7 @@ html{-webkit-tap-highlight-color:transparent}
   .tb-item:active svg{transform:scale(.86)}
   .tb-item.dot::before{content:'';position:absolute;top:13px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;
     background:var(--crimson);box-shadow:0 0 6px var(--crimson)}
-  .tb-plus{flex:0 0 auto;width:58px;height:58px;margin:-22px 4px 0;border-radius:50%;border:none;cursor:pointer;
+  .tb-plus{flex:0 0 auto;width:58px;height:58px;margin:-22px 2px 0;border-radius:50%;border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;color:var(--dock-ink);
     background:linear-gradient(145deg,var(--dock-hi),var(--dock) 48%,var(--dock-lo));
     box-shadow:0 10px 26px var(--dock-glow),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.25);
@@ -1867,8 +1871,9 @@ html{-webkit-tap-highlight-color:transparent}
   </div>
 </aside>
 <nav id="tabbar" aria-label="Navegación principal">
+  <div class="tb-side" id="tbLeft"></div>
   <button class="tb-plus" type="button" id="tbPlus" aria-label="Crear" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-  <button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Más</span></button>
+  <div class="tb-side" id="tbRight"><button class="tb-item" type="button" data-tab="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>Más</span></button></div>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -4326,15 +4331,17 @@ const getDockTabs = () => {
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
     bar.querySelectorAll('.tb-dyn').forEach(n => n.remove());
-    const tabs = getDockTabs(), k = Math.ceil(tabs.length / 2);
+    const tabs = getDockTabs(), k = Math.ceil((tabs.length + 1) / 2);   // «Más» cuenta como uno del lado derecho
+    const left = document.getElementById('tbLeft'), right = document.getElementById('tbRight');
+    bar.classList.toggle('dense', tabs.length >= 4);
     const mk = v => {
       const m = DOCK_META[v], b = document.createElement('button');
       b.type = 'button'; b.className = 'tb-item tb-dyn'; b.dataset.tab = v;
       b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span>`;
       return b;
     };
-    tabs.slice(0, k).forEach(v => bar.insertBefore(mk(v), plus));
-    tabs.slice(k).forEach(v => bar.insertBefore(mk(v), moreEl));
+    tabs.slice(0, k).forEach(v => left.appendChild(mk(v)));
+    tabs.slice(k).forEach(v => right.insertBefore(mk(v), moreEl));
     syncActive();
   };
   // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
