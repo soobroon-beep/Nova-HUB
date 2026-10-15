@@ -1702,6 +1702,18 @@ html{-webkit-tap-highlight-color:transparent}
   body.has-tabbar .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){#tabbar{animation:none}}
+#acctPop{position:fixed;top:calc(var(--topbar-h,64px) + 6px);right:12px;z-index:90;min-width:230px;max-width:calc(100vw - 24px);padding:12px;border-radius:16px;
+  background:rgba(20,20,38,.94);border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 36px rgba(0,0,0,.5);
+  opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top right;pointer-events:none;transition:opacity .18s,transform .22s cubic-bezier(.2,.8,.2,1)}
+#acctPop.open{opacity:1;transform:none;pointer-events:auto}
+#acctPop .ap-who{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;font-size:.82rem;color:var(--text)}
+#acctPop .ap-who small{color:var(--text2);font-size:.68rem;letter-spacing:.4px;text-transform:uppercase}
+#acctPop .ap-who b{font-weight:600;word-break:break-all}
+#acctPop button{width:100%;padding:11px 14px;border-radius:12px;border:none;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+#acctPop .ap-out{background:rgba(220,20,60,.16);color:#ff6b86}
+#acctPop .ap-in{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff}
+[data-theme="light"] #acctPop{background:rgba(255,255,255,.96);border-color:rgba(0,0,0,.1)}
+[data-theme="light"] #acctPop .ap-out{color:#c0173c}
 
 /* ── Traslúcido en toda la app: superficies más transparentes, con desenfoque donde se encima contenido ── */
 .greeting{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:10px;transition:opacity .15s,transform .15s}
@@ -3275,7 +3287,7 @@ const fb = {
     this.diag = null;
     setSyncStatus('error', 'Sin sesión');
     toast('✅ Sesión cerrada');
-    renderSettingsView();
+    if (document.querySelector('#sidebar .nav-item.active')?.dataset.view === 'settings') renderSettingsView();
   },
 
   // ── Escribe UN SOLO documento con todo el state ─────────────────────────
@@ -4449,7 +4461,7 @@ const getDockTabs = () => DOCK_DEFAULT;
       dFoot.appendChild(clone);
     });
   };
-  const moreBtn = bar.querySelector('[data-tab="more"]');
+  const moreBtn = bar.querySelector('[data-tab="settings"]');   // «Ajustes» despliega el panel de todas las secciones
   const openDrawer = () => {
     closeSheet();
     ensureDock();
@@ -4460,7 +4472,7 @@ const getDockTabs = () => DOCK_DEFAULT;
   };
   function closeDrawer() {
     drawer.classList.remove('open'); dScrim.classList.remove('open'); moreBtn && moreBtn.classList.remove('active');
-    drawer.style.transform = ''; drawer.setAttribute('aria-hidden', 'true');
+    drawer.style.transform = ''; drawer.setAttribute('aria-hidden', 'true'); syncActive();
   }
   dScrim.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
@@ -4507,13 +4519,31 @@ const getDockTabs = () => DOCK_DEFAULT;
     const b = e.target.closest('[data-tab]'); if (!b) return;
     closeSheet();
     const t = b.dataset.tab;
-    if (t === 'more') { drawer.classList.contains('open') ? closeDrawer() : openDrawer(); return; }
+    if (t === 'settings') { drawer.classList.contains('open') ? closeDrawer() : openDrawer(); return; }
     if (b.classList.contains('active') && ct) ct.scrollTo({ top: 0, behavior: 'smooth' });   // tocar la activa = subir al inicio
     navTo(t);
   });
 
-  document.getElementById('avatarEl')?.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
-  document.getElementById('avatarEl')?.setAttribute('role','button');
+  // Avatar: iniciar o cerrar sesión (según haya sesión abierta o no)
+  const av = document.getElementById('avatarEl');
+  const pop = document.createElement('div'); pop.id = 'acctPop'; pop.setAttribute('role','menu'); document.body.appendChild(pop);
+  const closePop = () => pop.classList.remove('open');
+  const openPop = () => {
+    closeSheet(); closeDrawer();
+    const on = !!(fb && fb.enabled && fb.uid);
+    pop.innerHTML = on
+      ? `<div class="ap-who"><small>Sesión iniciada</small><b>${(fb.email || state.settings.username || 'Cuenta de Google').replace(/[<>&]/g,'')}</b></div><button type="button" data-ap="out" class="ap-out">Cerrar sesión</button>`
+      : `<div class="ap-who"><small>Sin sesión</small><b>Tus datos solo están en este dispositivo</b></div><button type="button" data-ap="in" class="ap-in">Iniciar sesión con Google</button>`;
+    pop.classList.add('open');
+  };
+  av?.setAttribute('role','button');
+  av?.addEventListener('click', e => { e.stopPropagation(); pop.classList.contains('open') ? closePop() : openPop(); });
+  pop.addEventListener('click', async e => {
+    const b = e.target.closest('[data-ap]'); if (!b) return;
+    closePop();
+    if (b.dataset.ap === 'out') await fb.logout(); else await fb.login();
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('#acctPop')) closePop(); });
 
   // Crear algo nuevo: mismos formularios que ya usa la app
   const actions = {
@@ -5737,7 +5767,7 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">La barra tiene Calendario, Notas, Proyectos, Avisos, Diario, Hábitos y Ajustes. El botón (+) flotante crea lo de la sección donde estás. Dashboard: toca tu saludo. Todas las secciones y el resumen: toca tu avatar.</div>
+      <div class="settings-sub" style="margin-bottom:12px">La barra tiene Calendario, Notas, Proyectos, Avisos, Diario, Hábitos y Ajustes. El botón (+) flotante crea lo de la sección donde estás. Dashboard: toca tu saludo. Todas las secciones y el resumen: toca Ajustes en la barra. Iniciar o cerrar sesión: toca tu avatar.</div>
       <div class="settings-label" style="margin:4px 0 10px">Color del botón (+)</div>
       <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
     </div>
