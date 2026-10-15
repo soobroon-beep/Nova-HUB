@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// NOVA HUB — reglas de Firestore.
+// Todo vive en UN documento por cuenta: users/{uid}. Cada persona solo puede leer y
+// escribir el suyo. El Admin SDK del job de push (GitHub Actions) ignora estas reglas.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Una sección de datos, si viene, tiene que ser una lista (evita que un bug o un
+    // cliente raro deje "notes" como texto/número y rompa la app en todos tus dispositivos).
+    function listOrAbsent(d, k) {
+      return !(k in d) || d[k] is list;
+    }
+
+    function validDoc(uid, d) {
+      return listOrAbsent(d, 'notes')
+          && listOrAbsent(d, 'events')
+          && listOrAbsent(d, 'projects')
+          && listOrAbsent(d, 'habits')
+          && listOrAbsent(d, 'routines')
+          && listOrAbsent(d, 'reminders')
+          && listOrAbsent(d, 'diary')
+          && listOrAbsent(d, 'trash')
+          && listOrAbsent(d, 'fcmTokens')
+          && (!('settings' in d) || d.settings is map)
+          // El documento no puede declararse de otra cuenta.
+          && (!('_uid' in d) || d._uid == uid);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validDoc(userId, request.resource.data);
+      // Nadie borra el documento completo desde un cliente (la app nunca lo hace):
+      // protege contra un borrado accidental de TODOS tus datos.
+      allow delete: if false;
+    }
+
+    // Todo lo demás, cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

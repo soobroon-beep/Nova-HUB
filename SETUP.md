@@ -33,22 +33,30 @@ secret**
 - Value: pega el **contenido completo** del archivo JSON de la cuenta de
   servicio (todo, incluyendo `{ }`).
 
-## 3. Reglas de Firestore
+## 3. Reglas de Firestore (ya versionadas en el repo: `firestore.rules`)
 
-En **Firestore → Reglas**, usa esto para que cada quien solo pueda leer/escribir
-su propio documento (el Admin SDK del job de GitHub Actions ignora estas
-reglas, así que no afecta al envío de push):
+Las reglas viven en `firestore.rules`. Hacen esto:
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+- Cada cuenta solo puede **leer y escribir su propio documento** `users/{uid}`. Otra cuenta, o alguien sin sesión, no puede ni leerlo.
+- Nadie puede **borrar** el documento completo desde un cliente (la app nunca lo hace): protege contra un borrado accidental de todos tus datos.
+- Cada sección (`notes`, `projects`, `habits`, `reminders`, `diary`, `events`, `routines`, `trash`, `fcmTokens`) tiene que ser una lista y `settings` un mapa; `_uid`, si viene, debe ser el de la cuenta. Así un bug no puede dejar "notes" como texto y romper la app en todos tus dispositivos.
+- Todo lo demás (otras colecciones, subcolecciones) está cerrado.
+- El Admin SDK del job de GitHub Actions ignora estas reglas, así que el envío de push no se ve afectado.
+
+**Cómo aplicarlas** (una de dos; el repo NO las despliega solo):
+
+1. **Consola (lo más simple):** Firebase Console → Firestore Database → **Reglas** → pega el contenido de `firestore.rules` → **Publicar**. La consola avisa si hay un error de sintaxis y no publica nada roto.
+2. **CLI:** `npm i -g firebase-tools && firebase login && firebase deploy --only firestore:rules` (usa `firebase.json` y `.firebaserc`, proyecto `nova-hub-2a8a0`).
+
+**Cómo comprobar que quedaron bien** (en la consola, pestaña Reglas → **Simulador de reglas**):
+
+- Lectura de `users/TU_UID` autenticado como tú → **permitido**.
+- Lectura de `users/TU_UID` autenticado como OTRO uid, o sin autenticar → **denegado**.
+- Eliminar `users/TU_UID` → **denegado**.
+
+Después, abre Nova Hub, inicia sesión, crea una nota y mira que diga "Sincronizado ✓" (toca el indicador de la barra lateral para ver el detalle). Si algo fallara, aparece "Error al subir" y tus datos siguen guardados en el dispositivo.
+
+`tests/rules.test.js` contiene 16 pruebas de estas reglas contra el emulador de Firestore (necesitan Java; instrucciones en el encabezado del archivo).
 
 ## 4. Sube los cambios y prueba
 
@@ -114,3 +122,21 @@ npm run test:sync                          # o: node tests/sync.test.js
 FUZZ_SEED=42 FUZZ_RUNS=2000 npm run test:sync   # más secuencias aleatorias
 TRACE=1 npm run test:sync                  # si algo falla, imprime la bitácora de cada dispositivo
 ```
+
+## 8. App Check (opcional, recomendado): que solo TU app hable con tu Firebase
+
+Las reglas protegen *qué* datos puede tocar cada cuenta; App Check además verifica que la petición viene de la app de verdad y no de un script ajeno. Está **apagado** hasta que pegues una clave, así que no cambia nada hoy.
+
+1. Entra a https://www.google.com/recaptcha/admin → **Crear** → tipo **reCAPTCHA v3** → dominio `soobroon-beep.github.io` → copia la **clave del sitio** y la **clave secreta**.
+2. Firebase Console → **App Check** → pestaña Apps → tu app web → **reCAPTCHA** → pega la **clave secreta** → Guardar.
+3. En `index.html` busca `APP_CHECK_SITE_KEY` y pega la **clave del sitio** entre las comillas. Sube el cambio.
+4. Abre la app unos días y revisa en App Check → **Solicitudes** que casi todo aparezca como "verificado".
+5. Solo entonces, en App Check → **Firestore** (y Authentication, si quieres) pulsa **Aplicar**. **No lo apliques antes del paso 4**: con la imposición activa, una clave mal pegada o un dominio faltante dejaría la app sin poder guardar en la nube.
+
+## 9. Respaldo (Ajustes → 📦 Datos)
+
+- **Exportar respaldo:** descarga `nova-hub-respaldo-AAAA-MM-DD.json` con todos tus datos. No incluye tus API keys. Ajustes muestra la fecha del último respaldo y avisa si pasaron 7 días o más.
+- **Importar respaldo:** solo **añade** lo que falta (compara por id). Nunca reemplaza ni borra lo que ya tienes, y lo que está en la papelera no se vuelve a meter. Acepta también los archivos del formato anterior (`nova-hub-backup.json`). Lo importado se sube a la nube como cualquier otro cambio.
+- Toca el indicador de sincronización (barra lateral) para ver cuándo fue la última subida, cuánto ocupan tus datos y si hay cambios pendientes.
+
+Pruebas automáticas del respaldo: `npm run test:backup`. Todas las pruebas: `npm test`.

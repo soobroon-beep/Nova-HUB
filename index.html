@@ -2112,6 +2112,21 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// ── App Check (opcional) ───────────────────────────────────────────────
+// Hace que Firebase solo atienda peticiones que vienen de ESTA app y no de scripts ajenos.
+// Queda apagado mientras APP_CHECK_SITE_KEY esté vacío (no cambia nada). Para activarlo, mira
+// SETUP.md → sección 8 (clave reCAPTCHA v3). Si falla al cargar, la app sigue funcionando igual.
+const APP_CHECK_SITE_KEY = "";
+if (APP_CHECK_SITE_KEY) {
+  try {
+    const { initializeAppCheck, ReCaptchaV3Provider } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js");
+    initializeAppCheck(app, { provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
+  } catch (e) {
+    console.warn('[NOVA HUB] App Check no se pudo iniciar:', e.code || e.message);
+  }
+}
+
 const auth = getAuth(app);
 
 // Firestore con caché local persistente (IndexedDB): las lecturas y escrituras
@@ -3873,6 +3888,17 @@ const initGreeting = () => {
 };
 initGreeting();
 const toast = msg => { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2800); };
+
+// Tocar el indicador de sincronización (barra lateral) muestra el estado real de tus datos.
+(() => {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    if (typeof fb !== 'undefined' && fb.enabled) toast(syncMetaText());
+    else toast('📴 Sin sesión: tus datos solo están en este dispositivo. Inicia sesión con Google para guardarlos en la nube.');
+  });
+})();
 
 // ══════════════════════════════════════════════
 // CALENDAR (widget)
@@ -5774,6 +5800,96 @@ const sendAIMessage=async()=>{
   sendBtn.disabled=false; document.getElementById('aiInput')?.focus();
 };
 
+// ══════════════════════════════════════════════
+// RESPALDO: exportar / importar JSON
+// - El archivo NO incluye claves secretas (API keys).
+// - Importar SOLO AÑADE lo que falta (por id): nunca reemplaza ni borra lo que ya tienes.
+//   Lo que ya está en la papelera no se vuelve a meter (se restaura desde la papelera).
+// ══════════════════════════════════════════════
+const BACKUP_KEY = 'nn_last_backup';
+const BACKUP_MAX_BYTES = 8 * 1024 * 1024;
+const getLastBackup = () => { try { return +localStorage.getItem(BACKUP_KEY) || 0; } catch (e) { return 0; } };
+const backupStatusHtml = () => {
+  const t = getLastBackup();
+  if (!t) return '<span style="color:var(--red)">⚠️ Aún no has hecho ningún respaldo en este dispositivo.</span>';
+  const days = Math.floor((Date.now() - t) / 86400000);
+  const when = new Date(t).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (days >= 7) return `<span style="color:var(--orange,#f59e0b)">⏳ Último respaldo: ${when} (hace ${days} días). Conviene hacer uno nuevo.</span>`;
+  return `<span style="color:var(--green)">✓ Último respaldo: ${when}${days === 0 ? ' (hoy)' : ` (hace ${days} día${days === 1 ? '' : 's'})`}</span>`;
+};
+const buildBackup = () => {
+  const settings = { ...(state.settings || {}) };
+  ['aiApiKey', 'firebaseApiKey'].forEach(k => delete settings[k]);
+  const data = {}; DATA_KEYS.forEach(k => { data[k] = state[k] || []; });
+  return { app: 'nova-hub', format: 2, exportedAt: new Date().toISOString(), uid: (typeof fb !== 'undefined' && fb.uid) || null, counts: realCounts(state), data, settings };
+};
+const downloadBackup = () => {
+  const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const a = document.createElement('a');
+  a.href = url; a.download = `nova-hub-respaldo-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  try { localStorage.setItem(BACKUP_KEY, String(Date.now())); } catch (e) {}
+  toast('⬇️ Respaldo exportado (sin tus API keys)');
+};
+// Acepta el formato nuevo ({data:{notes:[…]}}) y el viejo (el state suelto con notes/events/… arriba).
+const parseBackup = text => {
+  let o; try { o = JSON.parse(text); } catch (e) { return { error: 'El archivo no es un JSON válido.' }; }
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return { error: 'El archivo no tiene el formato de un respaldo de Nova Hub.' };
+  const src = (o.data && typeof o.data === 'object' && !Array.isArray(o.data)) ? o.data : o;
+  const keys = DATA_KEYS.filter(k => k !== 'trash');
+  const found = keys.filter(k => Array.isArray(src[k]));
+  if (!found.length) return { error: 'No encontré notas, proyectos ni otros datos de Nova Hub en este archivo.' };
+  if (keys.some(k => src[k] !== undefined && !Array.isArray(src[k]))) return { error: 'El archivo está dañado (una sección no es una lista).' };
+  const items = {}; let skipped = 0;
+  found.forEach(k => {
+    items[k] = src[k].filter(x => {
+      const ok = x && typeof x === 'object' && !Array.isArray(x) && (typeof x.id === 'string' || typeof x.id === 'number');
+      if (!ok) skipped++;
+      return ok;
+    });
+  });
+  return { items, skipped, exportedAt: o.exportedAt || null };
+};
+const planImport = items => {
+  const trashIds = new Set((state.trash || []).filter(t => t && t.data && t.data.id !== undefined).map(t => String(t.data.id)));
+  const toAdd = {}; let total = 0, already = 0, inTrash = 0;
+  Object.keys(items).forEach(k => {
+    const have = new Set((state[k] || []).map(x => String(x.id)));
+    toAdd[k] = [];
+    items[k].forEach(x => {
+      const id = String(x.id);
+      if (have.has(id)) { already++; return; }
+      if (trashIds.has(id)) { inTrash++; return; }
+      have.add(id); toAdd[k].push(x); total++;
+    });
+  });
+  return { toAdd, total, already, inTrash };
+};
+const importBackupFile = async file => {
+  if (!file) return;
+  if (file.size > BACKUP_MAX_BYTES) { toast('❌ El archivo es demasiado grande para ser un respaldo de Nova Hub.'); return; }
+  const parsed = parseBackup(await file.text());
+  if (parsed.error) { toast('❌ ' + parsed.error); return; }
+  const plan = planImport(parsed.items);
+  if (!plan.total) {
+    toast(`Nada que importar: todo lo del archivo ya está en tu app${plan.inTrash ? ` (${plan.inTrash} están en la papelera)` : ''}.`);
+    return;
+  }
+  const labels = { notes: 'notas', events: 'eventos', projects: 'proyectos', habits: 'hábitos', routines: 'bloques de horario', reminders: 'recordatorios', diary: 'entradas de diario' };
+  const lines = Object.keys(plan.toAdd).filter(k => plan.toAdd[k].length).map(k => `• ${plan.toAdd[k].length} ${labels[k] || k}`).join('\n');
+  const when = parsed.exportedAt ? new Date(parsed.exportedAt).toLocaleString('es-MX') : 'fecha desconocida';
+  if (!confirm(`Respaldo del ${when}.\n\nSe AÑADIRÁN a tu app:\n${lines}\n\nNo se reemplaza ni se borra nada de lo que ya tienes${plan.already ? ` (${plan.already} elementos ya estaban)` : ''}${plan.inTrash ? `; ${plan.inTrash} están en la papelera y no se vuelven a meter` : ''}.\n\n¿Importar?`)) return;
+  Object.keys(plan.toAdd).forEach(k => { if (plan.toAdd[k].length) state[k] = [...(state[k] || []), ...plan.toAdd[k]]; });
+  save();
+  const av = document.querySelector('.nav-item.active')?.dataset.view;
+  if (av) rerenderView(av);
+  if (typeof updateStats === 'function') updateStats();
+  toast(`♻️ Importado: ${plan.total} elemento${plan.total === 1 ? '' : 's'} añadido${plan.total === 1 ? '' : 's'}${parsed.skipped ? ` · ${parsed.skipped} ignorados por formato` : ''}`);
+};
+
 const renderSettingsView=()=>{
   purgeTrash();
   document.getElementById('content').style.padding='28px'; 
@@ -5835,7 +5951,15 @@ const renderSettingsView=()=>{
       <div class="settings-row"><button class="btn btn-primary btn-sm" id="saveAiKey">Guardar</button>${state.settings.aiApiKey ? '<span style="font-size:.78rem;color:var(--green);margin-left:10px">✓ Configurada</span>' : '<span style="font-size:.78rem;color:var(--red);margin-left:10px">⚠️ Sin configurar</span>'}</div>
     </div>
     <div class="settings-section"><h3>📦 Datos</h3>
-      <div class="settings-row"><button class="btn btn-ghost btn-sm" id="exportJson">⬇️ Exportar JSON</button></div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <div class="settings-sub" style="margin:0">Tu respaldo incluye notas, proyectos, tareas, hábitos, recordatorios, diario, calendario, horario y papelera. No incluye tus API keys. Importar solo añade lo que falta; nunca reemplaza ni borra lo que ya tienes.</div>
+        <div id="backupStatus" style="font-size:.78rem">${backupStatusHtml()}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="exportJson">⬇️ Exportar respaldo</button>
+          <button class="btn btn-ghost btn-sm" id="importJsonBtn">⬆️ Importar respaldo</button>
+        </div>
+        <input type="file" id="importJsonFile" accept="application/json,.json" style="display:none"/>
+      </div>
       <div class="settings-row"><button class="btn btn-sm" id="resetDataBtn" style="color:var(--red)">⚠️ Borrar todo</button></div>
     </div>
     <div class="settings-section"><h3>🗑️ Papelera ${(state.trash||[]).length ? `(${state.trash.length})` : ''}</h3>
@@ -5916,7 +6040,13 @@ const renderSettingsView=()=>{
   });
   document.getElementById('fbPullBtn')?.addEventListener('click',async()=>{ if(fb.enabled){ fb._hold = false; if(fb.syncReady && hasUnsynced()) await fb.pushAll(); const ok = await fb.pullAll(); if(ok && _dirtyBeforeReady){ _dirtyBeforeReady=false; schedulePush(); } renderSettingsView(); } });
   document.getElementById('exportJson').addEventListener('click',()=>{
-    const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(state,null,2)); a.download=`nova-hub-backup.json`; a.click(); toast('⬇️ JSON exportado');
+    downloadBackup();
+    const el=document.getElementById('backupStatus'); if(el) el.innerHTML=backupStatusHtml();
+  });
+  document.getElementById('importJsonBtn')?.addEventListener('click',()=>document.getElementById('importJsonFile')?.click());
+  document.getElementById('importJsonFile')?.addEventListener('change',async e=>{
+    const f=e.target.files&&e.target.files[0]; e.target.value='';
+    await importBackupFile(f);
   });
   document.getElementById('resetDataBtn').addEventListener('click',()=>{
     if(confirm('¿Borrar TODO? Los elementos se moverán a la papelera y podrás recuperarlos durante 5 días.')){
