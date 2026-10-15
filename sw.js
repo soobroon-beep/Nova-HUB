@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v11';
+const CACHE_NAME = 'nova-hub-v12';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).

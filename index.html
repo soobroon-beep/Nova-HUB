@@ -32,16 +32,16 @@ if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector(
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" />
 <style>
 :root {
-  --bg: rgba(15, 15, 26, 0.4);
-  --bg2: rgba(22, 22, 42, 0.6);
-  --bg3: rgba(30, 30, 53, 0.65);
+  --bg: rgba(15, 15, 26, 0.28);
+  --bg2: rgba(22, 22, 42, 0.4);
+  --bg3: rgba(30, 30, 53, 0.48);
   --border: rgba(255, 255, 255, 0.08);
   --accent: #7c6af7;
   --accent2: #a78bfa;
   --accent3: #38bdf8;
   --text: #e2e2f0;
-  --text2: #9090b8;
-  --text3: #5a5a80;
+  --text2: #9d9dc4;
+  --text3: #7070a0;
   --green: #34d399;
   --yellow: #fbbf24;
   --pink: #f472b6;
@@ -51,13 +51,13 @@ if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector(
   --trans: all 0.25s cubic-bezier(.4,0,.2,1);
 }
 [data-theme="light"] {
-  --bg: rgba(240, 240, 250, 0.4);
-  --bg2: rgba(255, 255, 255, 0.7);
-  --bg3: rgba(232, 232, 245, 0.7);
+  --bg: rgba(240, 240, 250, 0.3);
+  --bg2: rgba(255, 255, 255, 0.5);
+  --bg3: rgba(232, 232, 245, 0.52);
   --border: rgba(0, 0, 0, 0.08);
   --text: #1a1a35;
   --text2: #4a4a70;
-  --text3: #9090b8;
+  --text3: #6b6b94;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 /* Color base sólido en html: si por cualquier razón el canvas de fondo no cubre
@@ -1697,6 +1697,22 @@ html{-webkit-tap-highlight-color:transparent}
   body.has-tabbar .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){#tabbar{animation:none}.tb-plus{animation:none}}
+
+/* ── Traslúcido en toda la app: superficies más transparentes, con desenfoque donde se encima contenido ── */
+.greeting{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:10px;transition:opacity .15s,transform .15s}
+.greeting:active{opacity:.7;transform:scale(.985)}
+.greeting:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+#topbar{background:rgba(20,20,40,.3);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+#sidebar{background:rgba(16,16,30,.72);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}
+.modal{background:rgba(20,20,38,.86);-webkit-backdrop-filter:blur(26px) saturate(160%);backdrop-filter:blur(26px) saturate(160%)}
+.modal-overlay{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.toast{background:rgba(20,20,38,.88);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.fab-menu{background:rgba(18,18,32,.8);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
+[data-theme="light"] #topbar{background:rgba(255,255,255,.4)}
+[data-theme="light"] #sidebar{background:rgba(255,255,255,.78)}
+[data-theme="light"] .modal{background:rgba(255,255,255,.9)}
+[data-theme="light"] .toast{background:rgba(255,255,255,.92)}
+[data-theme="light"] .fab-menu{background:rgba(255,255,255,.86)}
 
 /* ── Ajustes: barra inferior ── */
 .dock-picker{display:flex;flex-wrap:wrap;gap:8px}
@@ -4259,7 +4275,6 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
 
 // ── Pestañas que pueden ir en la barra inferior (s = etiqueta corta, f = nombre completo, p = icono SVG) ──
 const DOCK_META = {
-  dashboard: { s:'Inicio',     f:'Dashboard',      i:'⊞',  p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
   calendar:  { s:'Calendario', f:'Calendario',     i:'📅', p:'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z' },
   notes:     { s:'Notas',      f:'Notas',          i:'🗒️', p:'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z' },
   projects:  { s:'Proyectos',  f:'Proyectos',      i:'🚀', p:'M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z' },
@@ -4270,7 +4285,7 @@ const DOCK_META = {
   ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['dashboard', 'notes', 'projects'];
+const DOCK_DEFAULT = ['calendar', 'notes', 'projects'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -4284,6 +4299,19 @@ const getDockTabs = () => {
   const valid = Array.isArray(saved) ? Object.keys(DOCK_META).filter(k => saved.includes(k)).slice(0, 4) : [];
   return valid.length >= 2 ? valid : DOCK_DEFAULT;
 };
+
+// ── Tocar el saludo (arriba) lleva al Dashboard; si ya estás ahí, sube al inicio ──
+(function(){
+  const g = document.querySelector('#topbar .greeting'); if (!g) return;
+  g.setAttribute('role', 'button'); g.tabIndex = 0; g.title = 'Ir al Dashboard';
+  const go = () => {
+    const cur = document.querySelector('#sidebar .nav-item.active')?.dataset.view;
+    if (cur === 'dashboard') document.getElementById('content')?.scrollTo({ top: 0, behavior: 'smooth' });
+    else document.querySelector('#sidebar .nav-item[data-view="dashboard"]')?.click();
+  };
+  g.addEventListener('click', go);
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+})();
 
 // ── BARRA INFERIOR FLOTANTE (móvil/tablet) + botón central (+) + hápticos globales ──
 (function(){
@@ -4327,7 +4355,7 @@ const getDockTabs = () => {
     const cur = document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
     bar.querySelectorAll('[data-tab]').forEach(b => {
       const t = b.dataset.tab;
-      if (t === 'more') b.classList.toggle('dot', !getDockTabs().includes(cur));   // punto = estás en otra pestaña
+      if (t === 'more') b.classList.toggle('dot', cur !== 'dashboard' && !getDockTabs().includes(cur));   // punto = estás en otra pestaña (el Dashboard es la casa: sin punto)
       else b.classList.toggle('active', t === cur);
     });
   };
@@ -4523,7 +4551,7 @@ const getDockTabs = () => {
 
   // Háptico suave en cualquier control tocable
   document.addEventListener('click', e => {
-    if (e.target.closest('.nav-item,.fab,.fab-menu-item,.tb-item,.tb-plus,#tabSheet button,.btn,.sec-action,.toggle-sw,.hb-check,.focus-check,.cal-day,.pd-check,.pin-note-btn,.qa-icon-btn')) haptic('tap');
+    if (e.target.closest('.nav-item,.fab,.fab-menu-item,.tb-item,.tb-plus,#tabSheet button,.btn,.sec-action,.toggle-sw,.hb-check,.focus-check,.cal-day,.pd-check,.pin-note-btn,.qa-icon-btn,.greeting')) haptic('tap');
   }, true);
 })();
 
@@ -5690,7 +5718,7 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">Elige de 2 a 4 pestañas para la barra del celular. El botón (+) y «Más» siempre están, y desde «Más» llegas a todo lo demás.</div>
+      <div class="settings-sub" style="margin-bottom:12px">Elige de 2 a 4 pestañas para la barra del celular. El botón (+) y «Más» siempre están; el Dashboard está en «Más» y tocando tu saludo de arriba.</div>
       <div class="dock-picker" id="dockPicker">${Object.keys(DOCK_META).map(k => `<button type="button" class="dock-chip${getDockTabs().includes(k)?' on':''}" data-dock="${k}"><span>${DOCK_META[k].i}</span>${DOCK_META[k].f}</button>`).join('')}</div>
       <div class="settings-sub" id="dockCount" style="margin:10px 0 0">${getDockTabs().length} de 4 pestañas</div>
       <div class="settings-label" style="margin:16px 0 10px">Color del botón (+)</div>
