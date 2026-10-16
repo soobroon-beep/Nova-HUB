@@ -325,6 +325,62 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .settings-sub{font-size:.75rem;color:var(--text3);margin-top:2px}
 .settings-input{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:.87rem;outline:none;transition:border .2s;width:220px}
 .settings-input:focus{border-color:var(--accent)}
+/* ── TEMAS (Ajustes → Temas) ── */
+.tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px}
+.tp-bubble{--tc:var(--accent);aspect-ratio:1;border-radius:50%;border:2px solid var(--tc);background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--tc) 24%,transparent),transparent 74%),var(--bg3);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px;cursor:pointer;font-family:inherit;box-shadow:0 0 18px color-mix(in srgb,var(--tc) 38%,transparent);transition:transform .15s,box-shadow .2s}
+.tp-bubble:hover{box-shadow:0 0 26px color-mix(in srgb,var(--tc) 55%,transparent)}
+.tp-bubble:active{transform:scale(.96)}
+.tp-bubble-ico{font-size:1.7rem;line-height:1}
+.tp-bubble-name{font-size:.8rem;font-weight:700;text-align:center;line-height:1.15;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tp-bubble-n{font-size:.66rem;color:var(--text3)}
+.tp-new{--tc:var(--text3);border-style:dashed;box-shadow:none}
+.tp-overlay{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 28%,#12233a 0%,#0a0a16 72%);color:var(--text)}
+[data-theme="light"] .tp-overlay{background:radial-gradient(ellipse at 50% 28%,#ffffff 0%,#e6ebf8 78%)}
+.tp-head{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 10px}
+.tp-title{flex:1;min-width:0;font-size:1.05rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-ico{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:rgba(127,127,160,.14);color:var(--text);font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0}
+.tp-head-actions{display:flex;gap:8px}
+.tp-body{flex:1;overflow-y:auto;padding:0 14px calc(28px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch}
+.tp-stage{max-width:640px;margin:0 auto}
+.tp-stage svg{width:100%;height:auto;max-height:66vh;display:block;overflow:visible}
+.tp-line{stroke-width:1.2;opacity:0;animation:tpFade .6s ease .15s forwards}
+.tp-node{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tp-node-in{opacity:0;transform-box:fill-box;transform-origin:center;animation:tpIn .45s cubic-bezier(.2,.9,.3,1.2) forwards;animation-delay:calc(var(--i,0)*35ms + 120ms)}
+.tp-node.sel .tp-ring{stroke-width:3.6;fill-opacity:.42}
+.tp-center{transform-box:fill-box;transform-origin:center;animation:tpPulse 3.6s ease-in-out infinite}
+@keyframes tpIn{from{opacity:0;transform:scale(.35)}to{opacity:1;transform:scale(1)}}
+@keyframes tpFade{to{opacity:1}}
+@keyframes tpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@media (prefers-reduced-motion:reduce){.tp-node-in,.tp-line{animation:none;opacity:1}.tp-center{animation:none}}
+.tp-detail{max-width:640px;margin:10px auto 0;background:rgba(127,127,160,.12);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.tp-hint{font-size:.82rem;color:var(--text2);text-align:center;line-height:1.45}
+.tp-d-type{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:4px}
+.tp-d-title{font-size:1rem;font-weight:700;word-break:break-word}
+.tp-d-sub{font-size:.8rem;color:var(--text2);margin-top:4px;word-break:break-word}
+.tp-d-auto{font-size:.72rem;color:var(--text3);margin-top:6px}
+.tp-d-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tp-summary{max-width:640px;margin:18px auto 0}
+.tp-sum-h{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
+.tp-sum-h span.n{margin-left:auto;font-weight:600;color:var(--text3)}
+.tp-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font-family:inherit;color:var(--text);background:rgba(127,127,160,.1);border:1px solid var(--border);border-left:3px solid var(--rc,var(--accent));border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer;font-size:.86rem}
+.tp-row-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-row-go{color:var(--text3);font-size:.9rem}
+.tp-dialog-back{position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.tp-dialog{width:100%;max-width:420px;max-height:88vh;overflow-y:auto;background:#16162a;color:var(--text);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+[data-theme="light"] .tp-dialog{background:#ffffff}
+.tp-dialog h4{font-size:1.05rem;font-weight:800;margin-bottom:14px}
+.tp-dialog label{display:block;font-size:.74rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 6px}
+.tp-opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tp-opt{width:38px;height:38px;border-radius:50%;border:2px solid transparent;background:rgba(127,127,160,.16);font-size:1.15rem;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center}
+.tp-opt.on{border-color:var(--accent)}
+.tp-sw{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.tp-sw.on{border-color:var(--text);box-shadow:0 0 0 2px rgba(127,127,160,.4)}
+.tp-dialog-actions{display:flex;gap:8px;margin-top:20px;align-items:center}
+.tp-pick-list{max-height:46vh;overflow-y:auto;margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:4px 10px}
+.tp-pick-h{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 4px}
+.tp-pick-row{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.86rem;cursor:pointer}
+.tp-pick-row input{width:18px;height:18px;flex-shrink:0;accent-color:var(--accent)}
+.tp-pick-row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trash-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .trash-item{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
 .trash-item-icon{font-size:1.1rem;flex-shrink:0;width:30px;height:30px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center}
@@ -5891,6 +5947,296 @@ const importBackupFile = async file => {
   toast(`♻️ Importado: ${plan.total} elemento${plan.total === 1 ? '' : 's'} añadido${plan.total === 1 ? '' : 's'}${parsed.skipped ? ` · ${parsed.skipped} ignorados por formato` : ''}`);
 };
 
+// ══════════════════════════════════════════════
+// TEMAS — mapa de conexiones por tema (Ajustes → Temas)
+// Se guardan en state.settings.topics, así que se sincronizan con la nube junto con
+// los ajustes sin tocar las listas de notas, proyectos, etc. Cada tema enlaza elementos
+// existentes por tipo + id y, si tiene palabras clave, suma solo todo lo que coincida.
+// El diario NO entra en los temas (está protegido por candado).
+// ══════════════════════════════════════════════
+const _tpPlain = s => String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const _tpNorm = s => _tpPlain(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const _tpTrunc = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+const _tpTaskText = t => typeof t === 'string' ? t : (t && (t.text || t.title || t.name)) || '';
+const TOPIC_TYPES = {
+  project:  { icon:'🚀', label:'Proyectos',    one:'Proyecto',    color:'#7c6af7', view:'projects',  arr:'projects',
+              title:x=>x.name, text:x=>[x.name, x.desc, ...(x.tasks||[]).map(_tpTaskText)].join(' '),
+              sub:x=>_tpPlain(x.desc) || (((x.tasks||[]).length) ? `${x.tasks.length} tarea${x.tasks.length===1?'':'s'}` : '') },
+  note:     { icon:'🗒️', label:'Notas',        one:'Nota',        color:'#38bdf8', view:'notes',     arr:'notes',
+              title:x=>x.title, text:x=>[x.title, x.body, ...(x.tags||[])].join(' '),
+              sub:x=>_tpPlain(x.body) },
+  reminder: { icon:'⏰', label:'Recordatorios', one:'Recordatorio', color:'#f97316', view:'reminders', arr:'reminders',
+              title:x=>x.title, text:x=>[x.title, x.desc, ...(x.tags||[])].join(' '),
+              sub:x=>{ const d = new Date(x.datetime); return isNaN(d) ? _tpPlain(x.desc) : d.toLocaleString('es-MX'); } },
+  event:    { icon:'📅', label:'Eventos',      one:'Evento',      color:'#22c55e', view:'calendar',  arr:'events',
+              title:x=>x.title, text:x=>[x.title].join(' '),
+              sub:x=>[x.date, x.start].filter(Boolean).join(' · ') },
+  routine:  { icon:'🗓️', label:'Horario',      one:'Bloque de horario', color:'#a78bfa', view:'calendar', arr:'routines',
+              title:x=>x.title, text:x=>[x.title].join(' '),
+              sub:x=>[x.start, x.end].filter(Boolean).join(' – ') },
+  habit:    { icon:'🔥', label:'Hábitos',      one:'Hábito',      color:'#ef4444', view:'habits',    arr:'habits',
+              title:x=>x.name, text:x=>[x.name].join(' '),
+              sub:()=>'' },
+};
+const TOPIC_COLORS = ['#dc143c', '#d4a017', '#00a86b', '#7c6af7', '#38bdf8', '#f97316', '#ec4899', '#94a3b8'];
+const TOPIC_ICONS = ['🖋️', '👕', '💰', '🚀', '🏠', '🎵', '📚', '🧠', '🎨', '💪', '✈️', '🛒'];
+const TOPIC_MAX_SHOWN = 36;
+
+const getTopics = () => { if (!Array.isArray(state.settings.topics)) state.settings.topics = []; return state.settings.topics; };
+const topicKeywords = t => String(t.keywords || '').split(',').map(_tpNorm).map(s => s.trim()).filter(Boolean);
+const topicItems = t => {
+  const out = [], links = t.links || [], excl = new Set(t.excluded || []), kws = topicKeywords(t);
+  Object.keys(TOPIC_TYPES).forEach(type => {
+    const def = TOPIC_TYPES[type];
+    (state[def.arr] || []).forEach(x => {
+      const manual = links.some(l => l.type === type && String(l.id) === String(x.id));
+      let auto = false;
+      if (!manual && kws.length && !excl.has(type + ':' + x.id)) { const hay = _tpNorm(def.text(x)); auto = kws.some(k => hay.includes(k)); }
+      if (manual || auto) out.push({ type, id: x.id, item: x, title: _tpPlain(def.title(x)) || 'Sin título', auto });
+    });
+  });
+  return out;
+};
+const topicLink = (t, type, id) => {
+  t.links = t.links || [];
+  if (!t.links.some(l => l.type === type && String(l.id) === String(id))) t.links.push({ type, id });
+  t.excluded = (t.excluded || []).filter(k => k !== type + ':' + id);
+};
+const topicUnlink = (t, type, id) => {
+  t.links = (t.links || []).filter(l => !(l.type === type && String(l.id) === String(id)));
+  t.excluded = t.excluded || [];
+  if (!t.excluded.includes(type + ':' + id)) t.excluded.push(type + ':' + id);
+};
+
+// Posiciones de los círculos pequeños alrededor del tema (lienzo 600×600, centro 300,300)
+const topicLayout = n => {
+  const rings = n <= 8 ? [{ k:n, r:185 }]
+    : n <= 20 ? [{ k:Math.round(n*0.4), r:130 }, { k:n - Math.round(n*0.4), r:228 }]
+    : [{ k:7, r:108 }, { k:12, r:182 }, { k:n - 19, r:252 }];
+  const pos = [];
+  rings.forEach((ring, ri) => {
+    for (let i = 0; i < ring.k; i++) {
+      const a = -Math.PI/2 + 2*Math.PI*i/ring.k + (ri % 2 ? Math.PI/ring.k : 0);
+      pos.push({ x:300 + ring.r*Math.cos(a), y:300 + ring.r*Math.sin(a), ring:ri });
+    }
+  });
+  return pos;
+};
+const topicSvg = (t, items) => {
+  const col = _esc(t.color || '#7c6af7'), shown = items.slice(0, TOPIC_MAX_SHOWN), pos = topicLayout(shown.length);
+  const nr = shown.length <= 20 ? 25 : 19;
+  let edges = '';
+  const line = (a, b, op) => `<line class="tp-line" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${col}" stroke-opacity="${op}"/>`;
+  pos.forEach((p, i) => {
+    edges += line({ x:300, y:300 }, p, .38);
+    if (pos[i+1] && pos[i+1].ring === p.ring) edges += line(p, pos[i+1], .14);
+    if (p.ring > 0) {
+      let best = -1, bd = Infinity;
+      pos.forEach((q, j) => { if (q.ring === p.ring - 1) { const d = (q.x-p.x)**2 + (q.y-p.y)**2; if (d < bd) { bd = d; best = j; } } });
+      if (best >= 0) edges += line(p, pos[best], .16);
+    }
+  });
+  const nodes = shown.map((it, i) => {
+    const p = pos[i], def = TOPIC_TYPES[it.type], k = it.type + ':' + it.id;
+    return `<g class="tp-node${_topicSel === k ? ' sel' : ''}" data-k="${_esc(k)}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})">
+      <g class="tp-node-in" style="--i:${i}">
+        <circle r="${nr + 9}" fill="transparent"/>
+        <circle class="tp-ring" r="${nr}" fill="${def.color}" fill-opacity=".18" stroke="${def.color}" stroke-width="2" ${it.auto ? 'stroke-dasharray="4 3"' : ''} filter="url(#tpGlow)"/>
+        <text y="1" text-anchor="middle" dominant-baseline="central" font-size="${Math.round(nr*0.82)}">${def.icon}</text>
+        <text y="${nr + 15}" text-anchor="middle" font-size="11" fill="currentColor" fill-opacity=".85">${_esc(_tpTrunc(it.title, 14))}</text>
+      </g></g>`;
+  }).join('');
+  return `<svg viewBox="0 0 600 600" role="img" aria-label="Mapa del tema ${_esc(t.name)}" xmlns="http://www.w3.org/2000/svg">
+    <defs><filter id="tpGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    ${edges}${nodes}
+    <g transform="translate(300 300)"><g class="tp-center">
+      <circle r="74" fill="${col}" fill-opacity=".08"/>
+      <circle r="60" fill="${col}" fill-opacity=".2" stroke="${col}" stroke-width="2.6" filter="url(#tpGlow)"/>
+      <text y="-12" text-anchor="middle" dominant-baseline="central" font-size="30">${_esc(t.icon || '🏷️')}</text>
+      <text y="20" text-anchor="middle" font-size="13.5" font-weight="700" fill="currentColor">${_esc(_tpTrunc(t.name, 14))}</text>
+      <text y="37" text-anchor="middle" font-size="10.5" fill="currentColor" fill-opacity=".6">${items.length} elemento${items.length === 1 ? '' : 's'}</text>
+    </g></g></svg>`;
+};
+
+let _topicOpenId = null, _topicSel = null, _tpItems = [];
+const _tpKey = e => {
+  if (e.key !== 'Escape') return;
+  const dlg = document.querySelector('.tp-dialog-back');
+  if (dlg) dlg.remove(); else closeTopic();
+};
+const openTopic = id => { _topicOpenId = id; _topicSel = null; document.addEventListener('keydown', _tpKey); renderTopicOverlay(); };
+const closeTopic = (skipSettings) => {
+  _topicOpenId = null; _topicSel = null;
+  document.removeEventListener('keydown', _tpKey);
+  document.querySelector('.tp-dialog-back')?.remove();
+  document.getElementById('topicOverlay')?.remove();
+  if (!skipSettings && document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
+};
+const topicOpenItem = (it) => {
+  const def = TOPIC_TYPES[it.type];
+  closeTopic(true);
+  document.querySelector(`#sidebar .nav-item[data-view="${def.view}"]`)?.click();
+  setTimeout(() => {
+    try {
+      if (it.type === 'note' && typeof openNoteDetail === 'function') openNoteDetail(it.id);
+      else if (it.type === 'project' && typeof openProjectDetail === 'function') openProjectDetail(it.id);
+    } catch (e) { console.warn('[NOVA HUB] No se pudo abrir el elemento del tema', e); }
+  }, 90);
+};
+const topicDetailHtml = () => {
+  if (!_tpItems.length) return '<div class="tp-hint">Este tema está vacío. Toca ＋ arriba para agregar elementos, o ✏️ para añadir palabras clave que conecten todo automáticamente.</div>';
+  const it = _tpItems.find(x => x.type + ':' + x.id === _topicSel);
+  if (!it) return '<div class="tp-hint">Toca un círculo para ver su detalle.</div>';
+  const def = TOPIC_TYPES[it.type], sub = _tpTrunc(def.sub(it.item), 140);
+  return `<div class="tp-d-type">${def.icon} ${def.one}</div>
+    <div class="tp-d-title">${_esc(it.title)}</div>
+    ${sub ? `<div class="tp-d-sub">${_esc(sub)}</div>` : ''}
+    ${it.auto ? '<div class="tp-d-auto">Conectado automáticamente por una palabra clave del tema.</div>' : ''}
+    <div class="tp-d-actions"><button class="btn btn-primary btn-sm" data-act="open">Abrir</button><button class="btn btn-ghost btn-sm" data-act="remove">Quitar del tema</button></div>`;
+};
+const wireTopicDetail = (t) => {
+  const box = document.getElementById('tpDetail'); if (!box) return;
+  box.innerHTML = topicDetailHtml();
+  const it = _tpItems.find(x => x.type + ':' + x.id === _topicSel);
+  box.querySelector('[data-act="open"]')?.addEventListener('click', () => it && topicOpenItem(it));
+  box.querySelector('[data-act="remove"]')?.addEventListener('click', () => {
+    if (!it) return;
+    topicUnlink(t, it.type, it.id); _topicSel = null; save(); renderTopicOverlay(); toast('Quitado del tema (el elemento sigue en la app)');
+  });
+};
+const renderTopicOverlay = () => {
+  const t = getTopics().find(x => x.id === _topicOpenId);
+  if (!t) { closeTopic(); return; }
+  let ov = document.getElementById('topicOverlay');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'topicOverlay'; ov.className = 'tp-overlay'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov); }
+  _tpItems = topicItems(t);
+  if (_topicSel && !_tpItems.some(x => x.type + ':' + x.id === _topicSel)) _topicSel = null;
+  const groups = Object.keys(TOPIC_TYPES).map(type => ({ type, def:TOPIC_TYPES[type], list:_tpItems.filter(x => x.type === type) })).filter(g => g.list.length);
+  ov.innerHTML = `
+    <div class="tp-head">
+      <button class="tp-ico" id="tpBack" aria-label="Volver">←</button>
+      <div class="tp-title">${_esc(t.icon || '🏷️')} ${_esc(t.name)}</div>
+      <div class="tp-head-actions"><button class="tp-ico" id="tpAdd" aria-label="Agregar elementos" title="Agregar elementos">＋</button><button class="tp-ico" id="tpEdit" aria-label="Editar tema" title="Editar tema">✏️</button></div>
+    </div>
+    <div class="tp-body">
+      <div class="tp-stage">${topicSvg(t, _tpItems)}</div>
+      ${_tpItems.length > TOPIC_MAX_SHOWN ? `<div class="tp-hint" style="margin-top:6px">En el mapa se muestran ${TOPIC_MAX_SHOWN} de ${_tpItems.length}. Abajo está la lista completa.</div>` : ''}
+      <div class="tp-detail" id="tpDetail"></div>
+      <div class="tp-summary">
+        ${groups.map(g => `<div class="tp-sum-h"><span>${g.def.icon}</span> ${g.def.label}<span class="n">${g.list.length}</span></div>
+          ${g.list.map(it => `<button type="button" class="tp-row" style="--rc:${g.def.color}" data-k="${_esc(it.type + ':' + it.id)}"><span class="tp-row-t">${_esc(it.title)}</span><span class="tp-row-go">↗</span></button>`).join('')}`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('tpBack').addEventListener('click', () => closeTopic());
+  document.getElementById('tpAdd').addEventListener('click', () => openTopicPicker(t.id));
+  document.getElementById('tpEdit').addEventListener('click', () => openTopicDialog(t.id));
+  ov.querySelectorAll('.tp-node').forEach(g => g.addEventListener('click', () => {
+    _topicSel = g.dataset.k === _topicSel ? null : g.dataset.k;
+    ov.querySelectorAll('.tp-node').forEach(n => n.classList.toggle('sel', n.dataset.k === _topicSel));
+    wireTopicDetail(t); haptic('select');
+  }));
+  ov.querySelectorAll('.tp-row').forEach(b => b.addEventListener('click', () => {
+    const it = _tpItems.find(x => x.type + ':' + x.id === b.dataset.k); if (it) topicOpenItem(it);
+  }));
+  wireTopicDetail(t);
+};
+
+// Crear o editar un tema (nombre, icono, color y palabras clave opcionales)
+const openTopicDialog = (id) => {
+  const t = id ? getTopics().find(x => x.id === id) : null;
+  let color = t?.color || TOPIC_COLORS[0];
+  const back = document.createElement('div'); back.className = 'tp-dialog-back';
+  back.innerHTML = `<div class="tp-dialog" role="dialog" aria-modal="true">
+    <h4>${t ? 'Editar tema' : 'Nuevo tema'}</h4>
+    <label for="tpdName">Nombre</label>
+    <input id="tpdName" class="settings-input" style="width:100%" maxlength="40" placeholder="Ej. Tatuajes, Tienda de ropa" value="${_esc(t?.name || '')}"/>
+    <label for="tpdIcon">Icono</label>
+    <div class="tp-opts"><input id="tpdIcon" class="settings-input" style="width:70px;text-align:center;font-size:1.2rem" maxlength="4" value="${_esc(t?.icon || '🏷️')}"/>${TOPIC_ICONS.map(ic => `<button type="button" class="tp-opt" data-ic="${ic}">${ic}</button>`).join('')}</div>
+    <label>Color</label>
+    <div class="tp-opts" id="tpdColors">${TOPIC_COLORS.map(c => `<button type="button" class="tp-sw${c === color ? ' on' : ''}" data-c="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>
+    <label for="tpdKw">Palabras clave (opcional)</label>
+    <input id="tpdKw" class="settings-input" style="width:100%" placeholder="tatuaje, tinta, cliente" value="${_esc(t?.keywords || '')}"/>
+    <div class="settings-sub" style="margin-top:6px">Todo lo que tenga estas palabras en el título, texto o etiquetas se conecta solo al tema. Sepáralas con comas.</div>
+    <div class="tp-dialog-actions">${t ? '<button class="btn btn-ghost btn-sm" id="tpdDel" style="color:var(--red);margin-right:auto">Eliminar tema</button>' : '<span style="margin-right:auto"></span>'}<button class="btn btn-ghost btn-sm" id="tpdCancel">Cancelar</button><button class="btn btn-primary btn-sm" id="tpdSave">Guardar</button></div>
+  </div>`;
+  document.body.appendChild(back);
+  const q = s => back.querySelector(s);
+  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  q('#tpdCancel').addEventListener('click', () => back.remove());
+  back.querySelectorAll('.tp-opt').forEach(b => b.addEventListener('click', () => { q('#tpdIcon').value = b.dataset.ic; }));
+  q('#tpdColors').addEventListener('click', e => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    color = b.dataset.c; back.querySelectorAll('.tp-sw').forEach(s => s.classList.toggle('on', s === b));
+  });
+  q('#tpdSave').addEventListener('click', () => {
+    const name = q('#tpdName').value.trim();
+    if (!name) { toast('Ponle un nombre al tema'); q('#tpdName').focus(); return; }
+    const icon = q('#tpdIcon').value.trim() || '🏷️', keywords = q('#tpdKw').value.trim();
+    let topic = t;
+    if (topic) { Object.assign(topic, { name, icon, color, keywords }); }
+    else {
+      topic = { id:'tp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, icon, color, keywords, links:[], excluded:[], createdAt:new Date().toISOString() };
+      getTopics().push(topic);
+    }
+    save(); back.remove();
+    if (_topicOpenId) renderTopicOverlay();
+    else if (!t) { openTopic(topic.id); }
+    else renderSettingsView();
+    toast(t ? '✅ Tema actualizado' : '✅ Tema creado');
+  });
+  if (t) q('#tpdDel').addEventListener('click', () => {
+    if (!confirm(`¿Eliminar el tema "${t.name}"? Tus notas, proyectos y demás elementos NO se borran; solo se quita este tema.`)) return;
+    state.settings.topics = getTopics().filter(x => x.id !== t.id);
+    save(); back.remove(); closeTopic(true); renderSettingsView(); toast('🗑️ Tema eliminado');
+  });
+  setTimeout(() => q('#tpdName').focus(), 50);
+};
+
+// Elegir qué elementos de la app pertenecen al tema
+const openTopicPicker = (id) => {
+  const t = getTopics().find(x => x.id === id); if (!t) return;
+  const current = new Set(topicItems(t).map(x => x.type + ':' + x.id));
+  const back = document.createElement('div'); back.className = 'tp-dialog-back';
+  const sections = Object.keys(TOPIC_TYPES).map(type => {
+    const def = TOPIC_TYPES[type], list = state[def.arr] || [];
+    if (!list.length) return '';
+    return `<div class="tp-pick-h">${def.icon} ${def.label}</div>` + list.map(x => {
+      const k = type + ':' + x.id, ttl = _tpPlain(def.title(x)) || 'Sin título';
+      return `<label class="tp-pick-row" data-s="${_esc(_tpNorm(ttl))}"><input type="checkbox" data-k="${_esc(k)}" ${current.has(k) ? 'checked' : ''}/><span>${_esc(ttl)}</span></label>`;
+    }).join('');
+  }).join('');
+  back.innerHTML = `<div class="tp-dialog" role="dialog" aria-modal="true">
+    <h4>Agregar a ${_esc(t.icon || '🏷️')} ${_esc(t.name)}</h4>
+    <input id="tppSearch" class="settings-input" style="width:100%" placeholder="Buscar…" autocomplete="off"/>
+    <div class="tp-pick-list" id="tppList">${sections || '<div class="tp-hint" style="padding:16px">Todavía no tienes notas, proyectos ni recordatorios para conectar.</div>'}</div>
+    <div class="tp-dialog-actions"><span style="margin-right:auto"></span><button class="btn btn-ghost btn-sm" id="tppCancel">Cancelar</button><button class="btn btn-primary btn-sm" id="tppSave">Guardar</button></div>
+  </div>`;
+  document.body.appendChild(back);
+  back.addEventListener('click', e => { if (e.target === back) back.remove(); });
+  back.querySelector('#tppCancel').addEventListener('click', () => back.remove());
+  back.querySelector('#tppSearch').addEventListener('input', e => {
+    const s = _tpNorm(e.target.value).trim();
+    back.querySelectorAll('.tp-pick-row').forEach(r => { r.style.display = !s || r.dataset.s.includes(s) ? '' : 'none'; });
+  });
+  back.querySelector('#tppSave').addEventListener('click', () => {
+    let added = 0, removed = 0;
+    back.querySelectorAll('.tp-pick-row input').forEach(cb => {
+      const k = cb.dataset.k, i = k.indexOf(':'), type = k.slice(0, i), rawId = k.slice(i + 1);
+      const def = TOPIC_TYPES[type], el = (state[def.arr] || []).find(x => String(x.id) === rawId); if (!el) return;
+      if (cb.checked && !current.has(k)) { topicLink(t, type, el.id); added++; }
+      else if (!cb.checked && current.has(k)) { topicUnlink(t, type, el.id); removed++; }
+    });
+    if (added || removed) { save(); renderTopicOverlay(); toast(`✅ ${added} agregado${added === 1 ? '' : 's'}${removed ? ` · ${removed} quitado${removed === 1 ? '' : 's'}` : ''}`); }
+    back.remove();
+  });
+};
+const topicsSettingsHtml = () => `<div class="settings-section"><h3>🕸️ Temas</h3>
+  <div class="settings-sub" style="margin:0 0 14px">Reúne en un solo lugar todo lo que tengas de un tema: proyectos, notas, recordatorios, eventos y hábitos. Abre un tema para ver el mapa de conexiones y el resumen. El diario no se incluye, por privacidad.</div>
+  <div class="tp-grid">
+    ${getTopics().map(t => { const n = topicItems(t).length; return `<button type="button" class="tp-bubble" data-topic="${_esc(t.id)}" style="--tc:${_esc(t.color || '#7c6af7')}"><span class="tp-bubble-ico">${_esc(t.icon || '🏷️')}</span><span class="tp-bubble-name">${_esc(t.name)}</span><span class="tp-bubble-n">${n} elemento${n === 1 ? '' : 's'}</span></button>`; }).join('')}
+    <button type="button" class="tp-bubble tp-new" id="newTopicBtn"><span class="tp-bubble-ico">＋</span><span class="tp-bubble-name">Nuevo tema</span></button>
+  </div></div>`;
+
 const renderSettingsView=()=>{
   purgeTrash();
   document.getElementById('content').style.padding='28px'; 
@@ -5898,6 +6244,7 @@ const renderSettingsView=()=>{
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
+    ${topicsSettingsHtml()}
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h}"></div>`).join('')}</div></div></div>
     <div class="settings-section"><h3>🖼️ Icono de la app</h3>
       <div class="settings-sub" style="margin-top:0">Al elegir un icono también cambia el color de la app. El icono ya instalado en tu pantalla de inicio lo fija el sistema: para verlo cambiar ahí, desinstala la app y vuelve a instalarla.</div>
@@ -5991,6 +6338,8 @@ const renderSettingsView=()=>{
     save(); renderSettingsView(); toast('✅ Configuración de IA guardada');
   });
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
+  document.querySelectorAll('.tp-bubble[data-topic]').forEach(b=>b.addEventListener('click',()=>openTopic(b.dataset.topic)));
+  document.getElementById('newTopicBtn')?.addEventListener('click',()=>openTopicDialog());
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
     const b=e.target.closest('.app-icon-opt'); if(!b) return;
