@@ -1,0 +1,38 @@
+name: Publicar reglas de Firestore
+
+# Publica firestore.rules cada vez que cambia en main (o a mano desde Actions → Run workflow).
+# Usa el mismo secret FIREBASE_SERVICE_ACCOUNT del resto de los jobs. La cuenta de servicio
+# necesita el rol "Administrador de reglas de Firebase" (el de Firebase Admin SDK ya lo incluye).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - firestore.rules
+      - firebase.json
+      - .github/workflows/deploy-firestore-rules.yml
+  workflow_dispatch: {}
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Guardar credenciales temporales
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+
+      - name: Publicar reglas
+        run: npx --yes firebase-tools@13 deploy --only firestore:rules --project nova-hub-2a8a0 --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+
+      - name: Borrar credenciales
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

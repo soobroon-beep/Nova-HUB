@@ -1,0 +1,27 @@
+name: Respaldo diario de Firestore
+
+on:
+  schedule:
+    - cron: '30 9 * * *'   # 03:30 hora de Ciudad de México
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm install --omit=dev
+
+      - name: Respaldar documentos de usuarios
+        run: node scripts/backup-firestore.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

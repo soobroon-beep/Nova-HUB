@@ -62,6 +62,43 @@ const blockRepeatsToday = (b, dow) => {
 // ventana que cubre esta corrida del cron?
 const isDue = (targetMin, nowMin) => targetMin !== null && nowMin >= targetMin && (nowMin - targetMin) < WINDOW_MIN;
 
+// Clave estable de un recordatorio (por id; si no tuviera, por fecha+título).
+const reminderKey = (r) => (r && r.id != null) ? 'id:' + r.id : 'dt:' + (r && r.datetime) + '|' + (r && r.title);
+
+// Guarda lo ya notificado SIN pisar lo que el usuario haya escrito mientras el job corría.
+// Antes se reescribía la lista COMPLETA de `reminders` (y `fcmTokens`) con la copia leída al
+// inicio de la corrida: si guardabas o editabas un recordatorio en ese rato, se perdía.
+// Ahora, dentro de una transacción, se vuelve a leer el documento y solo se tocan los campos
+// `notified` de los recordatorios ya avisados, el registro de bloques y los tokens inválidos.
+async function commitNotified(db, ref, { reminderKeys, routineKeys, dateStr, badTokens }) {
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    const d = snap.data();
+    const updates = {};
+
+    if (reminderKeys.size && Array.isArray(d.reminders)) {
+      let changed = false;
+      const next = d.reminders.map((r) => {
+        if (r && !r.notified && reminderKeys.has(reminderKey(r))) { changed = true; return { ...r, notified: true }; }
+        return r;
+      });
+      if (changed) updates.reminders = next;
+    }
+
+    if (routineKeys.size) {
+      const prev = d.routineNotified && d.routineNotified.date === dateStr ? (d.routineNotified.keys || []) : [];
+      updates.routineNotified = { date: dateStr, keys: [...new Set([...prev, ...routineKeys])] };
+    }
+
+    if (badTokens.size && Array.isArray(d.fcmTokens)) {
+      updates.fcmTokens = d.fcmTokens.filter((t) => !badTokens.has(t));
+    }
+
+    if (Object.keys(updates).length) tx.update(ref, updates);
+  });
+}
+
 async function run() {
   const db = init();
   const { dateStr, dow, minutes: nowMin } = nowInTZ();
@@ -102,16 +139,17 @@ async function run() {
     if (!tokens.length) {
       // No hay dispositivos registrados para push: solo marca como
       // notificado para no reintentar infinitamente, pero avisa en el log.
-      dueReminders.forEach(r => { r.notified = true; });
-      dueRoutines.forEach(({ key }) => routineLog.add(key));
-      const updates = { reminders };
-      if (dueRoutines.length) updates.routineNotified = { date: dateStr, keys: [...routineLog] };
-      await userDoc.ref.update(updates);
+      await commitNotified(db, userDoc.ref, {
+        reminderKeys: new Set(dueReminders.map(reminderKey)),
+        routineKeys: new Set(dueRoutines.map(({ key }) => key)),
+        dateStr,
+        badTokens: new Set(),
+      });
       console.log(`Usuario ${userDoc.id}: avisos vencidos pero sin fcmTokens registrados.`);
       continue;
     }
 
-    const badTokenIndexes = new Set();
+    const badTokens = new Set();
 
     const sendPush = async (title, body, dataPayload) => {
       const message = { notification: { title, body }, data: dataPayload || {}, tokens };
@@ -122,7 +160,7 @@ async function run() {
           if (!res.success) {
             const code = res.error && res.error.code;
             if (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token') {
-              badTokenIndexes.add(i);
+              badTokens.add(tokens[i]);
             } else {
               console.warn('  fallo no recuperable:', code, res.error && res.error.message);
             }
@@ -133,13 +171,16 @@ async function run() {
       }
     };
 
+    const sentReminderKeys = new Set();
+    const sentRoutineKeys = new Set();
+
     for (const r of dueReminders) {
-      r.notified = true;
+      sentReminderKeys.add(reminderKey(r));
       await sendPush('⏰ NOVA HUB: ' + r.title, r.desc || '', { reminderId: String(r.id || '') });
     }
 
     for (const { block: b, edge, key } of dueRoutines) {
-      routineLog.add(key);
+      sentRoutineKeys.add(key);
       if (edge === 'start') {
         await sendPush('▶️ NOVA HUB', `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, { routineId: String(b.id), edge });
       } else {
@@ -147,14 +188,13 @@ async function run() {
       }
     }
 
-    const updates = { reminders };
-    if (dueRoutines.length) updates.routineNotified = { date: dateStr, keys: [...routineLog] };
-    if (badTokenIndexes.size) {
-      const goodTokens = tokens.filter((_, i) => !badTokenIndexes.has(i));
-      updates.fcmTokens = goodTokens;
-      console.log(`Usuario ${userDoc.id}: limpiando ${badTokenIndexes.size} token(s) inválido(s).`);
-    }
-    await userDoc.ref.update(updates);
+    if (badTokens.size) console.log(`Usuario ${userDoc.id}: limpiando ${badTokens.size} token(s) inválido(s).`);
+    await commitNotified(db, userDoc.ref, {
+      reminderKeys: sentReminderKeys,
+      routineKeys: sentRoutineKeys,
+      dateStr,
+      badTokens,
+    });
   }
 
   console.log('Listo.');

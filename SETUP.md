@@ -140,3 +140,10 @@ Las reglas protegen *qué* datos puede tocar cada cuenta; App Check además veri
 - Toca el indicador de sincronización (barra lateral) para ver cuándo fue la última subida, cuánto ocupan tus datos y si hay cambios pendientes.
 
 Pruebas automáticas del respaldo: `npm run test:backup`. Todas las pruebas: `npm test`.
+
+## 10. Respaldos en la nube y publicación automática de reglas
+
+- **Respaldo diario** (`.github/workflows/backup-firestore.yml`, 03:30 CDMX): copia el documento de cada cuenta a `users/{uid}/backups/{AAAA-MM-DD}`. Esa subcolección está cerrada a los clientes por las reglas (solo el Admin SDK escribe). Se conservan 30 días, nunca menos de 7 respaldos, y el respaldo con más datos nunca se rota. Si un día hay menos de la mitad de elementos que en el último respaldo, el log del job lo marca con ⚠️. Para forzarlo ya: Actions → "Respaldo diario de Firestore" → Run workflow.
+- **Restaurar**: Firebase Console → Firestore → `users` → tu uid → `backups` → copia el contenido del respaldo al documento principal (o pídeselo a Claude).
+- **Reglas** (`.github/workflows/deploy-firestore-rules.yml`): se publican solas al cambiar `firestore.rules` en `main`. Requiere el mismo secret `FIREBASE_SERVICE_ACCOUNT`.
+- **Job de recordatorios**: ya no reescribe la lista completa de recordatorios; dentro de una transacción solo marca `notified` en los avisados, así no pisa lo que guardes mientras corre.
