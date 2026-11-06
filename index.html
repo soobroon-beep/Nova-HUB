@@ -2191,6 +2191,93 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
   .note-card.colored,.proj-full-card.colored{transition:none!important}
 }
 
+
+/* NOVA HUB 4.8 — Rutinas reales: mañanas, tardes y noches con Liquid Glass animado. */
+.routine-section{
+ --routine-a:#4fa6ff;--routine-b:#80d9ff;--routine-c:rgba(72,145,255,.20);
+ position:relative;isolation:isolate;
+ border-radius:21px!important;
+ border:1px solid color-mix(in srgb,var(--routine-a) 27%,rgba(255,255,255,.15))!important;
+ background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.023))!important;
+ -webkit-backdrop-filter:blur(18px) saturate(145%)!important;
+ backdrop-filter:blur(18px) saturate(145%)!important;
+ box-shadow:inset 0 1px rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.15)!important;
+}
+.routine-section[data-routine="morning"]{
+ --routine-a:#48aaff;--routine-b:#80e2ff;--routine-c:rgba(57,139,255,.22)
+}
+.routine-section[data-routine="afternoon"]{
+ --routine-a:#ff982f;--routine-b:#ffca77;--routine-c:rgba(255,137,42,.21)
+}
+.routine-section[data-routine="night"]{
+ --routine-a:#416cdd;--routine-b:#a381ff;--routine-c:rgba(51,69,159,.22)
+}
+.routine-section-hero{
+ position:relative;isolation:isolate;
+ background:linear-gradient(115deg,
+ color-mix(in srgb,var(--routine-a) 24%,#0b1327),
+ color-mix(in srgb,var(--routine-b) 14%,#0c1021),
+ color-mix(in srgb,var(--routine-a) 22%,#121326))!important;
+ background-size:210% 210%!important;
+ animation:novaRoutineSky 13s ease-in-out infinite alternate;
+}
+.routine-section-hero canvas{
+ opacity:.15;
+ mix-blend-mode:screen;
+ pointer-events:none;
+}
+.routine-section-hero::before{
+ content:"";position:absolute;inset:-55%;z-index:0;pointer-events:none;
+ background:
+ radial-gradient(ellipse at 30% 40%,color-mix(in srgb,var(--routine-a) 54%,transparent),transparent 34%),
+ radial-gradient(ellipse at 74% 55%,color-mix(in srgb,var(--routine-b) 42%,transparent),transparent 39%),
+ radial-gradient(ellipse at 58% 78%,var(--routine-c),transparent 46%);
+ filter:blur(19px);
+ animation:novaRoutineAurora 12s ease-in-out infinite alternate;
+}
+.routine-section-hero::after{
+ content:"";position:absolute;inset:-15%;z-index:1;pointer-events:none;
+ background-image:
+ radial-gradient(circle,var(--routine-b) 0 1.4px,transparent 2.4px),
+ radial-gradient(circle,var(--routine-a) 0 1px,transparent 2px),
+ radial-gradient(circle,rgba(255,255,255,.67) 0 .8px,transparent 2px);
+ background-size:72px 60px,113px 87px,147px 93px;
+ background-position:9px 8px,37px 18px,69px 57px;
+ opacity:.46;
+ -webkit-mask-image:linear-gradient(90deg,transparent,black 13%,black 88%,transparent);
+ mask-image:linear-gradient(90deg,transparent,black 13%,black 88%,transparent);
+ animation:novaRoutineDust 17s linear infinite;
+}
+.routine-hero-overlay{
+ z-index:1!important;
+ background:linear-gradient(to top,rgba(3,6,16,.42),rgba(3,6,16,.02))!important;
+}
+.routine-hero-text,.routine-hero-icon{z-index:3!important}
+.routine-body{
+ position:relative;
+ background:linear-gradient(130deg,rgba(255,255,255,.068),rgba(255,255,255,.022))!important;
+ -webkit-backdrop-filter:blur(13px) saturate(125%);
+ backdrop-filter:blur(13px) saturate(125%);
+}
+.routine-block-item{
+ background:rgba(255,255,255,.048)!important;
+ border-color:rgba(255,255,255,.095)!important;
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.routine-block-item:hover{background:rgba(255,255,255,.09)!important;border-color:color-mix(in srgb,var(--routine-a) 30%,rgba(255,255,255,.14))!important}
+@keyframes novaRoutineSky{0%{background-position:0% 45%}100%{background-position:100% 58%}}
+@keyframes novaRoutineAurora{
+ 0%{transform:translate3d(-6%,3%,0) rotate(-5deg) scale(1)}
+ 50%{transform:translate3d(4%,-3%,0) rotate(5deg) scale(1.08)}
+ 100%{transform:translate3d(-1%,5%,0) rotate(-2deg) scale(1.02)}
+}
+@keyframes novaRoutineDust{to{background-position:135px -85px,-100px 95px,210px -115px}}
+[data-theme="light"] .routine-body{background:rgba(255,255,255,.43)!important}
+[data-theme="light"] .routine-block-item{background:rgba(255,255,255,.38)!important;border-color:rgba(40,50,75,.10)!important}
+@media(prefers-reduced-motion:reduce){
+ .routine-section-hero,.routine-section-hero::before,.routine-section-hero::after{animation:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -7313,7 +7400,7 @@ const renderRoutinesSections = () => {
       : `<div class="routine-empty"><span>✦</span> Sin bloques en este turno</div>`;
 
     html += `
-      <div class="routine-section">
+      <div class="routine-section" data-routine="${slot.key}">
         <div class="routine-section-hero">
           <canvas id="${slot.canvasId}" width="600" height="140"></canvas>
           <div class="routine-hero-overlay"></div>
