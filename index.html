@@ -2129,6 +2129,68 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  min-width:22px!important;max-width:22px!important}
 }
 
+
+/* NOVA HUB 4.7 — Soft Liquid Glass for project + note cards only.
+   Preserves individual color accents, card animations, badges and black Vortex. */
+.note-card.colored,
+.proj-full-card.colored,
+.proj-full-card.colored.compact{
+  --card-fg:var(--text)!important;
+  --card-fg2:var(--text2)!important;
+  --card-chip:rgba(255,255,255,.075)!important;
+  background:
+    radial-gradient(ellipse 105% 100% at 90% 8%,
+      color-mix(in srgb,var(--card-bg) 22%,transparent),transparent 76%),
+    radial-gradient(ellipse 75% 85% at 2% 100%,
+      color-mix(in srgb,var(--card-bg) 10%,transparent),transparent 88%),
+    linear-gradient(145deg,rgba(255,255,255,.082),rgba(21,23,40,.115))!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 24%,rgba(255,255,255,.13))!important;
+  color:var(--text)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(140%)!important;
+  backdrop-filter:blur(20px) saturate(140%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),
+    0 8px 24px rgba(0,0,0,.10)!important;
+}
+.note-card.colored:hover,
+.proj-full-card.colored:hover,
+.proj-full-card.colored.compact:hover{
+  border-color:color-mix(in srgb,var(--card-bg) 38%,rgba(255,255,255,.23))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),
+    0 12px 29px rgba(0,0,0,.15),
+    0 0 14px color-mix(in srgb,var(--card-bg) 9%,transparent)!important;
+}
+.note-card.colored .note-title,
+.proj-full-card.colored .proj-card-title{
+  background:transparent!important;
+  color:var(--text)!important;
+}
+.note-card.colored .note-body,
+.proj-full-card.colored .proj-card-desc{color:var(--text2)!important}
+.note-card.colored .note-tag,
+.proj-full-card.colored .proj-card-pending{
+  background:rgba(255,255,255,.07)!important;
+  border-color:rgba(255,255,255,.10)!important;
+  color:var(--text2)!important;
+}
+.proj-full-card.colored .proj-icon-badge{
+  background:rgba(255,255,255,.075)!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+[data-theme="light"] .note-card.colored,
+[data-theme="light"] .proj-full-card.colored,
+[data-theme="light"] .proj-full-card.colored.compact{
+  background:
+    radial-gradient(ellipse at 85% 10%,
+      color-mix(in srgb,var(--card-bg) 15%,transparent),transparent 80%),
+    linear-gradient(145deg,rgba(255,255,255,.59),rgba(255,255,255,.37))!important;
+  border-color:color-mix(in srgb,var(--card-bg) 20%,rgba(50,50,70,.12))!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .note-card.colored,.proj-full-card.colored{transition:none!important}
+}
+
 </style>
 </head>
 <body>
