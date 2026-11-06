@@ -2028,6 +2028,7 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 .nova-dock-item:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
 .nova-dock-popover{position:fixed;z-index:101;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(28,33,48,.96);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 18px;box-shadow:0 15px 35px rgba(0,0,0,.38);color:#fff;font-size:.79rem;min-width:215px;text-align:center;backdrop-filter:blur(18px)}
 .nova-dock-popover[hidden]{display:none!important}
+@media(min-width:901px){#novaFloatingDock{display:flex!important}}
 /* Los contadores flotan FUERA; los efectos permanecen recortados a la superficie. */
 .proj-full-card.colored.compact[data-nova-motion]{overflow:visible!important;position:relative!important;isolation:isolate}
 .proj-full-card.colored.compact[data-nova-motion] > .nova-card-fx{position:absolute!important;inset:0!important;overflow:hidden!important;border-radius:inherit;z-index:0!important}
