@@ -2827,7 +2827,8 @@ html[data-theme] .reminder-card.colored.reminder-past{opacity:.62}
 /* Gráficos espaciales de un solo tono, siempre derivados del color elegido. */
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored) > .nova-card-fx{
   filter:none!important;
-  opacity:.7!important;
+  opacity:.92!important;
+  transition:opacity .25s ease!important;
   mix-blend-mode:normal!important;
   background:transparent!important;
 }
@@ -2837,7 +2838,7 @@ html[data-theme] :is(.note-card.colored,.proj-full-card.colored) .nova-card-fx::
   border-color:var(--solid-fx)!important;
   text-shadow:none!important;
   box-shadow:none!important;
-  opacity:.48!important;
+  opacity:.7!important;
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="glow"] .nova-card-fx::before{
   background:transparent!important;
@@ -2845,7 +2846,7 @@ html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motio
   border-radius:50%;
   filter:none!important;
   width:126px;height:126px;
-  opacity:.42!important;
+  opacity:.64!important;
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="aurora"] .nova-card-fx::before{
   background:transparent!important;
@@ -2858,7 +2859,7 @@ html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motio
   background:var(--solid-fx)!important;
   filter:none!important;
   width:2px!important;
-  opacity:.3!important;
+  opacity:.54!important;
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="stack"] .nova-card-fx::before{
   box-shadow:-10px -7px 0 -2px var(--solid-fx)!important;
@@ -2882,10 +2883,13 @@ html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motio
   filter:none!important;
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="particles"] .nova-card-fx::before{
-  background-image:radial-gradient(circle,var(--solid-fx) 2px,transparent 3px),radial-gradient(circle,var(--solid-fx) 1.5px,transparent 3px)!important;
+  background-image:radial-gradient(circle,var(--solid-fx) 2.4px,transparent 3.4px),radial-gradient(circle,var(--solid-fx) 1.8px,transparent 3.3px)!important;
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="sparkles"] .nova-card-fx::after{
   color:var(--solid-fx)!important;
+}
+@media(hover:hover){
+  html[data-theme] :is(.note-card.colored,.proj-full-card.colored):hover > .nova-card-fx{opacity:1!important}
 }
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="prism"] .nova-card-fx::after,
 html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="vortex"] .nova-card-fx::after{
@@ -3723,7 +3727,7 @@ const cardToneStyle = (color) => {
   const chip = dark ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.22)';
   // Fondo del título: una versión más oscura del mismo color de la tarjeta
   const titleBg = dark ? 'rgba(0,0,0,.11)' : 'rgba(0,0,0,.24)';
-  return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip};--card-title-bg:${titleBg};--solid-fg:${fg};--solid-fg2:${fg2};--solid-chip:${chip};--solid-fx:color-mix(in srgb, rgb(${rgb.join(',')}) 58%, ${fg})`;
+  return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip};--card-title-bg:${titleBg};--solid-fg:${fg};--solid-fg2:${fg2};--solid-chip:${chip};--solid-fx:color-mix(in srgb, rgb(${rgb.join(',')}) 46%, ${fg})`;
 };
 
 // ══════════════════════════════════════════════
