@@ -1755,7 +1755,8 @@ html{-webkit-tap-highlight-color:transparent}
 
 /* ── Menú flotante inferior: resumen del día + todas las secciones ── */
 #moreDrawer,#moreScrim{display:none}
-@media(max-width:900px){
+/* Shared mobile + desktop sheet: same authentic dashboard/navigation/status UI. */
+@media screen{
   #moreScrim{display:block;position:fixed;inset:0;z-index:57;background:rgba(0,0,0,.5);
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
   #moreScrim.open{opacity:1;pointer-events:auto}
@@ -2366,6 +2367,68 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 [data-theme="light"] .nova-settings-level{background:rgba(20,30,65,.055)}
 [data-theme="light"] .nova-settings-action:hover{background:rgba(30,40,70,.07)}
 @media(prefers-reduced-motion:reduce){#novaCreateFab{transition:none!important}}
+
+
+/* NOVA HUB 5.1 — true DARK liquid glass for schedule details, and original settings drawer. */
+.routine-section .routine-body{
+  background:linear-gradient(145deg,rgba(9,13,27,.78),rgba(17,22,38,.63))!important;
+  border-top:1px solid rgba(255,255,255,.09)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%)!important;
+  backdrop-filter:blur(22px) saturate(145%)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.045)!important;
+}
+.routine-section .routine-block-item,
+.routine-section .routine-block-item[style]{
+  background:linear-gradient(125deg,rgba(18,24,43,.77),rgba(26,31,49,.53))!important;
+  color:#f0f2fc!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(135%)!important;
+  backdrop-filter:blur(18px) saturate(135%)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.052),0 5px 16px rgba(0,0,0,.12)!important;
+}
+.routine-section[data-routine="morning"] .routine-block-item{border-left:2px solid rgba(90,188,255,.75)!important}
+.routine-section[data-routine="afternoon"] .routine-block-item{border-left:2px solid rgba(255,168,75,.76)!important}
+.routine-section[data-routine="night"] .routine-block-item{border-left:2px solid rgba(157,143,255,.75)!important}
+.routine-section .routine-block-item:hover{
+  background:linear-gradient(135deg,rgba(27,35,59,.85),rgba(35,42,65,.65))!important;
+  border-color:rgba(255,255,255,.20)!important;
+}
+.routine-section .routine-block-name{color:#f5f6ff!important}
+.routine-section .routine-block-time{color:rgba(208,218,242,.72)!important}
+.routine-section .routine-empty{
+  background:linear-gradient(135deg,rgba(12,17,32,.67),rgba(26,32,53,.49))!important;
+  color:rgba(210,222,245,.68)!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  border-radius:12px!important;
+  -webkit-backdrop-filter:blur(16px) saturate(135%)!important;
+  backdrop-filter:blur(16px) saturate(135%)!important;
+}
+@media(min-width:901px){
+  #moreScrim{z-index:108!important}
+  #moreDrawer{
+    z-index:109!important;
+    width:min(92vw,505px)!important;
+    max-height:calc(100dvh - 130px)!important;
+    bottom:calc(90px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+#moreDrawer{
+  background:linear-gradient(155deg,rgba(24,27,44,.88),rgba(10,14,27,.87))!important;
+  border:1px solid rgba(255,255,255,.15)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(145%)!important;
+  backdrop-filter:blur(26px) saturate(145%)!important;
+}
+#moreDrawer .md-tile{
+  background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.018))!important;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+}
+#moreDrawer .md-chip{
+  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.028))!important;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+}
+[data-theme="light"] #moreDrawer{
+  background:linear-gradient(145deg,rgba(249,250,255,.94),rgba(235,238,250,.91))!important;
+}
 
 </style>
 </head>
@@ -5161,6 +5224,7 @@ const getDockTabs = () => DOCK_DEFAULT;
     drawer.classList.add('open'); dScrim.classList.add('open'); moreBtn && moreBtn.classList.add('active');
     drawer.setAttribute('aria-hidden', 'false');
   };
+  window.openNovaAllSectionsDrawer = openDrawer;
   function closeDrawer() {
     drawer.classList.remove('open'); dScrim.classList.remove('open'); moreBtn && moreBtn.classList.remove('active');
     drawer.style.transform = ''; drawer.setAttribute('aria-hidden', 'true'); syncActive();
@@ -8119,21 +8183,10 @@ initNotifications();
     const key=btn.dataset.dock;
     pop.hidden=true;
     if(key==='settings'){
-      const lv=document.getElementById('userLevelDisplay')?.textContent||'1';
-      const xp=document.getElementById('userXpDisplay')?.textContent||'0';
-      const nx=document.getElementById('userNextXpDisplay')?.textContent||'100';
-      const ss=document.getElementById('syncLabel')?.textContent||'Sin conexión';
-      const theme=document.documentElement.dataset.theme==='light'?'Modo oscuro':'Modo claro';
-      pop.innerHTML='<div class="nova-settings-menu-title">⚙️ Ajustes rápidos</div>'+
-        '<div class="nova-settings-level">⭐ Nivel <strong class="nova-level-value"></strong><span class="nova-settings-xp"></span></div>'+
-        '<div class="nova-settings-sync"><span class="nova-settings-sync-dot"></span><span class="nova-sync-text"></span></div>'+
-        '<button type="button" data-setting-action="theme" class="nova-settings-action"><span class="material-symbols-outlined">contrast</span><span class="nova-theme-text"></span></button>'+
-        '<button type="button" data-setting-action="open" class="nova-settings-action"><span class="material-symbols-outlined">settings</span>Abrir todos los ajustes</button>';
-      pop.querySelector('.nova-level-value').textContent=lv;
-      pop.querySelector('.nova-settings-xp').textContent=xp+' / '+nx+' XP';
-      pop.querySelector('.nova-sync-text').textContent=ss;
-      pop.querySelector('.nova-theme-text').textContent=theme;
-      pop.hidden=false;
+      // Open the original full dashboard drawer (summary, all navigation tiles, level, sync and theme).
+      // This is the same drawer already used on mobile/tablet, now shared with desktop.
+      if(window.openNovaAllSectionsDrawer) window.openNovaAllSectionsDrawer();
+      else sidebar.querySelector('.nav-item[data-view="settings"]')?.click();
       return;
     }
     if(views.includes(key)){
