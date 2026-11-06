@@ -8074,8 +8074,20 @@ initNotifications();
  const fade=(t,m)=>Math.abs(((t+m/2)%m)-m/2)/(m/2);
  const lerp=(a,b,k)=>(1-k)*a+k*b;
  const initParticle=(i)=>{
-  const x=rand(width),y=height/2+randRange(100);
+  // Mantener el núcleo del Vortex, pero dejar que nazcan partículas
+  // arriba y abajo para que el flujo ocupe suavemente toda la pantalla.
+  const x=rand(width);
+  const y=Math.random()<.38
+    ? height/2+randRange(Math.min(height*.23,230))
+    : height*(.07+Math.random()*.86);
   particles.set([x,y,0,0,0,50+rand(150),rand(1.5),1+rand(2),220+rand(100)],i);
+ };
+ const edgeFade=(y)=>{
+  // Difuminar cerca de los límites superior/inferior sin recortar las partículas.
+  const d=Math.min(y,height-y);
+  const zone=Math.max(72,height*.18);
+  const v=Math.max(0,Math.min(1,d/zone));
+  return v*v*(3-2*v);
  };
  const resize=()=>{
   width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
@@ -8103,7 +8115,7 @@ initNotifications();
     const life=particles[i+4],ttl=particles[i+5],speed=particles[i+6];
     const nx=x+vx*speed,ny=y+vy*speed;
     ctx.lineWidth=particles[i+7];
-    ctx.strokeStyle='hsla('+particles[i+8]+',100%,60%,'+fade(life,ttl)+')';
+    ctx.strokeStyle='hsla('+particles[i+8]+',100%,60%,'+(fade(life,ttl)*edgeFade(y)).toFixed(3)+')';
     ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(nx,ny);ctx.stroke();
     particles[i]=nx;particles[i+1]=ny;particles[i+2]=vx;particles[i+3]=vy;particles[i+4]=life+1;
     if(nx<0||nx>width||ny<0||ny>height||life>ttl)initParticle(i);
