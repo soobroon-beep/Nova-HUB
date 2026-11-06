@@ -1883,6 +1883,63 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 @media(max-width:600px){.settings-section{padding:15px}.nova-motion-options{gap:5px}.nova-motion-option{font-size:.65rem;min-height:55px}}
 @media(prefers-reduced-motion:reduce){.nova-card-fx:before,.nova-card-fx:after{animation:none!important}.proj-full-card[data-nova-motion]:hover,.widget:hover,.stat-card:hover,.cal-card:hover,.projects-card:hover,.note-card:hover,.reminder-card:hover,.diary-card:hover,.habit-row:hover,.event-item:hover{transform:none!important}}
 
+
+/* NOVA HUB 4.3 — Color luminoso y efectos animados visibles */
+.nova-motion-options{grid-template-columns:repeat(4,minmax(0,1fr));max-height:230px;overflow-y:auto;scrollbar-width:thin;padding:2px}
+.nova-motion-option{min-height:57px}
+.note-card.colored,.proj-full-card.colored{
+ --card-fg:var(--text)!important;--card-fg2:var(--text2)!important;
+ background:radial-gradient(ellipse 115% 94% at 88% 5%,color-mix(in srgb,var(--card-bg) 52%,transparent),transparent 84%),
+ radial-gradient(ellipse 80% 90% at -15% 95%,color-mix(in srgb,var(--card-bg) 27%,transparent),transparent 90%),
+ linear-gradient(145deg,rgba(31,35,55,.89),rgba(12,17,30,.88))!important;
+ border:1px solid color-mix(in srgb,var(--card-bg) 75%,rgba(255,255,255,.22))!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 0 23px color-mix(in srgb,var(--card-bg) 13%,transparent),0 9px 24px rgba(0,0,0,.16)
+}
+.note-card.colored:hover,.proj-full-card.colored:hover{border-color:var(--card-bg)!important;box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 28px color-mix(in srgb,var(--card-bg) 23%,transparent),0 13px 30px rgba(0,0,0,.2)}
+.note-card[data-nova-motion],.proj-full-card[data-nova-motion]{position:relative;isolation:isolate}
+.note-card .nova-card-fx,.proj-full-card .nova-card-fx{position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;overflow:hidden;border-radius:inherit;opacity:1!important}
+.note-card[data-nova-motion] > :not(.nova-card-fx),.proj-full-card[data-nova-motion] > :not(.nova-card-fx){position:relative;z-index:1}
+.note-card[data-nova-motion] .nova-card-fx:before,.note-card[data-nova-motion] .nova-card-fx:after,
+.proj-full-card[data-nova-motion] .nova-card-fx:before,.proj-full-card[data-nova-motion] .nova-card-fx:after{
+ border-color:var(--card-bg);opacity:.95;filter:drop-shadow(0 0 6px var(--card-bg))
+}
+[data-nova-motion="orbit"] .nova-card-fx:before,[data-nova-motion="orbit"] .nova-card-fx:after{width:112px;height:112px;right:14px;top:-20px;border:2px solid var(--card-bg);box-shadow:0 0 13px color-mix(in srgb,var(--card-bg) 45%,transparent)}
+[data-nova-motion="orbit"] .nova-card-fx:after{width:77px;height:77px;right:32px;top:-4px}
+[data-nova-motion="glow"] .nova-card-fx:before{width:180px;height:180px;background:var(--card-bg);opacity:.5!important;filter:blur(39px);right:0;top:-40px}
+[data-nova-motion="stack"] .nova-card-fx:before{width:80px;height:95px;border:2px solid var(--card-bg);opacity:.8!important;box-shadow:-12px -8px 0 -1px rgba(45,59,88,.55),-12px -8px 0 1px var(--card-bg),12px 8px 0 -1px rgba(32,47,67,.65),12px 8px 0 1px var(--card-bg)}
+[data-nova-motion="launch"] .nova-card-fx:before{font-size:4.2rem;opacity:1!important}
+[data-nova-motion="pulse"] .nova-card-fx:before,[data-nova-motion="pulse"] .nova-card-fx:after{border-width:3px}
+[data-nova-motion="wave"] .nova-card-fx:before,[data-nova-motion="wave"] .nova-card-fx:after{border-width:3px;opacity:.85!important}
+[data-nova-motion="shimmer"] .nova-card-fx:before{inset:-60% auto -60% -45%;width:40%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--card-bg) 45%,transparent),rgba(255,255,255,.25),transparent);transform:rotate(20deg);animation:novaSweep 4.2s ease-in-out infinite}
+[data-nova-motion="aurora"] .nova-card-fx:before{width:135%;height:140%;top:-50%;right:-35%;background:conic-gradient(from 90deg,transparent,color-mix(in srgb,var(--card-bg) 80%,transparent),transparent,rgba(56,189,248,.3),transparent);filter:blur(30px);animation:novaSpin 9s linear infinite}
+[data-nova-motion="comet"] .nova-card-fx:before{content:"✦";color:var(--card-bg);font-size:3.7rem;top:2%;right:12%;text-shadow:0 0 18px var(--card-bg);animation:novaComet 3.8s ease-in-out infinite}
+[data-nova-motion="comet"] .nova-card-fx:after{width:95px;height:3px;top:33%;right:18%;background:linear-gradient(90deg,transparent,var(--card-bg));transform:rotate(-32deg);animation:novaCometTrail 3.8s ease-in-out infinite}
+[data-nova-motion="particles"] .nova-card-fx:before{inset:5px;width:100%;height:100%;background-image:radial-gradient(circle,var(--card-bg) 2px,transparent 3px),radial-gradient(circle,rgba(255,255,255,.78) 1.5px,transparent 3px);background-size:38px 42px,52px 51px;background-position:10px 10px,25px 23px;animation:novaParticles 8s linear infinite}
+[data-nova-motion="radar"] .nova-card-fx:before{width:120px;height:120px;top:-20px;right:0;border:2px solid var(--card-bg);border-radius:50%;box-shadow:inset 0 0 0 24px rgba(0,0,0,0),inset 0 0 0 25px color-mix(in srgb,var(--card-bg) 40%,transparent);opacity:.8!important}
+[data-nova-motion="radar"] .nova-card-fx:after{width:108px;height:108px;top:-14px;right:6px;border-radius:50%;background:conic-gradient(from 0deg,color-mix(in srgb,var(--card-bg) 55%,transparent),transparent 85deg,transparent);animation:novaSpin 4.5s linear infinite}
+[data-nova-motion="prism"] .nova-card-fx:before{width:92px;height:92px;top:-6px;right:23px;border:2px solid var(--card-bg);border-radius:17px;transform:rotate(25deg);animation:novaPrism 5s ease-in-out infinite;box-shadow:0 0 20px color-mix(in srgb,var(--card-bg) 35%,transparent)}
+[data-nova-motion="prism"] .nova-card-fx:after{width:62px;height:62px;top:8px;right:38px;border:2px solid rgba(255,255,255,.7);border-radius:12px;animation:novaPrism 5s ease-in-out infinite reverse}
+[data-nova-motion="breathe"] .nova-card-fx:before{width:130px;height:130px;top:-26px;right:-1px;background:radial-gradient(circle,var(--card-bg),transparent 70%);opacity:.55!important;filter:blur(8px);border-radius:50%;animation:novaBreathe 3.5s ease-in-out infinite}
+[data-nova-motion="sparkles"] .nova-card-fx:before{content:"✦   ✧";color:var(--card-bg);font-size:2.5rem;top:4px;right:15px;white-space:pre;animation:novaSparkle 2.8s ease-in-out infinite}
+[data-nova-motion="sparkles"] .nova-card-fx:after{content:"✧";color:#fff;font-size:2rem;top:46px;right:65px;animation:novaSparkle 3s ease-in-out infinite reverse}
+[data-nova-motion="scan"] .nova-card-fx:before{left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--card-bg),rgba(255,255,255,.8),transparent);box-shadow:0 0 17px var(--card-bg);animation:novaScan 3.7s ease-in-out infinite}
+[data-nova-motion="scan"] .nova-card-fx:after{inset:0;background:repeating-linear-gradient(0deg,transparent 0 15px,color-mix(in srgb,var(--card-bg) 13%,transparent) 16px 17px);opacity:.55!important}
+[data-nova-motion="vortex"] .nova-card-fx:before{width:132px;height:132px;right:-8px;top:-25px;border:3px dashed var(--card-bg);border-radius:50%;animation:novaSpin 7s linear infinite}
+[data-nova-motion="vortex"] .nova-card-fx:after{width:84px;height:84px;right:16px;top:0;border:3px dotted rgba(255,255,255,.8);border-radius:50%;animation:novaSpin 4.5s linear infinite reverse}
+@keyframes novaSweep{0%,12%{transform:translateX(-140%) rotate(20deg)}55%,100%{transform:translateX(600%) rotate(20deg)}}
+@keyframes novaSpin{to{transform:rotate(360deg)}}
+@keyframes novaComet{50%{transform:translate(12px,-19px) rotate(30deg)}}
+@keyframes novaCometTrail{50%{opacity:.3;transform:scaleX(1.5) rotate(-32deg)}}
+@keyframes novaParticles{to{background-position:85px -105px,-70px 85px}}
+@keyframes novaPrism{50%{transform:translateY(-9px) rotate(60deg) scale(1.06)}}
+@keyframes novaBreathe{50%{opacity:.9;transform:scale(1.28)}}
+@keyframes novaSparkle{50%{transform:translateY(-9px) scale(1.12);opacity:.4}}
+@keyframes novaScan{50%{top:98%}100%{top:0}}
+.project-item[data-nova-motion]{border-left:3px solid var(--card-bg)!important;background:radial-gradient(circle at 95% 15%,color-mix(in srgb,var(--card-bg) 34%,transparent),transparent 70%),var(--bg2)}
+[data-theme="light"] .note-card.colored,[data-theme="light"] .proj-full-card.colored{background:radial-gradient(circle at 85% 10%,color-mix(in srgb,var(--card-bg) 30%,transparent),transparent 72%),linear-gradient(140deg,rgba(255,255,255,.92),rgba(234,238,250,.85))!important}
+@media(max-width:600px){.nova-motion-options{grid-template-columns:repeat(4,minmax(0,1fr));max-height:200px}}
+@media(prefers-reduced-motion:reduce){.nova-card-fx:before,.nova-card-fx:after{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -1985,6 +2042,29 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
       <input id="noteColor" type="hidden" value="#7c6af7" data-colorpick>
         
     </div>
+    <div class="field">
+      <label>Animación de la nota</label>
+      <input type="hidden" id="noteMotion" value="glow"/>
+      <div class="nova-motion-options" id="noteMotionPicker" role="group" aria-label="Animación de la nota">
+        <button type="button" class="nova-motion-option" data-motion="orbit"><span>◎</span>Órbita</button>
+        <button type="button" class="nova-motion-option" data-motion="glow"><span>✧</span>Glow</button>
+        <button type="button" class="nova-motion-option" data-motion="stack"><span>▤</span>Stack</button>
+        <button type="button" class="nova-motion-option" data-motion="launch"><span>✦</span>Launch</button>
+        <button type="button" class="nova-motion-option" data-motion="pulse"><span>◉</span>Pulse</button>
+        <button type="button" class="nova-motion-option" data-motion="wave"><span>≋</span>Wave</button>
+        <button type="button" class="nova-motion-option" data-motion="shimmer"><span>╱</span>Shimmer</button>
+        <button type="button" class="nova-motion-option" data-motion="aurora"><span>◒</span>Aurora</button>
+        <button type="button" class="nova-motion-option" data-motion="comet"><span>☄</span>Cometa</button>
+        <button type="button" class="nova-motion-option" data-motion="particles"><span>⁙</span>Partículas</button>
+        <button type="button" class="nova-motion-option" data-motion="radar"><span>⌖</span>Radar</button>
+        <button type="button" class="nova-motion-option" data-motion="prism"><span>◇</span>Prisma</button>
+        <button type="button" class="nova-motion-option" data-motion="breathe"><span>◌</span>Respirar</button>
+        <button type="button" class="nova-motion-option" data-motion="sparkles"><span>✳</span>Destellos</button>
+        <button type="button" class="nova-motion-option" data-motion="scan"><span>▥</span>Escáner</button>
+        <button type="button" class="nova-motion-option" data-motion="vortex"><span>⊛</span>Vórtice</button>
+      </div>
+      <div class="nova-motion-help">Se guarda únicamente el efecto visual de esta nota.</div>
+    </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" id="noteCancel">Cancelar</button>
       <button class="btn btn-primary" id="noteSave">Guardar</button>
@@ -2051,6 +2131,16 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
         <button type="button" class="nova-motion-option" data-motion="launch"><span>✦</span>Launch</button>
         <button type="button" class="nova-motion-option" data-motion="pulse"><span>◉</span>Pulse</button>
         <button type="button" class="nova-motion-option" data-motion="wave"><span>≋</span>Wave</button>
+        <button type="button" class="nova-motion-option" data-motion="shimmer"><span>╱</span>Shimmer</button>
+        <button type="button" class="nova-motion-option" data-motion="aurora"><span>◒</span>Aurora</button>
+        <button type="button" class="nova-motion-option" data-motion="comet"><span>☄</span>Cometa</button>
+        <button type="button" class="nova-motion-option" data-motion="particles"><span>⁙</span>Partículas</button>
+        <button type="button" class="nova-motion-option" data-motion="radar"><span>⌖</span>Radar</button>
+        <button type="button" class="nova-motion-option" data-motion="prism"><span>◇</span>Prisma</button>
+        <button type="button" class="nova-motion-option" data-motion="breathe"><span>◌</span>Respirar</button>
+        <button type="button" class="nova-motion-option" data-motion="sparkles"><span>✳</span>Destellos</button>
+        <button type="button" class="nova-motion-option" data-motion="scan"><span>▥</span>Escáner</button>
+        <button type="button" class="nova-motion-option" data-motion="vortex"><span>⊛</span>Vórtice</button>
       </div>
       <div class="nova-motion-help">El efecto acompaña al ícono, sin reemplazarlo.</div>
     </div>
@@ -4078,6 +4168,8 @@ const renderNotes=()=>{
   sorted.forEach(n=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':'');
     el.setAttribute('style', cardToneStyle(n.color));
+    el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
+    el.insertAdjacentHTML('afterbegin','<span class="nova-card-fx" aria-hidden="true"></span>');
     el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="note-title">${n.title||'Sin título'}</div><button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button></div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
     el.querySelector('.pin-note-btn').addEventListener('click',(e)=>{ e.stopPropagation(); if(_suppressNextCardClick) return; setNotePinned(n,!n.pinned); renderNotes(); toast(n.pinned?'📌 Anclada':'Desanclada'); });
     el.addEventListener('click',()=>{ if(_suppressNextCardClick) return; openNoteDetail(n.id); }); c.appendChild(el);
@@ -4090,7 +4182,7 @@ const renderNotes=()=>{
 // ══════════════════════════════════════════════
 const PROJECT_ICONS = ['rocket_launch','work','school','fitness_center','code','palette','music_note','photo_camera','menu_book','restaurant','flight','home','savings','favorite','lightbulb','build','shopping_cart','pets','sports_esports','brush','terminal','language','medical_services','eco','celebration','directions_car','business_center','science','theater_comedy','star','diamond','bolt','psychology','local_fire_department','sailing','piano','auto_stories','handyman','volunteer_activism','spa','sports_soccer','local_cafe','beach_access','forest','nightlife','emoji_events','checkroom','local_library','cake','headphones'];
 
-const NOVA_MOTIONS = ['orbit','glow','stack','launch','pulse','wave'];
+const NOVA_MOTIONS = ["orbit","glow","stack","launch","pulse","wave","shimmer","aurora","comet","particles","radar","prism","breathe","sparkles","scan","vortex"];
 const setProjectMotion = (motion) => {
   const selected=NOVA_MOTIONS.includes(motion)?motion:'glow';
   const input=document.getElementById('projMotion');
@@ -4104,6 +4196,21 @@ const setProjectMotion = (motion) => {
 document.getElementById('projMotionPicker')?.addEventListener('click',event=>{
   const button=event.target.closest('[data-motion]');
   if(button) setProjectMotion(button.dataset.motion);
+});
+
+const setNoteMotion = (motion) => {
+  const selected=NOVA_MOTIONS.includes(motion)?motion:'glow';
+  const input=document.getElementById('noteMotion');
+  if(input)input.value=selected;
+  document.querySelectorAll('#noteMotionPicker [data-motion]').forEach(btn=>{
+    const active=btn.dataset.motion===selected;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',String(active));
+  });
+};
+document.getElementById('noteMotionPicker')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-motion]');
+  if(button)setNoteMotion(button.dataset.motion);
 });
 
 const renderIconPicker = (selected) => {
@@ -4128,6 +4235,8 @@ const renderProjects=()=>{
     const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
     const badges={active:'badge-active',pause:'badge-pause',idea:'badge-idea'}, labels={active:'Activo',pause:'Pausado',idea:'Idea'};
     const el=document.createElement('div'); el.className='project-item';
+    el.dataset.novaMotion=NOVA_MOTIONS.includes(p.motion)?p.motion:'glow';
+    el.setAttribute('style',cardToneStyle(p.color));
     el.innerHTML=`<div class="proj-top"><div class="proj-name" style="display:flex;align-items:center;gap:8px"><span class="material-symbols-outlined" style="font-size:1.05rem;color:${p.color||'var(--accent)'}">${p.icon||'rocket_launch'}</span>${p.name}${p.pinned?' 📌':''}${(p.tasks||[]).some(t=>!t.done)?`<span class="proj-notif-inline">${(p.tasks||[]).filter(t=>!t.done).length}</span>`:''}</div><span class="proj-badge ${badges[p.status]}">${labels[p.status]}</span></div><div class="proj-desc">${p.desc||''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="proj-footer"><span>${p.tasks?.length||0} tareas</span><span>${pct}%</span></div>`;
     c.appendChild(el);
   });
@@ -4205,12 +4314,13 @@ document.getElementById('authSetupOk')?.addEventListener('click',()=>closeModal(
 document.getElementById('noteCancel')?.addEventListener('click',()=>closeModal('noteModal'));
 document.getElementById('noteSave')?.addEventListener('click',()=>{
   const t=document.getElementById('noteTitle').value.trim(); if(!t){toast('⚠️ Agrega un título');return;}
+  const motion=document.getElementById('noteMotion')?.value || 'glow';
   const nId=document.getElementById('noteId').value;
   if(nId) {
     const n = state.notes.find(x=>x.id==nId);
-    if(n) { n.title=t; n.body=document.getElementById('noteBody').value.trim(); n.tags=document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean); n.color=document.getElementById('noteColor').value; n.updatedAt=new Date().toISOString(); }
+    if(n) { n.title=t; n.body=document.getElementById('noteBody').value.trim(); n.tags=document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean); n.color=document.getElementById('noteColor').value; n.motion=motion; n.updatedAt=new Date().toISOString(); }
   } else {
-    state.notes.unshift({id:Date.now(),title:t,body:document.getElementById('noteBody').value.trim(),tags:document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean),color:document.getElementById('noteColor').value,pinned:false,createdAt:new Date().toISOString()});
+    state.notes.unshift({id:Date.now(),title:t,body:document.getElementById('noteBody').value.trim(),tags:document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean),color:document.getElementById('noteColor').value,motion,pinned:false,createdAt:new Date().toISOString()});
   }
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='notes') renderNotesView(); else renderNotes();
   closeModal('noteModal'); ['noteTitle','noteBody','noteTags','noteId'].forEach(id=>document.getElementById(id).value=''); toast('✅ Nota guardada');
@@ -4705,6 +4815,7 @@ const getDockTabs = () => DOCK_DEFAULT;
     note(){
       document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
       document.getElementById('noteId').value = '';
+    setNoteMotion('glow');
       ['noteTitle','noteBody','noteTags'].forEach(id => document.getElementById(id).value = '');
       openModal('noteModal');
     },
@@ -5189,6 +5300,7 @@ const renderDashboard=()=>{
   document.getElementById('addNoteBtn')?.addEventListener('click',()=>{
     document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
     document.getElementById('noteId').value = '';
+    setNoteMotion('glow');
     ['noteTitle','noteBody','noteTags'].forEach(id=>document.getElementById(id).value='');
     openModal('noteModal');
   });
@@ -6442,6 +6554,7 @@ const renderNoteDetail = () => {
     document.getElementById('noteTitle').value = n.title || '';
     document.getElementById('noteBody').value = n.body || '';
     document.getElementById('noteColor').value = colorToHex(n.color);
+    setNoteMotion(n.motion || 'glow');
     document.getElementById('noteTags').value = n.tags ? n.tags.join(', ') : '';
     document.getElementById('noteModalTitle').textContent = '✏️ Editar Nota';
     openModal('noteModal');
@@ -6475,6 +6588,7 @@ const renderNotesView=()=>{
   document.getElementById('newNoteBtnView').addEventListener('click',()=>{
     document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
     document.getElementById('noteId').value = '';
+    setNoteMotion('glow');
     ['noteTitle','noteBody','noteTags'].forEach(id=>document.getElementById(id).value='');
     openModal('noteModal');
   });
@@ -6486,6 +6600,8 @@ const renderNotesView=()=>{
   sorted.forEach(n=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
     el.setAttribute('style', cardToneStyle(n.color));
+    el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
+    el.insertAdjacentHTML('afterbegin','<span class="nova-card-fx" aria-hidden="true"></span>');
     el.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="note-title">${n.title||'Sin título'}</div>
