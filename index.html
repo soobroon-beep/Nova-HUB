@@ -2527,6 +2527,111 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  }
 }
 
+
+/* NOVA HUB 5.7 — Calendar mobile day agenda: no stacked/overlapping week blocks.
+   The 7-column hourly desktop view remains unchanged above 700px. */
+@media(max-width:700px){
+ #content:has(#weekCard){padding:12px!important}
+ #weekCard{
+   border-radius:18px!important;
+   background:rgba(16,19,35,.74)!important;
+   border:1px solid rgba(255,255,255,.13)!important;
+   -webkit-backdrop-filter:blur(18px) saturate(145%);
+   backdrop-filter:blur(18px) saturate(145%);
+ }
+ #weekCard .week-nav-row{padding:12px 10px!important;gap:7px}
+ #weekCard .week-label{min-width:0;flex:1;text-align:center;font-size:.77rem!important}
+ #weekCard .week-nav-btn{flex:0 0 32px;width:32px;height:34px}
+ #weekCard #weekToday{flex:0 0 auto;width:auto;padding:0 9px!important;font-size:.72rem}
+ #weekGridWrap.week-grid-wrap{
+   display:block!important;overflow:visible!important;
+   max-height:none!important;width:100%;min-width:0;
+ }
+ .nova-mobile-week-days{
+   display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+   gap:3px;padding:10px 7px;border-bottom:1px solid rgba(255,255,255,.11)
+ }
+ .nova-mobile-day-button{
+   appearance:none;display:flex;flex-direction:column;
+   align-items:center;justify-content:center;gap:4px;
+   min-width:0;min-height:63px;padding:7px 0 5px;
+   background:transparent;color:var(--text2);
+   border:1px solid transparent;border-radius:13px;
+   font:inherit;cursor:pointer;position:relative
+ }
+ .nova-mobile-day-name{font-size:.60rem;font-weight:700;letter-spacing:.2px;text-transform:uppercase}
+ .nova-mobile-day-number{font-size:.95rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+ .nova-mobile-day-button.today .nova-mobile-day-number{color:var(--accent2)}
+ .nova-mobile-day-button.selected{
+   color:#fff;
+   background:linear-gradient(140deg,rgba(77,129,229,.31),rgba(109,81,191,.25));
+   border-color:rgba(142,170,255,.4);
+   box-shadow:inset 0 1px rgba(255,255,255,.11);
+ }
+ .nova-mobile-day-button.selected .nova-mobile-day-number{color:#fff}
+ .nova-mobile-day-dot{width:4px;height:4px;border-radius:50%;background:var(--accent2);position:absolute;bottom:4px}
+ .nova-mobile-day-button.selected .nova-mobile-day-dot{background:#fff}
+ .nova-mobile-day-agenda{min-width:0;padding:12px 10px 14px}
+ .nova-mobile-agenda-heading{
+   display:flex;justify-content:space-between;align-items:center;gap:12px;
+   padding:2px 2px 12px
+ }
+ .nova-mobile-agenda-heading-text{display:flex;flex-direction:column;gap:4px;min-width:0}
+ .nova-mobile-agenda-date{font-size:.86rem;font-weight:800;color:var(--text);text-transform:capitalize}
+ .nova-mobile-agenda-count{font-size:.7rem;color:var(--text3)}
+ .nova-mobile-add-event{
+   flex:0 0 auto;min-height:32px;padding:6px 11px;border-radius:10px;
+   color:var(--text);background:rgba(255,255,255,.095);
+   border:1px solid rgba(255,255,255,.14);font-size:.71rem;font-weight:750;
+   cursor:pointer
+ }
+ .nova-mobile-agenda-list{
+   display:flex;flex-direction:column;gap:8px;
+   max-height:min(57dvh,500px);overflow-y:auto;
+   padding:1px 2px 4px;-webkit-overflow-scrolling:touch;
+   overscroll-behavior:contain
+ }
+ .nova-mobile-agenda-event{
+   display:grid;grid-template-columns:65px minmax(0,1fr);
+   gap:12px;align-items:start;min-width:0;width:100%;
+   padding:13px 11px;text-align:left;cursor:pointer;font:inherit;
+   color:var(--text);border-radius:12px;
+   border:1px solid rgba(255,255,255,.11);
+   border-left:3px solid var(--nova-event-color,var(--accent));
+   background:linear-gradient(125deg,rgba(36,46,70,.61),rgba(14,19,34,.62));
+   -webkit-backdrop-filter:blur(12px) saturate(135%);
+   backdrop-filter:blur(12px) saturate(135%);
+   box-shadow:0 4px 14px rgba(0,0,0,.13)
+ }
+ .nova-mobile-agenda-event:active{background:rgba(75,90,129,.39)}
+ .nova-mobile-event-time{
+   display:flex;flex-direction:column;gap:3px;
+   font-size:.68rem;line-height:1.2;color:var(--text2);
+   font-variant-numeric:tabular-nums;white-space:normal
+ }
+ .nova-mobile-event-time strong{font-size:.75rem;color:var(--text)}
+ .nova-mobile-event-info{min-width:0;display:flex;flex-direction:column;gap:6px}
+ .nova-mobile-event-title{
+   font-size:.84rem;line-height:1.38;overflow-wrap:anywhere;
+   white-space:normal;font-weight:750;color:var(--text)
+ }
+ .nova-mobile-event-kind{font-size:.69rem;color:var(--text3)}
+ .nova-mobile-agenda-empty{
+   border:1px dashed rgba(255,255,255,.15);border-radius:12px;
+   padding:28px 12px;text-align:center;font-size:.8rem;color:var(--text3)
+ }
+ [data-theme="light"] #weekCard{
+   background:rgba(250,251,255,.85)!important;
+   border-color:rgba(40,55,90,.14)!important
+ }
+ [data-theme="light"] .nova-mobile-agenda-event{
+   background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(229,235,250,.80));
+   border-color:rgba(55,70,105,.13);
+   border-left:3px solid var(--nova-event-color,var(--accent))
+ }
+ [data-theme="light"] .nova-mobile-day-button.selected{color:#fff;background:linear-gradient(125deg,#536dc7,#8271c2)}
+}
+
 </style>
 </head>
 <body>
@@ -7328,6 +7433,117 @@ const localDateStr = d => {
   return `${y}-${m}-${day}`;
 };
 
+
+/* NOVA HUB 5.7 — móvil: días claros + agenda legible, sin superposición de eventos.
+   En escritorio se conserva íntegramente la cuadrícula horaria semanal. */
+const novaMobileWeekQuery=window.matchMedia('(max-width:700px)');
+const novaMobileWeekNames=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function renderNovaMobileWeekAgenda(wrapEl,days,todayStr){
+  wrapEl.replaceChildren();
+  const strip=document.createElement('div');
+  strip.className='nova-mobile-week-days';
+  strip.setAttribute('role','group');
+  strip.setAttribute('aria-label','Seleccionar día de la semana');
+  const agenda=document.createElement('section');
+  agenda.className='nova-mobile-day-agenda';
+  const chosen=days.find(x=>x.ds===state.calSelectedDay)
+    ||days.find(x=>x.ds===todayStr)||days[0];
+  let selected=chosen.ds;
+
+  const readableTitle=it=>{
+    const t=String(it.title||'Sin título');
+    return it.google?t.replace(/&(amp|lt|gt|quot|#39);/g,(_,e)=>({
+      amp:'&',lt:'<',gt:'>',quot:'"', '#39':"'"
+    }[e]||_)):t;
+  };
+  const newEl=(tag,klass,txt)=>{
+    const el=document.createElement(tag);
+    if(klass)el.className=klass;
+    if(txt!==undefined)el.textContent=txt;
+    return el;
+  };
+  const openItem=it=>{
+    if(it.kind==='event'&&String(it.id).startsWith('g_')){
+      gcal.confirmHide(it.id);
+    }else if(it.kind==='event'){
+      _editEvent(it.id);
+    }else{
+      _editBlockFromWeek(it.id);
+    }
+  };
+  const renderDay=()=>{
+    strip.replaceChildren();
+    days.forEach((day,i)=>{
+      const b=newEl('button','nova-mobile-day-button');
+      b.type='button';
+      b.setAttribute('aria-pressed',String(day.ds===selected));
+      b.setAttribute('aria-label',novaMobileWeekNames[i]+' '+day.d.getDate()+', '+day.items.length+' actividades');
+      if(day.ds===selected)b.classList.add('selected');
+      if(day.isToday)b.classList.add('today');
+      b.append(
+        newEl('span','nova-mobile-day-name',novaMobileWeekNames[i]),
+        newEl('span','nova-mobile-day-number',String(day.d.getDate()))
+      );
+      if(day.items.length)b.append(newEl('span','nova-mobile-day-dot'));
+      b.addEventListener('click',()=>{
+        selected=day.ds;
+        state.calSelectedDay=selected;
+        renderDay();
+      });
+      strip.appendChild(b);
+    });
+    agenda.replaceChildren();
+    const day=days.find(x=>x.ds===selected)||days[0];
+    const heading=newEl('div','nova-mobile-agenda-heading');
+    const label=newEl('div','nova-mobile-agenda-heading-text');
+    label.append(
+      newEl('strong','nova-mobile-agenda-date',day.d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})),
+      newEl('span','nova-mobile-agenda-count',day.items.length+(day.items.length===1?' actividad':' actividades')+(day.isToday?' · Hoy':''))
+    );
+    const add=newEl('button','nova-mobile-add-event','+ Evento');
+    add.type='button';
+    add.addEventListener('click',()=>_openNewEventOn(day.ds));
+    heading.append(label,add);
+    agenda.appendChild(heading);
+    const list=newEl('div','nova-mobile-agenda-list');
+    const entries=[...day.items].sort((a,b)=>{
+      const am=a.start?timeToMin(a.start):-1;
+      const bm=b.start?timeToMin(b.start):-1;
+      return am-bm||String(a.title).localeCompare(String(b.title),'es');
+    });
+    if(!entries.length){
+      list.appendChild(newEl('div','nova-mobile-agenda-empty','No hay eventos ni actividades para este día.'));
+    }
+    entries.forEach(it=>{
+      const row=newEl('button','nova-mobile-agenda-event');
+      row.type='button';
+      row.style.setProperty('--nova-event-color',it.color||'var(--accent)');
+      const times=newEl('span','nova-mobile-event-time');
+      if(!it.start){
+        times.textContent='Todo el día';
+      }else{
+        times.append(newEl('strong','',String(it.start)));
+        if(it.end)times.append(newEl('span','',String(it.end)));
+      }
+      const info=newEl('span','nova-mobile-event-info');
+      info.append(
+        newEl('strong','nova-mobile-event-title',(it.tattoo?'🖋 ':'')+readableTitle(it)),
+        newEl('span','nova-mobile-event-kind',it.kind==='block'?'Bloque de horario':(it.google?'Google Calendar':'Evento'))
+      );
+      row.append(times,info);
+      row.addEventListener('click',()=>openItem(it));
+      list.appendChild(row);
+    });
+    agenda.appendChild(list);
+  };
+  wrapEl.append(strip,agenda);
+  state.calSelectedDay=selected;
+  renderDay();
+}
+novaMobileWeekQuery.addEventListener?.('change',()=>{
+ if(document.getElementById('weekGridWrap'))_renderWeekStrip();
+});
+
 function _renderWeekStrip() {
   const wrapEl  = document.getElementById('weekGridWrap');
   const labelEl = document.getElementById('weekLabel');
@@ -7352,7 +7568,7 @@ function _renderWeekStrip() {
     const dow = d.getDay();
     const items = [];
     gcal.forDate(ds).forEach(e=>{
-      items.push({ kind:'event', id:e.id, title:(e.google?String(e.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):e.title), start:e.start||'', end:e.end||'', color:gcal.isTattoo(e)?'#FFD700':(e.color||'var(--green)'), tattoo:gcal.isTattoo(e) });
+      items.push({ kind:'event', id:e.id, google:!!e.google, title:(e.google?String(e.title).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):e.title), start:e.start||'', end:e.end||'', color:gcal.isTattoo(e)?'#FFD700':(e.color||'var(--green)'), tattoo:gcal.isTattoo(e) });
     });
     (state.routines||[]).filter(b=>blockRepeatsToday(b, dow)).forEach(b=>{
       items.push({ kind:'block', id:b.id, title:b.title, start:b.start||'', end:b.end||'', color:b.color||'var(--accent)' });
@@ -7368,6 +7584,11 @@ function _renderWeekStrip() {
   maxHour = Math.min(24, Math.max(maxHour, minHour+1));
   const rangeStartMin = minHour*60;
   const gridHeight = (maxHour-minHour)*WEEK_PX_PER_HOUR;
+
+  if(novaMobileWeekQuery.matches){
+    renderNovaMobileWeekAgenda(wrapEl,days,todayStr);
+    return;
+  }
 
   // 2) Cabecera de días
   let headHTML = '<div class="wg-corner"></div>';
@@ -7725,7 +7946,7 @@ const renderCalendarView=()=>{
   });
   document.getElementById('weekPrev').addEventListener('click',()=>{ state.calWeekOffset--; _renderWeekStrip(); });
   document.getElementById('weekNext').addEventListener('click',()=>{ state.calWeekOffset++; _renderWeekStrip(); });
-  document.getElementById('weekToday').addEventListener('click',()=>{ state.calWeekOffset=0; _renderWeekStrip(); });
+  document.getElementById('weekToday').addEventListener('click',()=>{ state.calWeekOffset=0; if(novaMobileWeekQuery.matches)state.calSelectedDay=localDateStr(new Date()); _renderWeekStrip(); });
 
   // Render content - rAF garantiza que el DOM esté pintado antes de buscar elementos
   requestAnimationFrame(() => {
