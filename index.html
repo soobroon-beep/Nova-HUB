@@ -1826,6 +1826,63 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
   .toast,.fab-menu{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
   #novaTexture::after{display:none}
 }
+
+/* NOVA HUB 4.2 — Minimal Liquid: visual-only overrides. No background or data changes. */
+.settings-wrap{gap:14px}
+.settings-section{background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018));backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);border:1px solid rgba(255,255,255,.11);border-radius:19px;padding:19px 21px;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.settings-section h3{font-size:.78rem;letter-spacing:.4px;text-transform:none;color:var(--text);margin-bottom:12px;font-weight:650}
+.settings-row{border-bottom-color:rgba(255,255,255,.075);padding:11px 0;gap:12px}
+.settings-label{font-size:.85rem}.settings-sub{font-size:.72rem}
+.settings-input,.field input:not([type=checkbox]),.field select,.field textarea{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);border-radius:11px;box-shadow:inset 0 1px rgba(255,255,255,.045)}
+.settings-input:focus,.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent2)}
+.accent-swatches,.color-swatches{gap:10px;align-items:center}
+.accent-swatch,.color-swatch{width:25px;height:25px;border-radius:9px!important;border:1px solid rgba(255,255,255,.2)!important;background:radial-gradient(circle at 26% 20%,var(--c,var(--accent)),rgba(24,29,43,.82) 88%)!important;box-shadow:inset 0 1px rgba(255,255,255,.16);transition:transform .2s,border-color .2s,box-shadow .2s}
+.accent-swatch{background:radial-gradient(circle at 26% 20%,var(--swatch-color,var(--accent)),rgba(24,29,43,.82) 88%)!important}
+.accent-swatch.active,.color-swatch.active{border-color:rgba(255,255,255,.86)!important;box-shadow:0 0 0 2px rgba(160,155,205,.28)!important;transform:none}
+.accent-swatch.active::after,.color-swatch.active::after{display:none}
+.icon-picker-grid{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.11);border-radius:13px;gap:7px}
+.icon-pick{border-radius:10px}.icon-pick.active{background:rgba(170,150,255,.13);border-color:rgba(180,160,255,.58);color:var(--text)}
+.app-icon-grid{gap:9px}.app-icon-opt{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.13);border-radius:15px;font-weight:500}
+.app-icon-opt.active{border-color:var(--accent2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+#projModal .modal{background:linear-gradient(155deg,rgba(32,37,55,.94),rgba(17,21,33,.95));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.14)}
+.nova-motion-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.nova-motion-option{min-height:59px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:rgba(255,255,255,.045);color:var(--text2);border:1px solid rgba(255,255,255,.12);border-radius:11px;cursor:pointer;font-size:.71rem;transition:border-color .2s,background .2s}
+.nova-motion-option span{font-size:1.25rem;color:var(--accent2)}
+.nova-motion-option.active{border-color:var(--accent2);background:rgba(160,135,255,.13);color:var(--text)}
+.nova-motion-option:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.nova-motion-help{font-size:.69rem;color:var(--text3);margin-top:7px}
+.note-card.colored,.proj-full-card.colored{
+ --card-fg:var(--text)!important;--card-fg2:var(--text2)!important;--card-chip:rgba(255,255,255,.065)!important;--card-title-bg:transparent!important;
+ background:radial-gradient(circle at 85% 12%,color-mix(in srgb,var(--card-bg) 20%,transparent),transparent 66%),linear-gradient(145deg,rgba(35,41,59,.80),rgba(17,22,34,.72))!important;
+ border:1px solid color-mix(in srgb,var(--card-bg) 45%,rgba(255,255,255,.16))!important;color:var(--text)!important;
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:inset 0 1px rgba(255,255,255,.07),0 8px 25px rgba(0,0,0,.12)
+}
+.note-card.colored .note-title,.proj-full-card.colored .proj-card-title{background:transparent!important;color:var(--text)!important;padding:2px 0!important}
+.note-card.colored .note-title::before,.proj-full-card.colored .proj-card-title::before{background:var(--card-bg)}
+.note-card.colored .note-body,.proj-full-card.colored .proj-card-desc{color:var(--text2)!important}
+.proj-full-card.colored .proj-icon-badge{color:var(--text)!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important}
+.proj-full-card[data-nova-motion]{position:relative;isolation:isolate;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.proj-full-card[data-nova-motion]:hover{transform:translateY(-3px);box-shadow:0 15px 32px rgba(0,0,0,.25)}
+.proj-full-card .nova-card-fx{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.nova-card-fx:before,.nova-card-fx:after{content:"";position:absolute;pointer-events:none}
+[data-nova-motion="orbit"] .nova-card-fx:before,[data-nova-motion="orbit"] .nova-card-fx:after{width:100px;height:100px;border:1px solid var(--card-bg);border-radius:50%;right:10px;top:-21px;transform:rotateX(65deg);animation:novaOrbit 7s linear infinite;opacity:.7}
+[data-nova-motion="orbit"] .nova-card-fx:after{width:70px;height:70px;right:25px;top:-6px;animation-direction:reverse;animation-duration:5s}
+[data-nova-motion="glow"] .nova-card-fx:before{width:130px;height:130px;right:0;top:-30px;border-radius:50%;background:var(--card-bg);opacity:.2;filter:blur(33px);animation:novaFloat 4s ease-in-out infinite}
+[data-nova-motion="stack"] .nova-card-fx:before{width:64px;height:80px;right:27px;top:12px;border:1px solid var(--card-bg);border-radius:12px;transform:rotate(9deg);box-shadow:-11px -5px 0 -1px rgba(35,52,70,.7),-11px -5px 0 0 var(--card-bg);opacity:.55;animation:novaFloat 4s ease-in-out infinite}
+[data-nova-motion="launch"] .nova-card-fx:before{content:"✦";font-size:3.3rem;color:var(--card-bg);text-shadow:0 0 18px var(--card-bg);right:25px;top:0;opacity:.65;animation:novaFloat 3s ease-in-out infinite}
+[data-nova-motion="pulse"] .nova-card-fx:before,[data-nova-motion="pulse"] .nova-card-fx:after{width:30px;height:30px;border:2px solid var(--card-bg);border-radius:50%;right:42px;top:20px;animation:novaPulse 3s ease-out infinite}
+[data-nova-motion="pulse"] .nova-card-fx:after{animation-delay:1.5s}
+[data-nova-motion="wave"] .nova-card-fx:before,[data-nova-motion="wave"] .nova-card-fx:after{width:150px;height:70px;border-top:2px solid var(--card-bg);border-radius:50%;right:-15px;top:20px;opacity:.55;animation:novaFloat 4s ease-in-out infinite}
+[data-nova-motion="wave"] .nova-card-fx:after{top:42px;animation-delay:1s}
+@keyframes novaOrbit{to{transform:rotateX(65deg) rotate(360deg)}}
+@keyframes novaFloat{50%{transform:translateY(-10px) scale(1.04)}}
+@keyframes novaPulse{0%{transform:scale(.5);opacity:.75}100%{transform:scale(3);opacity:0}}
+/* Shared motion polish throughout Dashboard, Calendar, Notes, Reminders, Diary and Habits */
+.widget,.stat-card,.cal-card,.projects-card,.note-card,.reminder-card,.diary-card,.habit-row,.event-item,.settings-section{transition:transform .26s cubic-bezier(.2,.8,.2,1),border-color .26s,box-shadow .26s;background-clip:padding-box}
+@media(hover:hover){.widget:hover,.stat-card:hover,.cal-card:hover,.projects-card:hover,.note-card:hover,.reminder-card:hover,.diary-card:hover,.habit-row:hover,.event-item:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 27%,var(--border))}}
+@media(max-width:600px){.settings-section{padding:15px}.nova-motion-options{gap:5px}.nova-motion-option{font-size:.65rem;min-height:55px}}
+@media(prefers-reduced-motion:reduce){.nova-card-fx:before,.nova-card-fx:after{animation:none!important}.proj-full-card[data-nova-motion]:hover,.widget:hover,.stat-card:hover,.cal-card:hover,.projects-card:hover,.note-card:hover,.reminder-card:hover,.diary-card:hover,.habit-row:hover,.event-item:hover{transform:none!important}}
+
 </style>
 </head>
 <body>
@@ -1982,6 +2039,20 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
         <input id="projColor" type="hidden" value="#7c6af7" data-colorpick>
           
       </div>
+    </div>
+
+    <div class="field">
+      <label>Animación de la tarjeta</label>
+      <input type="hidden" id="projMotion" value="glow"/>
+      <div class="nova-motion-options" id="projMotionPicker" role="group" aria-label="Animación del proyecto">
+        <button type="button" class="nova-motion-option" data-motion="orbit"><span>◎</span>Órbita</button>
+        <button type="button" class="nova-motion-option" data-motion="glow"><span>✧</span>Glow</button>
+        <button type="button" class="nova-motion-option" data-motion="stack"><span>▤</span>Stack</button>
+        <button type="button" class="nova-motion-option" data-motion="launch"><span>✦</span>Launch</button>
+        <button type="button" class="nova-motion-option" data-motion="pulse"><span>◉</span>Pulse</button>
+        <button type="button" class="nova-motion-option" data-motion="wave"><span>≋</span>Wave</button>
+      </div>
+      <div class="nova-motion-help">El efecto acompaña al ícono, sin reemplazarlo.</div>
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" id="projCancel">Cancelar</button>
@@ -4018,6 +4089,23 @@ const renderNotes=()=>{
 // ICON PICKER (proyectos)
 // ══════════════════════════════════════════════
 const PROJECT_ICONS = ['rocket_launch','work','school','fitness_center','code','palette','music_note','photo_camera','menu_book','restaurant','flight','home','savings','favorite','lightbulb','build','shopping_cart','pets','sports_esports','brush','terminal','language','medical_services','eco','celebration','directions_car','business_center','science','theater_comedy','star','diamond','bolt','psychology','local_fire_department','sailing','piano','auto_stories','handyman','volunteer_activism','spa','sports_soccer','local_cafe','beach_access','forest','nightlife','emoji_events','checkroom','local_library','cake','headphones'];
+
+const NOVA_MOTIONS = ['orbit','glow','stack','launch','pulse','wave'];
+const setProjectMotion = (motion) => {
+  const selected=NOVA_MOTIONS.includes(motion)?motion:'glow';
+  const input=document.getElementById('projMotion');
+  if(input) input.value=selected;
+  document.querySelectorAll('#projMotionPicker [data-motion]').forEach(btn=>{
+    const active=btn.dataset.motion===selected;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',String(active));
+  });
+};
+document.getElementById('projMotionPicker')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-motion]');
+  if(button) setProjectMotion(button.dataset.motion);
+});
+
 const renderIconPicker = (selected) => {
   const grid = document.getElementById('projIconPicker'); if(!grid) return;
   const sel = selected || 'rocket_launch';
@@ -4145,12 +4233,13 @@ document.getElementById('projSave')?.addEventListener('click',()=>{
   const n=document.getElementById('projName').value.trim(); if(!n){toast('⚠️ Agrega un nombre');return;}
   const c=document.getElementById('projColor').value;
   const ic=document.getElementById('projIcon').value || 'rocket_launch';
+  const motion=document.getElementById('projMotion')?.value || 'glow';
   const pId=document.getElementById('projId').value;
   if(pId) {
     const p = state.projects.find(x=>x.id==pId);
-    if(p) { p.name=n; p.desc=document.getElementById('projDesc').value.trim(); p.status=document.getElementById('projStatus').value; p.color=c; p.icon=ic; p.updatedAt=new Date().toISOString(); }
+    if(p) { p.name=n; p.desc=document.getElementById('projDesc').value.trim(); p.status=document.getElementById('projStatus').value; p.color=c; p.icon=ic; p.motion=motion; p.updatedAt=new Date().toISOString(); }
   } else {
-    state.projects.unshift({id:Date.now(),name:n,desc:document.getElementById('projDesc').value.trim(),status:document.getElementById('projStatus').value,color:c,icon:ic,pinned:false,tasks:[],createdAt:new Date().toISOString()});
+    state.projects.unshift({id:Date.now(),name:n,desc:document.getElementById('projDesc').value.trim(),status:document.getElementById('projStatus').value,color:c,icon:ic,motion,pinned:false,tasks:[],createdAt:new Date().toISOString()});
   }
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='projects') renderProjectsView(); else renderProjects(); 
   closeModal('projModal'); document.getElementById('projName').value=''; document.getElementById('projDesc').value=''; document.getElementById('projId').value=''; toast('✅ Guardado');
@@ -5114,6 +5203,7 @@ const renderDashboard=()=>{
     document.getElementById('projName').value = '';
     document.getElementById('projDesc').value = '';
     renderIconPicker('rocket_launch');
+    setProjectMotion('glow');
     openModal('projModal');
   });
   document.getElementById('addReminderBtnDash')?.addEventListener('click',()=>{
@@ -5908,7 +5998,7 @@ const renderSettingsView=()=>{
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
-    <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h}"></div>`).join('')}</div></div></div>
+    <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
     <div class="settings-section"><h3>🖼️ Icono de la app</h3>
       <div class="settings-sub" style="margin-top:0">Al elegir un icono también cambia el color de la app. El icono ya instalado en tu pantalla de inicio lo fija el sistema: para verlo cambiar ahí, desinstala la app y vuelve a instalarla.</div>
       <div class="app-icon-grid" id="appIconGrid">${APP_ICONS.map(ic=>`<button type="button" class="app-icon-opt${(state.settings.appIcon||'nova')===ic.id?' active':''}" data-icon="${ic.id}"><img src="${ic.src}" alt=""><span>${ic.label}</span></button>`).join('')}</div>
@@ -6093,6 +6183,7 @@ const renderProjectsView=()=>{
     document.getElementById('projName').value = '';
     document.getElementById('projDesc').value = '';
     renderIconPicker('rocket_launch');
+    setProjectMotion('glow');
     openModal('projModal');
   });
   const list=document.getElementById('projFullList');
@@ -6111,7 +6202,9 @@ const renderProjectsView=()=>{
     const pendingIcon = !total ? 'playlist_add' : (pending === 0 ? 'task_alt' : 'checklist');
     const el=document.createElement('div'); el.className='proj-full-card colored compact'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
     el.setAttribute('style', cardToneStyle(p.color));
+    el.dataset.novaMotion=NOVA_MOTIONS.includes(p.motion)?p.motion:'glow';
     el.innerHTML=`
+      <span class="nova-card-fx" aria-hidden="true"></span>
       ${pending > 0 ? `<span class="proj-notif" aria-label="${pending} pendiente${pending===1?'':'s'}">${pending > 99 ? '99+' : pending}</span>` : ''}
       <div class="proj-card-head">
         <div class="proj-card-info">
@@ -6277,6 +6370,7 @@ const renderProjectDetail = () => {
     document.getElementById('projStatus').value = p.status;
     document.getElementById('projColor').value = colorToHex(p.color);
     renderIconPicker(p.icon || 'rocket_launch');
+    setProjectMotion(p.motion || 'glow');
     document.getElementById('projModalTitle').textContent = '✏️ Editar Proyecto';
     openModal('projModal');
   });
