@@ -2278,6 +2278,19 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  .routine-section-hero,.routine-section-hero::before,.routine-section-hero::after{animation:none!important}
 }
 
+
+/* NOVA HUB 4.9 — vivid three-scene routines; no shared dim animation */
+.routine-section-hero{height:155px!important;animation:none!important;background:#0c152b!important}
+.routine-section-hero canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:1!important;mix-blend-mode:normal!important;filter:none!important;z-index:0!important}
+.routine-section-hero::before,.routine-section-hero::after{display:none!important;animation:none!important}
+.routine-hero-overlay{z-index:1!important;background:linear-gradient(90deg,rgba(3,8,23,.25),transparent 75%),linear-gradient(to top,rgba(3,8,23,.24),transparent 62%)!important}
+.routine-hero-text,.routine-hero-icon{position:relative;z-index:2!important}
+.routine-section[data-routine="morning"]{border-color:rgba(88,185,255,.46)!important}
+.routine-section[data-routine="afternoon"]{border-color:rgba(255,170,72,.52)!important}
+.routine-section[data-routine="night"]{border-color:rgba(118,132,255,.44)!important}
+.routine-body{background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.026))!important}
+@media(prefers-reduced-motion:reduce){.routine-section-hero canvas{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -7261,113 +7274,58 @@ const renderScheduleTimeline = () => {
 // ══════════════════════════════════════════════
 // RUTINAS POR TURNO — estilo Fabulous
 // ══════════════════════════════════════════════
-const ROUTINE_SLOTS = [
-  {
-    key: 'morning',
-    label: 'Rutina Matutina',
-    emoji: '🌅',
-    desc: 'Empieza el día con energía',
-    startH: 0, endH: 12, range: '08:00 – 12:00',
-    canvasId: 'canvasMorn',
-    draw: (c) => {
-      const ctx = c.getContext('2d');
-      const W = c.width, H = c.height;
-      // Sky gradient
-      const grad = ctx.createLinearGradient(0,0,W,H);
-      grad.addColorStop(0, '#1a1060');
-      grad.addColorStop(0.5, '#ff7043');
-      grad.addColorStop(1, '#ffcc02');
-      ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
-      // Sun
-      ctx.beginPath(); ctx.arc(W*0.75, H*0.55, 32, 0, Math.PI*2);
-      const sunGrad = ctx.createRadialGradient(W*0.75,H*0.55,0,W*0.75,H*0.55,32);
-      sunGrad.addColorStop(0,'#fff7a0'); sunGrad.addColorStop(1,'#ffb300');
-      ctx.fillStyle=sunGrad; ctx.fill();
-      // Rays
-      ctx.strokeStyle='rgba(255,200,0,0.35)'; ctx.lineWidth=2;
-      for(let i=0;i<12;i++){
-        const a=i*Math.PI/6; const r1=38, r2=52;
-        ctx.beginPath();
-        ctx.moveTo(W*0.75+Math.cos(a)*r1, H*0.55+Math.sin(a)*r1);
-        ctx.lineTo(W*0.75+Math.cos(a)*r2, H*0.55+Math.sin(a)*r2);
-        ctx.stroke();
-      }
-      // Horizon glow
-      const hGrad = ctx.createLinearGradient(0,H*0.7,0,H);
-      hGrad.addColorStop(0,'rgba(255,120,0,0.3)'); hGrad.addColorStop(1,'rgba(255,80,0,0.05)');
-      ctx.fillStyle=hGrad; ctx.fillRect(0,H*0.7,W,H*0.3);
-      // Stars (faint)
-      ctx.fillStyle='rgba(255,255,255,0.5)';
-      [[0.05,0.12],[0.18,0.08],[0.3,0.2],[0.12,0.28],[0.4,0.1]].forEach(([x,y])=>{
-        ctx.beginPath(); ctx.arc(W*x,H*y,1.5,0,Math.PI*2); ctx.fill();
-      });
-    }
-  },
-  {
-    key: 'afternoon',
-    label: 'Rutina de la Tarde',
-    emoji: '☀️',
-    desc: 'Mantén el momentum del día',
-    startH: 12, endH: 19, range: '12:00 – 19:00',
-    canvasId: 'canvasAftern',
-    draw: (c) => {
-      const ctx = c.getContext('2d');
-      const W = c.width, H = c.height;
-      const grad = ctx.createLinearGradient(0,0,0,H);
-      grad.addColorStop(0,'#0a74da'); grad.addColorStop(1,'#38b2f8');
-      ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
-      // Sun high
-      ctx.beginPath(); ctx.arc(W*0.8, H*0.25, 28, 0, Math.PI*2);
-      const sg = ctx.createRadialGradient(W*0.8,H*0.25,0,W*0.8,H*0.25,28);
-      sg.addColorStop(0,'#fffde7'); sg.addColorStop(1,'#ffd740');
-      ctx.fillStyle=sg; ctx.fill();
-      // Clouds
-      [[0.15,0.35,35,18],[0.45,0.22,45,22],[0.6,0.45,30,14]].forEach(([x,y,rx,ry])=>{
-        ctx.beginPath(); ctx.ellipse(W*x,H*y,rx,ry,0,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fill();
-      });
-      // Horizon
-      const hGrad=ctx.createLinearGradient(0,H*0.7,0,H);
-      hGrad.addColorStop(0,'rgba(56,178,248,0.0)'); hGrad.addColorStop(1,'rgba(2,136,209,0.4)');
-      ctx.fillStyle=hGrad; ctx.fillRect(0,H*0.7,W,H*0.3);
-    }
-  },
-  {
-    key: 'night',
-    label: 'Rutina Nocturna',
-    emoji: '🌙',
-    desc: 'Cierra el día y descansa',
-    startH: 19, endH: 24, range: '19:00 – 23:59',
-    canvasId: 'canvasNight',
-    draw: (c) => {
-      const ctx = c.getContext('2d');
-      const W = c.width, H = c.height;
-      const grad = ctx.createLinearGradient(0,0,0,H);
-      grad.addColorStop(0,'#05050f'); grad.addColorStop(1,'#0d1535');
-      ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
-      // Stars
-      const stars=[[.08,.12],[.2,.06],[.35,.18],[.5,.08],[.65,.2],[.8,.05],[.9,.16],[.12,.3],[.55,.35],[.72,.12],[.28,.25],[.42,.4],[.85,.3],[.03,.4],[.95,.08]];
-      stars.forEach(([x,y],i)=>{
-        ctx.beginPath(); const r=i%3===0?2:1.2;
-        ctx.arc(W*x,H*y,r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,255,${0.5+Math.random()*0.5})`; ctx.fill();
-      });
-      // Moon
-      ctx.beginPath(); ctx.arc(W*0.78, H*0.28, 26, 0, Math.PI*2);
-      const mg=ctx.createRadialGradient(W*0.78,H*0.28,0,W*0.78,H*0.28,26);
-      mg.addColorStop(0,'#e8eaf6'); mg.addColorStop(1,'#b0bec5');
-      ctx.fillStyle=mg; ctx.fill();
-      // Bite out of moon
-      ctx.beginPath(); ctx.arc(W*0.78+16, H*0.28-8, 20, 0, Math.PI*2);
-      ctx.fillStyle=grad; ctx.fill();
-      // Moon glow
-      ctx.beginPath(); ctx.arc(W*0.78, H*0.28, 36, 0, Math.PI*2);
-      const glowG=ctx.createRadialGradient(W*0.78,H*0.28,22,W*0.78,H*0.28,36);
-      glowG.addColorStop(0,'rgba(200,210,255,0.18)'); glowG.addColorStop(1,'rgba(200,210,255,0)');
-      ctx.fillStyle=glowG; ctx.fill();
-    }
-  }
+/* Nova Hub 4.9 — 3 distinctive animated canvas routine scenes */
+const novaRoutineStars = Array.from({length:45},(_,i)=>({x:((i*73+23)%101)/101,y:((i*41+13)%79)/100,r:i%7===0?1.7:(i%4===0?1.3:.8),phase:i*1.84}));
+const drawNovaRoutineScene=(canvas,type,t=0)=>{
+ const ctx=canvas?.getContext('2d');if(!ctx)return;
+ const w=canvas.width||600,h=canvas.height||140,now=t*.001;
+ const sky=stops=>{const g=ctx.createLinearGradient(0,0,0,h);stops.forEach(v=>g.addColorStop(v[0],v[1]));ctx.fillStyle=g;ctx.fillRect(0,0,w,h)};
+ const glow=(x,y,r,rgb,power=1)=>{const g=ctx.createRadialGradient(x,y,4,x,y,r);g.addColorStop(0,'rgba('+rgb+','+(.76*power)+')');g.addColorStop(.38,'rgba('+rgb+','+(.32*power)+')');g.addColorStop(1,'rgba('+rgb+',0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()};
+ const sun=(x,y,r)=>{glow(x,y,r*3.5,'255,201,65');ctx.fillStyle='#fff2a1';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()};
+ const cloud=(x,y,s,a)=>{ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(x,y,s*.7,s*.26,0,0,Math.PI*2);ctx.ellipse(x-s*.28,y-s*.16,s*.39,s*.34,0,0,Math.PI*2);ctx.ellipse(x+s*.22,y-s*.16,s*.44,s*.35,0,0,Math.PI*2);ctx.fill();ctx.restore()};
+ const drift=(x,speed,span)=>((x+now*speed)%(w+span*2))-span;
+ ctx.clearRect(0,0,w,h);
+ if(type==='morning'){
+  sky([[0,'#108ff0'],[.46,'#45c9ff'],[.78,'#a7eaff'],[1,'#ffe6a4']]);
+  const sx=w*.75,sy=h*(.70-.08*(.5+.5*Math.sin(now*.30)));
+  sun(sx,sy,25);ctx.strokeStyle='rgba(255,246,155,.65)';ctx.lineWidth=2.5;
+  for(let i=0;i<11;i++){const a=i*Math.PI*2/11+now*.13;ctx.beginPath();ctx.moveTo(sx+Math.cos(a)*35,sy+Math.sin(a)*35);ctx.lineTo(sx+Math.cos(a)*48,sy+Math.sin(a)*48);ctx.stroke()}
+  cloud(drift(w*.15,5.8,110),h*.36,52,.38);cloud(drift(w*.52,3.4,130),h*.20,43,.29);cloud(drift(w*.91,4.9,140),h*.53,65,.23);
+  const mist=ctx.createLinearGradient(0,h*.65,0,h);mist.addColorStop(0,'rgba(255,255,255,0)');mist.addColorStop(1,'rgba(255,227,160,.38)');ctx.fillStyle=mist;ctx.fillRect(0,h*.65,w,h*.35);
+ }else if(type==='afternoon'){
+  sky([[0,'#ff8927'],[.33,'#ffba52'],[.66,'#fa695c'],[1,'#7a3d99']]);
+  const sx=w*.78,sy=h*(.48+.13*(.5+.5*Math.sin(now*.28)));
+  glow(sx,sy,118,'255,171,49');sun(sx,sy,28);
+  cloud(drift(w*.17,3.9,120),h*.31,57,.26);cloud(drift(w*.50,2.7,130),h*.15,43,.19);
+  const haze=ctx.createLinearGradient(0,h*.55,0,h);haze.addColorStop(0,'rgba(255,130,59,0)');haze.addColorStop(1,'rgba(90,35,128,.62)');ctx.fillStyle=haze;ctx.fillRect(0,h*.55,w,h*.45);
+  ctx.fillStyle='rgba(93,38,104,.29)';ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=w;x+=12)ctx.lineTo(x,h*(.91+Math.sin(x*.017+now*.04)*.04));ctx.lineTo(w,h);ctx.fill();
+ }else{
+  sky([[0,'#051026'],[.46,'#102d67'],[.79,'#24366f'],[1,'#48236c']]);
+  const mx=w*.78,my=h*.36+Math.sin(now*.33)*2.5;glow(mx,my,80,'161,174,255',.74);
+  ctx.fillStyle='#f7f5e7';ctx.beginPath();ctx.arc(mx,my,24,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0f2553';ctx.beginPath();ctx.arc(mx+10,my-7,23,0,Math.PI*2);ctx.fill();
+  for(const s of novaRoutineStars){ctx.globalAlpha=.37+.63*(.5+.5*Math.sin(now*(.8+s.r*.22)+s.phase));ctx.fillStyle=s.r>1.5?'#ffe4a3':'#e4edff';ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);ctx.fill();if(s.r>1.5){ctx.strokeStyle='rgba(235,242,255,.42)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(s.x*w-4,s.y*h);ctx.lineTo(s.x*w+4,s.y*h);ctx.moveTo(s.x*w,s.y*h-4);ctx.lineTo(s.x*w,s.y*h+4);ctx.stroke()}}
+  ctx.globalAlpha=1;
+ }
+};
+const ROUTINE_SLOTS=[
+ {key:'morning',label:'Rutina Matutina',emoji:'🌅',desc:'Empieza el día con energía',startH:0,endH:12,range:'08:00 – 12:00',canvasId:'canvasMorn',draw:c=>drawNovaRoutineScene(c,'morning')},
+ {key:'afternoon',label:'Rutina de la Tarde',emoji:'☀️',desc:'Mantén el momentum del día',startH:12,endH:19,range:'12:00 – 19:00',canvasId:'canvasAftern',draw:c=>drawNovaRoutineScene(c,'afternoon')},
+ {key:'night',label:'Rutina Nocturna',emoji:'🌙',desc:'Cierra el día y descansa',startH:19,endH:24,range:'19:00 – 23:59',canvasId:'canvasNight',draw:c=>drawNovaRoutineScene(c,'night')}
 ];
+let novaRoutineRAF=0;
+const startNovaRoutineAnimations=()=>{
+ cancelAnimationFrame(novaRoutineRAF);
+ const cvs=ROUTINE_SLOTS.map(s=>[s.key,document.getElementById(s.canvasId)]).filter(x=>x[1]);
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!cvs.length)return;
+ let last=0;
+ const frame=time=>{
+  if(!document.getElementById('routinesFabWrap')||!cvs.some(x=>x[1].isConnected)){novaRoutineRAF=0;return}
+  if(time-last>=32&&!document.hidden){last=time;for(const [type,canvas] of cvs)drawNovaRoutineScene(canvas,type,time)}
+  novaRoutineRAF=requestAnimationFrame(frame);
+ };
+ novaRoutineRAF=requestAnimationFrame(frame);
+};
 
 const renderRoutinesSections = () => {
   // Find or create container
@@ -7424,6 +7382,7 @@ const renderRoutinesSections = () => {
       slot.draw(c);
     }
   });
+  startNovaRoutineAnimations();
 };
 
 const renderCalendarView=()=>{
