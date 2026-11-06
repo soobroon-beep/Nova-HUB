@@ -2049,6 +2049,54 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 }
 @media(prefers-reduced-motion:reduce){.nova-dock-item{transition:none!important;transform:none!important}}
 
+
+/* NOVA HUB 4.5 — Dock amplio, Vortex y notificaciones independientes */
+@media(min-width:901px){
+ #novaFloatingDock{
+   gap:11px!important;padding:15px 20px 17px!important;
+   border-radius:28px!important;
+   min-height:77px!important;
+   max-width:calc(100vw - 48px)!important
+ }
+ #novaFloatingDock .nova-dock-item{
+   width:49px!important;height:49px!important;flex:0 0 49px!important;
+   border:0!important;border-radius:12px!important;
+   background:transparent!important;box-shadow:none!important;
+   color:#e3e7fa!important
+ }
+ #novaFloatingDock .nova-dock-item:hover,
+ #novaFloatingDock .nova-dock-item:focus-visible,
+ #novaFloatingDock .nova-dock-item.active{
+   background:transparent!important;box-shadow:none!important;
+   color:#f5f1ff!important
+ }
+ #novaFloatingDock .nova-dock-item.active:before{
+   content:"";position:absolute;width:5px;height:5px;bottom:-8px;left:calc(50% - 2.5px);
+   background:var(--accent2);border-radius:50%;box-shadow:0 0 9px var(--accent)
+ }
+ #novaFloatingDock .nova-dock-item svg{width:26px!important;height:26px!important}
+ #novaFloatingDock .nova-dock-item .material-symbols-outlined{font-size:29px!important}
+ #novaFloatingDock .nova-dock-separator{height:35px!important}
+ #content{padding-bottom:144px!important}
+}
+[data-theme="light"] #novaFloatingDock .nova-dock-item,
+[data-theme="light"] #novaFloatingDock .nova-dock-item.active{color:#353957!important}
+#novaBadgeLayer{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:visible}
+#novaBadgeLayer .nova-floating-badge{
+ position:absolute;display:flex;justify-content:center;align-items:center;
+ width:19px;height:19px;min-width:19px;max-width:19px;
+ padding:0;border-radius:50%;background:#ff4260;color:#fff;
+ border:1.5px solid #1b1c32;box-shadow:0 3px 12px rgba(255,62,95,.45);
+ font-size:10px;font-weight:800;line-height:1;font-family:inherit
+}
+#projFullList .proj-notif{display:none!important}
+#novaVortexBg{position:fixed;inset:0;z-index:-8;pointer-events:none;overflow:hidden;
+ background:radial-gradient(ellipse at 15% 10%,#202a55 0%,transparent 52%),
+ radial-gradient(ellipse at 87% 82%,#17284c 0%,transparent 55%),#0c1122}
+#novaVortexBg canvas{width:100%;height:100%;display:block;opacity:.74}
+#psBgWrap,#novaTexture{display:none!important}
+@media(prefers-reduced-motion:reduce){#novaVortexBg canvas{opacity:.45}}
+
 </style>
 </head>
 <body>
@@ -7881,17 +7929,105 @@ initNotifications();
   dock.addEventListener('pointermove',e=>{
     if(!motionOK||e.pointerType!=='mouse')return;
     all.forEach(btn=>{
-      const rect=btn.getBoundingClientRect();
-      const center=rect.left+rect.width/2;
-      const d=Math.abs(e.clientX-center);
-      const intensity=Math.max(0,1-d/155);
+      const center=btn.offsetLeft+btn.offsetWidth/2;
+      const d=Math.abs(e.clientX-dock.getBoundingClientRect().left-center);
+      const intensity=Math.max(0,1-d/180);
       const falloff=intensity*intensity*(3-2*intensity);
-      btn.style.setProperty('--dock-scale',(1+falloff).toFixed(3));
-      btn.style.setProperty('--dock-rise',(falloff*17).toFixed(1)+'px');
+      btn.style.setProperty('--dock-scale',(1+falloff*.82).toFixed(3));
+      btn.style.setProperty('--dock-rise',(falloff*22).toFixed(1)+'px');
     });
   });
   dock.addEventListener('pointerleave',reset);
   window.addEventListener('blur',reset);
+})();
+
+
+/* Badge portal: anchored in viewport, never clipped by card animations or CSS columns. */
+(function novaBadges(){
+ const content=document.getElementById('content');if(!content)return;
+ const layer=document.createElement('div');layer.id='novaBadgeLayer';
+ layer.setAttribute('aria-hidden','true');document.body.appendChild(layer);
+ let badges=[],pending=false,ref=null;
+ const rebuild=()=>{
+   const list=document.getElementById('projFullList');
+   if(!list){layer.replaceChildren();badges=[];return}
+   const source=[...list.querySelectorAll('.proj-full-card > .proj-notif')];
+   layer.replaceChildren();badges=source.map(src=>{
+     const card=src.closest('.proj-full-card');
+     const b=document.createElement('span');
+     b.className='nova-floating-badge';
+     b.textContent=src.textContent.trim();
+     layer.appendChild(b);return {card,b};
+   });
+   position();
+ };
+ const position=()=>{
+   for(const {card,b} of badges){
+     if(!card.isConnected){b.style.display='none';continue}
+     const r=card.getBoundingClientRect();
+     const show=r.bottom>0&&r.top<innerHeight&&r.left<innerWidth&&r.right>0;
+     b.style.display=show?'flex':'none';
+     if(show){b.style.left=Math.round(r.right-10)+'px';b.style.top=Math.round(r.top-9)+'px'}
+   }
+ };
+ const schedule=(rebuildNeeded=false)=>{
+   if(rebuildNeeded)ref=true;
+   if(pending)return;
+   pending=true;requestAnimationFrame(()=>{pending=false;if(ref){ref=false;rebuild()}else position()});
+ };
+ const observer=new MutationObserver(records=>{
+   if(records.some(rec=>[...rec.addedNodes,...rec.removedNodes].some(n=>n.nodeType===1&&(n.matches?.('#projFullList,.proj-full-card,.proj-notif')||n.querySelector?.('#projFullList,.proj-full-card,.proj-notif')))))schedule(true);
+ });
+ observer.observe(content,{childList:true,subtree:true});
+ content.addEventListener('scroll',()=>schedule(),{passive:true});
+ window.addEventListener('resize',()=>schedule(),{passive:true});
+ window.addEventListener('orientationchange',()=>schedule(true),{passive:true});
+ schedule(true);
+})();
+/* Vortex background: lightweight canvas adaptation of the provided Aceternity effect.
+   Runs behind the app; dark navy wash preserves text contrast. */
+(function novaVortexBackground(){
+ const old=document.getElementById('psBgWrap');if(!old)return;
+ const wrap=document.createElement('div');wrap.id='novaVortexBg';wrap.setAttribute('aria-hidden','true');
+ const canvas=document.createElement('canvas');wrap.appendChild(canvas);old.insertAdjacentElement('afterend',wrap);
+ const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)return;
+ const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+ const particles=[];const count=210;
+ let w=0,h=0,dpr=1,t=0,raf=0,last=0;
+ const reset=(p,randomY=false)=>{
+   p.x=Math.random()*w;p.y=randomY?Math.random()*h:h*(.28+Math.random()*.4);
+   p.age=Math.random()*100;p.max=100+Math.random()*140;
+   p.speed=.15+Math.random()*.85;p.radius=.5+Math.random()*1.25;
+   p.hue=205+Math.random()*98;
+ };
+ const resize=()=>{
+   dpr=Math.min(devicePixelRatio||1,1.5);w=innerWidth;h=innerHeight;
+   canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);
+   ctx.setTransform(dpr,0,0,dpr,0,0);
+   if(!particles.length)for(let i=0;i<count;i++){const p={};reset(p,true);particles.push(p)}
+ };
+ const draw=(now)=>{
+   if(now-last<33){raf=requestAnimationFrame(draw);return}last=now;
+   t+=.006;
+   ctx.fillStyle='#10162b';ctx.fillRect(0,0,w,h);
+   const glow=ctx.createRadialGradient(w*.6,h*.42,0,w*.6,h*.42,Math.max(w,h)*.75);
+   glow.addColorStop(0,'rgba(49,43,105,.33)');glow.addColorStop(.6,'rgba(15,30,64,.18)');glow.addColorStop(1,'rgba(12,17,34,0)');
+   ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+   if(!reduce.matches)for(const p of particles){
+     const a=Math.sin(p.x*.007+Math.cos(p.y*.006+t)*2+t*.2)*2.3+Math.cos(p.y*.004-t*.9);
+     const dx=Math.cos(a)*p.speed,dy=Math.sin(a)*p.speed;
+     const alpha=Math.sin(Math.PI*Math.min(1,p.age/p.max))*.28;
+     ctx.strokeStyle='hsla('+p.hue+',95%,70%,'+alpha.toFixed(3)+')';
+     ctx.lineWidth=p.radius;ctx.lineCap='round';
+     ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+dx*2.8,p.y+dy*2.8);ctx.stroke();
+     p.x+=dx;p.y+=dy;p.age++;
+     if(p.x<0||p.x>w||p.y<0||p.y>h||p.age>=p.max)reset(p);
+   }
+   if(!document.hidden)raf=requestAnimationFrame(draw);
+ };
+ resize();window.addEventListener('resize',resize,{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){cancelAnimationFrame(raf);last=0;raf=requestAnimationFrame(draw)}});
+ raf=requestAnimationFrame(draw);
 })();
 
 if ('serviceWorker' in navigator) {
