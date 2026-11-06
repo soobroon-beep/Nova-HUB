@@ -2464,6 +2464,19 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  color:#2d3450!important;border-color:rgba(55,68,103,.16)!important
 }
 
+
+/* Nova Hub — Adjustable Vortex opacity (0=original, 100=blackout). */
+#novaVortexBg::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:rgba(0,0,0,var(--nova-bg-opacity,0))}
+.nova-bg-setting{width:100%;padding:4px 2px}
+.nova-bg-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.86rem;font-weight:750;color:var(--text);margin-bottom:12px}
+.nova-bg-heading strong{font-variant-numeric:tabular-nums;color:var(--accent2)}
+.nova-bg-range{appearance:none;-webkit-appearance:none;display:block;width:100%;height:7px;margin:10px 0 15px;border-radius:99px;outline:none;cursor:pointer;accent-color:var(--accent);background:linear-gradient(90deg,rgba(228,235,255,.75),rgba(124,106,247,.60),rgba(7,10,22,.98))}
+.nova-bg-range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:21px;height:21px;border-radius:50%;border:3px solid var(--accent);background:#eef0ff;box-shadow:0 3px 11px rgba(0,0,0,.32)}
+.nova-bg-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;border:3px solid var(--accent);background:#eef0ff}
+.nova-bg-endpoints{display:flex;justify-content:space-between;gap:10px;font-size:.72rem;color:var(--text2)}
+.nova-bg-explainer{font-size:.72rem;color:var(--text3);margin-top:9px;line-height:1.45}
+#mdFoot .nova-bg-setting{flex:1 1 100%!important;width:100%!important;min-width:0;padding:13px!important;margin-top:5px!important;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:15px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+
 </style>
 </head>
 <body>
@@ -2939,6 +2952,28 @@ const state = {
 };
 if(state.settings.photoURL === undefined) state.settings.photoURL = '';
 if(state.settings.notificationsEnabled === undefined) state.settings.notificationsEnabled = false;
+
+/* Vortex opacity control: per-user setting preserved in nn_settings / Firebase. */
+const clampNovaOpacity=v=>Math.min(100,Math.max(0,Number.isFinite(Number(v))?Math.round(Number(v)):0));
+state.settings.backgroundOpacity=clampNovaOpacity(state.settings.backgroundOpacity??0);
+document.documentElement.style.setProperty('--nova-bg-opacity',String(state.settings.backgroundOpacity/100));
+const novaBackgroundSliderMarkup=(inDrawer=false)=>`
+<div class="nova-bg-setting${inDrawer?' nova-bg-drawer':''}">
+ <div class="nova-bg-heading"><span>🌌 Opacidad del fondo</span><strong data-nova-bg-value>${state.settings.backgroundOpacity}%</strong></div>
+ <input type="range" class="nova-bg-range" data-nova-bg-range min="0" max="100" step="1" value="${state.settings.backgroundOpacity}" aria-label="Oscurecimiento del fondo Vortex de cero a cien"/>
+ <div class="nova-bg-endpoints"><span>0 · Más claro</span><span>100 · Más oscuro</span></div>
+ <div class="nova-bg-explainer">Oscurece el fondo Vortex sin afectar tus proyectos, notas ni textos.</div>
+</div>`;
+const updateNovaOpacity=(value,persist=true)=>{
+ const n=clampNovaOpacity(value);
+ state.settings.backgroundOpacity=n;
+ document.documentElement.style.setProperty('--nova-bg-opacity',String(n/100));
+ document.querySelectorAll('[data-nova-bg-range]').forEach(el=>{if(Number(el.value)!==n)el.value=n});
+ document.querySelectorAll('[data-nova-bg-value]').forEach(el=>{el.textContent=n+'%'});
+ if(persist)save();
+};
+document.addEventListener('input',e=>{if(e.target.matches?.('[data-nova-bg-range]'))updateNovaOpacity(e.target.value)});
+
 const DEFAULT_DASH_WIDGETS = { focus:true, briefing:true, daySummary:true, activity:true, stats:true, notes:true, habits:true, diary:true, ai:true, calendar:true, reminders:true, projects:true };
 state.settings.dashboardWidgets = { ...DEFAULT_DASH_WIDGETS, ...(state.settings.dashboardWidgets || {}) };
 const WIDGET_LABELS = { focus:{icon:'🎯',label:'Enfoque de Hoy (pendientes)'}, briefing:{icon:'🗞️',label:'Daily Briefing'}, daySummary:{icon:'✨',label:'Resumen del Día (IA)'}, activity:{icon:'🕓',label:'Actividad Reciente'}, stats:{icon:'📊',label:'Tarjetas de estadísticas'}, notes:{icon:'🗒️',label:'Notas recientes'}, habits:{icon:'🔥',label:'Seguimiento de hábitos'}, diary:{icon:'📖',label:'Diario emocional'}, ai:{icon:'✦',label:'Tarjeta de IA Asistente'}, calendar:{icon:'📅',label:'Calendario'}, reminders:{icon:'⏰',label:'Recordatorios'}, projects:{icon:'🚀',label:'Proyectos'} };
@@ -5248,6 +5283,7 @@ const getDockTabs = () => DOCK_DEFAULT;
       svgify(clone);
       dFoot.appendChild(clone);
     });
+    dFoot.insertAdjacentHTML('beforeend',novaBackgroundSliderMarkup(true));
   };
   const moreBtn = bar.querySelector('[data-tab="settings"]');   // «Ajustes» despliega el panel de todas las secciones
   const openDrawer = () => {
@@ -6637,6 +6673,7 @@ const renderSettingsView=()=>{
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
+    <div class="settings-section"><h3>🌌 Apariencia del fondo</h3>${novaBackgroundSliderMarkup()}</div>
     <div class="settings-section"><h3>🖼️ Icono de la app</h3>
       <div class="settings-sub" style="margin-top:0">Al elegir un icono también cambia el color de la app. El icono ya instalado en tu pantalla de inicio lo fija el sistema: para verlo cambiar ahí, desinstala la app y vuelve a instalarla.</div>
       <div class="app-icon-grid" id="appIconGrid">${APP_ICONS.map(ic=>`<button type="button" class="app-icon-opt${(state.settings.appIcon||'nova')===ic.id?' active':''}" data-icon="${ic.id}"><img src="${ic.src}" alt=""><span>${ic.label}</span></button>`).join('')}</div>
