@@ -2521,6 +2521,24 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
   }
 }
 
+
+/* NOVA HUB 5.4 — gapless ordered cards, reduced mobile animations. */
+#projFullList.proj-masonry,#notesFullList.notes-masonry,#notesMasonry.notes-masonry{
+ grid-auto-rows:1px!important;grid-auto-flow:row!important;
+ row-gap:0!important;align-items:start!important;
+}
+#projFullList.proj-masonry>.proj-full-card,
+#notesFullList.notes-masonry>.note-card,
+#notesMasonry.notes-masonry>.note-card{
+ align-self:start!important;box-sizing:border-box!important;
+}
+@media(max-width:700px){
+ .proj-full-card[data-nova-motion]>.nova-card-fx::before,
+ .proj-full-card[data-nova-motion]>.nova-card-fx::after{
+  zoom:.62;opacity:.53!important;
+ }
+}
+
 </style>
 </head>
 <body>
@@ -4746,21 +4764,44 @@ const setNotePinned=(n,val)=>{
   window._pinPopId=n.pinned?n.id:null;
   save();
 };
-// Orden visual por FILAS en vez de columnas; la posición de una fijación
-// nunca depende de la altura de las demás tarjetas ni de su animación.
-const layoutNotesGrid=(c)=>{
- if(!c||!c.isConnected)return;
- [...c.querySelectorAll(':scope > .note-card')].forEach(el=>{
-   el.style.removeProperty('grid-column');
-   el.style.removeProperty('grid-row-end');
+/* Compacted masonry: the fixed chronological order is distributed left-to-right,
+   then each column receives the next card immediately under its own previous card. */
+const layoutPinnedMasonry=container=>{
+ if(!container||!container.isConnected)return;
+ const cards=[...container.children].filter(el=>el.matches('.note-card,.proj-full-card'));
+ if(!cards.length)return;
+ const columns=Math.max(1,getComputedStyle(container).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length);
+ const gap=window.innerWidth<=700?10:(window.innerWidth<=1050?12:16);
+ const ends=Array(columns).fill(0);
+ cards.forEach((card,i)=>{
+  const column=i%columns,top=ends[column],height=Math.max(1,Math.ceil(card.offsetHeight));
+  const col=String(column+1),row=(top+1)+' / span '+height;
+  if(card.style.getPropertyValue('grid-column')!==col)card.style.setProperty('grid-column',col,'important');
+  if(card.style.getPropertyValue('grid-row')!==row)card.style.setProperty('grid-row',row,'important');
+  ends[column]+=height+gap;
  });
 };
-const bindNotesGrid=(c)=>{
- if(!c)return;
- if(c._ro){c._ro.disconnect();c._ro=null}
- c._relayout=()=>layoutNotesGrid(c);
- layoutNotesGrid(c);
+const bindPinnedMasonry=container=>{
+ if(!container)return;
+ if(container._pinnedMasonryObserver)container._pinnedMasonryObserver.disconnect();
+ if(container._pinnedMasonryResize)window.removeEventListener('resize',container._pinnedMasonryResize);
+ let raf=0;
+ const relayout=()=>{
+  if(!container.isConnected){container._pinnedMasonryObserver?.disconnect();return}
+  cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>layoutPinnedMasonry(container));
+ };
+ container._relayout=relayout;container._pinnedMasonryResize=relayout;
+ window.addEventListener('resize',relayout,{passive:true});
+ if('ResizeObserver' in window){
+  const ob=new ResizeObserver(relayout);container._pinnedMasonryObserver=ob;
+  ob.observe(container);
+  [...container.children].filter(el=>el.matches('.note-card,.proj-full-card')).forEach(el=>ob.observe(el));
+ }
+ relayout();
+ if(document.fonts?.ready)document.fonts.ready.then(relayout);
 };
+const layoutNotesGrid=c=>layoutPinnedMasonry(c);
+const bindNotesGrid=c=>bindPinnedMasonry(c);
 const renderNotes=()=>{
   const c=document.getElementById('notesMasonry'); if(!c) return; c.innerHTML='';
   const statNotes=document.getElementById('statNotes'); if(statNotes) statNotes.textContent=state.notes.length;
@@ -6942,6 +6983,7 @@ const renderProjectsView=()=>{
   });
 
   window._pinPopId = null;
+  bindPinnedMasonry(list);
   enableDragReorder(list, { onDrop: (orderedIds) => {
     orderedIds.forEach((id,i)=>{
       const proj=state.projects.find(x=>x.id==id);
