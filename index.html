@@ -2918,6 +2918,36 @@ html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motio
   .proj-full-card.colored .nova-card-fx::after{animation:none!important}
 }
 
+/* La agenda y los bloques creados también respetan su color seleccionado. */
+html[data-theme] .nova-mobile-agenda-event{
+  background:var(--card-bg)!important;
+  background-image:none!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 72%,var(--solid-fg))!important;
+  border-left:3px solid var(--solid-fx)!important;
+  color:var(--solid-fg)!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.13)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+html[data-theme] .nova-mobile-agenda-event :is(span,strong){color:var(--solid-fg)!important}
+html[data-theme] .routine-section .routine-block-item,
+html[data-theme] .routine-section .routine-block-item[style],
+html[data-theme] .routine-section .routine-block-item:hover{
+  background:var(--card-bg)!important;
+  background-image:none!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 73%,var(--solid-fg))!important;
+  border-left:3px solid var(--solid-fx)!important;
+  color:var(--solid-fg)!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.11)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+html[data-theme] .routine-section .routine-block-item .routine-block-name{color:var(--solid-fg)!important}
+html[data-theme] .routine-section .routine-block-item .routine-block-time{color:var(--solid-fg2)!important}
+html[data-theme] .routine-section .routine-block-item .routine-block-dot{
+  background:var(--solid-fx)!important;
+}
+
 </style>
 </head>
 <body>
@@ -7805,6 +7835,7 @@ function renderNovaMobileWeekAgenda(wrapEl,days,todayStr){
       const row=newEl('button','nova-mobile-agenda-event');
       row.type='button';
       row.style.setProperty('--nova-event-color',it.color||'var(--accent)');
+      row.style.cssText += cardToneStyle(it.color || '#7c6af7');
       const times=newEl('span','nova-mobile-event-time');
       if(!it.start){
         times.textContent='Todo el día';
@@ -8149,7 +8180,7 @@ const renderRoutinesSections = () => {
     });
     const blocksHTML = blocks.length
       ? blocks.map(b => `
-          <div class="routine-block-item"${b.tattoo?' style="border-color:rgba(255,215,0,.45);background:linear-gradient(90deg,rgba(255,215,0,.12),transparent 80%)"':''}>
+          <div class="routine-block-item" style="${cardToneStyle(b.color || '#7c6af7')}">
             <div class="routine-block-dot" style="background:${esc(b.color)}"></div>
             <div class="routine-block-info">
               <div class="routine-block-name">${b.title}</div>
