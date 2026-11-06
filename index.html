@@ -2754,6 +2754,170 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  .proj-full-card.colored[data-nova-motion] > .nova-card-fx{filter:saturate(1.2)}
 }
 
+
+/* NOVA HUB 5.9 — Tarjetas de color sólido.
+   La selección guardada determina el fondo y un tono de la misma familia
+   determina las ilustraciones animadas. Sin cambiar los datos ni la navegación. */
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored,.project-item[data-nova-motion],.reminder-card.colored){
+  --card-fg:var(--solid-fg)!important;
+  --card-fg2:var(--solid-fg2)!important;
+  --card-chip:var(--solid-chip)!important;
+  background:var(--card-bg)!important;
+  background-image:none!important;
+  color:var(--solid-fg)!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 75%,var(--solid-fg))!important;
+  box-shadow:0 4px 15px rgba(0,0,0,.15)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  text-shadow:none!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored,.project-item[data-nova-motion],.reminder-card.colored):hover{
+  border-color:color-mix(in srgb,var(--card-bg) 55%,var(--solid-fg))!important;
+  box-shadow:0 9px 22px rgba(0,0,0,.2)!important;
+}
+html[data-theme] .note-card.colored .note-title,
+html[data-theme] .proj-full-card.colored .proj-card-title,
+html[data-theme] .project-item[data-nova-motion] .proj-name{
+  color:var(--solid-fg)!important;
+  background:transparent!important;
+  text-shadow:none!important;
+  padding:2px 0!important;
+}
+html[data-theme] .note-card.colored .note-title::before,
+html[data-theme] .proj-full-card.colored .proj-card-title::before{display:none!important}
+html[data-theme] .note-card.colored .note-body,
+html[data-theme] .proj-full-card.colored .proj-card-desc,
+html[data-theme] .project-item[data-nova-motion] .proj-desc,
+html[data-theme] .project-item[data-nova-motion] .proj-footer{
+  color:var(--solid-fg2)!important;
+}
+html[data-theme] .note-card.colored .note-color{display:none}
+html[data-theme] .note-card.colored .note-tag,
+html[data-theme] .proj-full-card.colored .proj-card-pending,
+html[data-theme] .project-item[data-nova-motion] .proj-badge{
+  background:var(--solid-chip)!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 80%,var(--solid-fg))!important;
+  color:var(--solid-fg)!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+html[data-theme] .proj-full-card.colored .proj-icon-badge{
+  background:var(--solid-chip)!important;
+  border:1px solid color-mix(in srgb,var(--card-bg) 78%,var(--solid-fg))!important;
+  color:var(--solid-fg)!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+html[data-theme] .project-item[data-nova-motion] .proj-name .material-symbols-outlined{color:var(--solid-fg)!important}
+html[data-theme] .project-item[data-nova-motion] .progress-bar{background:var(--solid-chip)!important}
+html[data-theme] .project-item[data-nova-motion] .progress-fill{background:var(--solid-fx)!important}
+html[data-theme] .note-card.colored .pin-note-btn{color:var(--solid-fg)!important;opacity:.8}
+html[data-theme] .reminder-card.colored{
+  border-left:4px solid var(--solid-fx)!important;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s;
+}
+html[data-theme] .reminder-card.colored :is(div,span){color:var(--solid-fg)!important}
+html[data-theme] .reminder-card.colored :is(span,.edit-rem-btn){color:var(--solid-fg)!important}
+html[data-theme] .reminder-card.colored span[style]{background:var(--solid-chip)!important;border-color:transparent!important}
+html[data-theme] .reminder-card.colored .edit-rem-btn{opacity:.85!important}
+html[data-theme] .reminder-card.colored.reminder-past{opacity:.62}
+
+/* Gráficos espaciales de un solo tono, siempre derivados del color elegido. */
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored) > .nova-card-fx{
+  filter:none!important;
+  opacity:.7!important;
+  mix-blend-mode:normal!important;
+  background:transparent!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored) .nova-card-fx::before,
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored) .nova-card-fx::after{
+  color:var(--solid-fx)!important;
+  border-color:var(--solid-fx)!important;
+  text-shadow:none!important;
+  box-shadow:none!important;
+  opacity:.48!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="glow"] .nova-card-fx::before{
+  background:transparent!important;
+  border:2px solid var(--solid-fx)!important;
+  border-radius:50%;
+  filter:none!important;
+  width:126px;height:126px;
+  opacity:.42!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="aurora"] .nova-card-fx::before{
+  background:transparent!important;
+  border:2px solid var(--solid-fx)!important;
+  border-radius:42%;
+  width:130px;height:130px;right:-12px;top:-36px;
+  filter:none!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="shimmer"] .nova-card-fx::before{
+  background:var(--solid-fx)!important;
+  filter:none!important;
+  width:2px!important;
+  opacity:.3!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="stack"] .nova-card-fx::before{
+  box-shadow:-10px -7px 0 -2px var(--solid-fx)!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="comet"] .nova-card-fx::after,
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="scan"] .nova-card-fx::before{
+  background:var(--solid-fx)!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="scan"] .nova-card-fx::after{
+  background:transparent!important;
+  border:0!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="radar"] .nova-card-fx::after{
+  background:transparent!important;
+  border-left:2px solid var(--solid-fx)!important;
+  border-radius:50%;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="breathe"] .nova-card-fx::before{
+  background:transparent!important;
+  border:2px solid var(--solid-fx)!important;
+  filter:none!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="particles"] .nova-card-fx::before{
+  background-image:radial-gradient(circle,var(--solid-fx) 2px,transparent 3px),radial-gradient(circle,var(--solid-fx) 1.5px,transparent 3px)!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="sparkles"] .nova-card-fx::after{
+  color:var(--solid-fx)!important;
+}
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="prism"] .nova-card-fx::after,
+html[data-theme] :is(.note-card.colored,.proj-full-card.colored)[data-nova-motion="vortex"] .nova-card-fx::after{
+  border-color:var(--solid-fx)!important;
+}
+
+/* Paneles no personalizables: superficies mates, no degradados difusos. */
+:root:not([data-theme="light"]) :is(.widget,.stat-card,.projects-card,.diary-card,.habit-row,.reminder-card:not(.colored)){
+  background:#171c30!important;
+  border-color:rgba(255,255,255,.09)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+[data-theme="light"] :is(.widget,.stat-card,.projects-card,.diary-card,.habit-row,.reminder-card:not(.colored)){
+  background:#fff!important;
+  border-color:rgba(34,47,76,.13)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+/* El selector muestra exactamente el color que se asignará a la tarjeta. */
+.color-swatches .color-swatch{
+  background:var(--c,var(--accent))!important;
+  background-image:none!important;
+  box-shadow:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .note-card.colored .nova-card-fx::before,
+  .note-card.colored .nova-card-fx::after,
+  .proj-full-card.colored .nova-card-fx::before,
+  .proj-full-card.colored .nova-card-fx::after{animation:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -3529,7 +3693,7 @@ const cardToneStyle = (color) => {
   const chip = dark ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.22)';
   // Fondo del título: una versión más oscura del mismo color de la tarjeta
   const titleBg = dark ? 'rgba(0,0,0,.11)' : 'rgba(0,0,0,.24)';
-  return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip};--card-title-bg:${titleBg}`;
+  return `--card-bg:rgb(${rgb.join(',')});--card-fg:${fg};--card-fg2:${fg2};--card-chip:${chip};--card-title-bg:${titleBg};--solid-fg:${fg};--solid-fg2:${fg2};--solid-chip:${chip};--solid-fx:color-mix(in srgb, rgb(${rgb.join(',')}) 58%, ${fg})`;
 };
 
 // ══════════════════════════════════════════════
@@ -6003,7 +6167,7 @@ const renderFocusCard = () => {
 const renderDashReminders = () => {
   const list = document.getElementById('dashRemindersList'); if(!list) return;
   const sorted = state.reminders.filter(r => !r.notified || new Date(r.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).slice(0,5);
-  list.innerHTML = sorted.length ? sorted.map(r=>`<div class="reminder-card"><div style="flex:1"><div style="font-weight:600;font-size:.9rem">${r.title}</div><div style="font-size:.75rem;color:var(--text2)">${new Date(r.datetime).toLocaleString()}</div></div></div>`).join('') : '<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:10px">No hay recordatorios pendientes.</div>';
+  list.innerHTML = sorted.length ? sorted.map(r=>`<div class="reminder-card colored" style="${cardToneStyle(r.color || '#7c6af7')}"><div style="flex:1"><div style="font-weight:600;font-size:.9rem">${r.title}</div><div style="font-size:.75rem;color:var(--text2)">${new Date(r.datetime).toLocaleString()}</div></div></div>`).join('') : '<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:10px">No hay recordatorios pendientes.</div>';
 };
 const renderDashHabits = () => {
   const c = document.getElementById('dashHabits'); if(!c) return;
@@ -6235,7 +6399,8 @@ const renderRemindersView = () => {
   list.innerHTML='';
   sorted.forEach(r => {
     const isPast = new Date(r.datetime) < new Date(), el = document.createElement('div');
-    el.className = 'reminder-card' + (isPast ? ' reminder-past' : '');
+    el.className = 'reminder-card colored' + (isPast ? ' reminder-past' : '');
+    el.style.cssText = cardToneStyle(r.color || '#7c6af7');
     el.style.borderLeft = `4px solid ${r.color||'var(--accent)'}`;
     el.innerHTML = `<div style="flex:1"><div style="font-weight:700;font-size:.95rem;margin-bottom:4px;color:${isPast?'var(--text3)':'var(--text)'}">${r.title}</div>${r.desc ? `<div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">${r.desc}</div>`:``}<div style="display:flex;gap:5px;align-items:center"><span style="font-size:.7rem;padding:2px 6px;background:var(--bg2);border-radius:4px;color:var(--text3)">${new Date(r.datetime).toLocaleString('es-MX')}</span>${(r.tags||[]).map(t=>`<span style="font-size:.65rem;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text2);border:1px solid var(--border)">#${t}</span>`).join('')}</div></div><div style="display:flex;"><button data-rid="${r.id}" class="edit-rem-btn" style="background:none;border:none;color:var(--text2);cursor:pointer;padding:8px;font-size:1rem;opacity:0.5">✏️</button><button data-rid="${r.id}" class="del-rem-btn" style="background:none;border:none;color:var(--red);cursor:pointer;padding:8px;font-size:1rem">🗑</button></div>`;
     el.querySelector('.edit-rem-btn').addEventListener('click', () => {
