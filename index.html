@@ -4814,8 +4814,7 @@ const renderNotes=()=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':'');
     el.setAttribute('style', cardToneStyle(n.color));
     el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
-    el.insertAdjacentHTML('afterbegin','<span class="nova-card-fx" aria-hidden="true"></span>');
-    el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="note-title">${n.title||'Sin título'}</div><button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button></div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
+    el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="note-title">${n.title||'Sin título'}</div><button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button></div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
     el.querySelector('.pin-note-btn').addEventListener('click',(e)=>{ e.stopPropagation(); if(_suppressNextCardClick) return; setNotePinned(n,!n.pinned); renderNotes(); toast(n.pinned?'📌 Anclada':'Desanclada'); });
     el.addEventListener('click',()=>{ if(_suppressNextCardClick) return; openNoteDetail(n.id); }); c.appendChild(el);
   });
@@ -7250,8 +7249,7 @@ const renderNotesView=()=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
     el.setAttribute('style', cardToneStyle(n.color));
     el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
-    el.insertAdjacentHTML('afterbegin','<span class="nova-card-fx" aria-hidden="true"></span>');
-    el.innerHTML=`
+    el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span>
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="note-title">${n.title||'Sin título'}</div>
         <button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button>
