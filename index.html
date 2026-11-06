@@ -2477,6 +2477,50 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 .nova-bg-explainer{font-size:.72rem;color:var(--text3);margin-top:9px;line-height:1.45}
 #mdFoot .nova-bg-setting{flex:1 1 100%!important;width:100%!important;min-width:0;padding:13px!important;margin-top:5px!important;background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:15px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 
+
+/* NOVA HUB 5.3 — Pinned items follow reading order: left -> right, then next row.
+   No CSS columns, dense packing, or vertical masonry that changes visual order. */
+#projFullList.proj-masonry,
+#notesFullList.notes-masonry,
+#notesMasonry.notes-masonry{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  grid-auto-rows:auto!important;
+  column-count:auto!important;
+  column-width:auto!important;
+  column-gap:16px!important;
+  row-gap:16px!important;
+  align-items:start!important;
+}
+#projFullList.proj-masonry > .proj-full-card,
+#notesFullList.notes-masonry > .note-card,
+#notesMasonry.notes-masonry > .note-card{
+  grid-column:auto!important;
+  grid-row:auto!important;
+  margin-bottom:0!important;
+  min-width:0!important;
+  break-inside:auto!important;
+}
+@media(max-width:1050px){
+  #projFullList.proj-masonry,
+  #notesFullList.notes-masonry,
+  #notesMasonry.notes-masonry{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    column-gap:12px!important;
+    row-gap:12px!important
+  }
+}
+@media(max-width:700px){
+  #projFullList.proj-masonry,
+  #notesFullList.notes-masonry,
+  #notesMasonry.notes-masonry{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    column-gap:10px!important;
+    row-gap:10px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -4681,43 +4725,41 @@ const renderTodayEvents=()=>{
 // ══════════════════════════════════════════════
 // Orden de notas: las fijadas arriba, en el orden en que se fueron fijando (la nueva va debajo de las ya fijadas);
 // las no fijadas conservan su orden normal.
-const sortNotes=(list)=>[...list].sort((a,b)=>{
-  const pa=a.pinned?1:0, pb=b.pinned?1:0;
-  if(pa!==pb) return pb-pa;
-  if(pa) return ((a.pinnedAt??0)-(b.pinnedAt??0)) || ((a.order??0)-(b.order??0));
+const sortPinnedCards=(list)=>[...list].sort((a,b)=>{
+  if(!!a.pinned!==!!b.pinned)return a.pinned?-1:1;
+  if(a.pinned&&b.pinned){
+    const fixed=(a.pinnedAt??0)-(b.pinnedAt??0);
+    if(fixed)return fixed;
+  }
   return (a.order??0)-(b.order??0);
 });
+const sortNotes=(list)=>sortPinnedCards(list);
+const sortProjects=(list)=>sortPinnedCards(list);
+const pinProject=(p)=>{
+  p.pinned=!p.pinned;
+  if(p.pinned) p.pinnedAt=Date.now();
+  else delete p.pinnedAt;
+};
 const setNotePinned=(n,val)=>{
   n.pinned=!!val;
   if(n.pinned) n.pinnedAt=Date.now(); else delete n.pinnedAt;
   window._pinPopId=n.pinned?n.id:null;
   save();
 };
-// Acomoda las tarjetas en orden de lectura: la 1ª arriba a la izquierda, la 2ª junto a ella,
-// la 3ª debajo de la 1ª, la 4ª debajo de la 2ª… (columna = posición % nº de columnas).
+// Orden visual por FILAS en vez de columnas; la posición de una fijación
+// nunca depende de la altura de las demás tarjetas ni de su animación.
 const layoutNotesGrid=(c)=>{
-  if(!c || !c.isConnected) return;
-  const n=Math.max(1,(getComputedStyle(c).gridTemplateColumns||'').split(' ').filter(Boolean).length);
-  const cards=[...c.children].filter(el=>el.classList&&el.classList.contains('note-card'));
-  cards.forEach((el,i)=>{ el.style.gridColumn=String((i%n)+1); el.style.gridRowEnd=''; });
-  cards.forEach(el=>{
-    const mb=parseFloat(getComputedStyle(el).marginBottom)||0;
-    el.style.gridRowEnd='span '+Math.max(1,Math.ceil(el.offsetHeight+mb));
-  });
+ if(!c||!c.isConnected)return;
+ [...c.querySelectorAll(':scope > .note-card')].forEach(el=>{
+   el.style.removeProperty('grid-column');
+   el.style.removeProperty('grid-row-end');
+ });
 };
 const bindNotesGrid=(c)=>{
-  if(!c) return;
-  c._relayout=()=>layoutNotesGrid(c);
-  if('ResizeObserver' in window){
-    if(c._ro) c._ro.disconnect();
-    let raf=0;
-    c._ro=new ResizeObserver(()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>layoutNotesGrid(c)); });
-    c._ro.observe(c);
-    [...c.children].forEach(el=>{ if(el.classList&&el.classList.contains('note-card')) c._ro.observe(el); });
-  }
-  layoutNotesGrid(c);
-  // Respaldo: tras cargar fuentes/estilos las alturas pueden cambiar
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>layoutNotesGrid(c));
+ if(!c)return;
+ if(c._ro){c._ro.disconnect();c._ro=null}
+ c._relayout=()=>layoutNotesGrid(c);
+ layoutNotesGrid(c);
 };
 const renderNotes=()=>{
   const c=document.getElementById('notesMasonry'); if(!c) return; c.innerHTML='';
@@ -4790,7 +4832,7 @@ const renderProjects=()=>{
   const c=document.getElementById('projectsList'); if(!c) return; c.innerHTML='';
   const statProjects=document.getElementById('statProjects'); if(statProjects) statProjects.textContent=state.projects.filter(p=>p.status==='active').length;
   if(!state.projects.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px">Sin proyectos.</div>'; return; }
-  [...state.projects].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(p=>{
+  sortProjects(state.projects).forEach(p=>{
     const pct=p.tasks?.length?Math.round(p.tasks.filter(t=>t.done).length/p.tasks.length*100):0;
     const badges={active:'badge-active',pause:'badge-pause',idea:'badge-idea'}, labels={active:'Activo',pause:'Pausado',idea:'Idea'};
     const el=document.createElement('div'); el.className='project-item';
@@ -6868,7 +6910,7 @@ const renderProjectsView=()=>{
     return;
   }
 
-  [...state.projects].sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0))||((a.order??0)-(b.order??0))).forEach(p=>{
+  sortProjects(state.projects).forEach(p=>{
     // Tarjeta compacta: solo icono, título, descripción y conteo de pendientes.
     // Las tareas se ven al abrir el proyecto (ventana de detalle).
     const total = p.tasks?.length || 0;
@@ -6901,9 +6943,9 @@ const renderProjectsView=()=>{
 
   window._pinPopId = null;
   enableDragReorder(list, { onDrop: (orderedIds) => {
-    orderedIds.forEach((id, i) => {
-      const proj = state.projects.find(x => x.id == id);
-      if (proj) proj.order = i;
+    orderedIds.forEach((id,i)=>{
+      const proj=state.projects.find(x=>x.id==id);
+      if(proj&&!proj.pinned)proj.order=i;
     });
     save(); toast('↕️ Orden actualizado');
   }});
@@ -7032,7 +7074,7 @@ const renderProjectDetail = () => {
   box.querySelector('#pdNewTask').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
 
   box.querySelector('#pdPin').addEventListener('click', () => {
-    p.pinned = !p.pinned; window._pinPopId = p.pinned ? p.id : null; save();
+    pinProject(p); window._pinPopId = p.pinned ? p.id : null; save();
     renderProjectDetail(); refreshProjectsBehind();
     toast(p.pinned ? '📌 Proyecto fijado' : 'Proyecto desfijado');
   });
@@ -7194,14 +7236,11 @@ const renderNotesView=()=>{
   window._pinPopId = null;
   bindNotesGrid(c);
   enableDragReorder(c, { onDrop: (orderedIds) => {
-    // Si se arrastran notas fijadas entre sí, se respeta el nuevo orden entre ellas
-    const base = Date.now();
-    let k = 0;
+    // Arrastrar cambia el orden de notas no fijadas, no la antigüedad
+    // de las fijaciones: la primera fijada siempre permanece primero.
     orderedIds.forEach((id, i) => {
-      const note = state.notes.find(x => x.id == id);
-      if (!note) return;
-      note.order = i;
-      if (note.pinned) note.pinnedAt = base + (k++);
+      const note=state.notes.find(x=>x.id==id);
+      if(note&&!note.pinned)note.order=i;
     });
     save(); toast('↕️ Orden actualizado');
   }});
