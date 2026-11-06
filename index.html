@@ -1940,6 +1940,68 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 @media(max-width:600px){.nova-motion-options{grid-template-columns:repeat(4,minmax(0,1fr));max-height:200px}}
 @media(prefers-reduced-motion:reduce){.nova-card-fx:before,.nova-card-fx:after{animation:none!important}}
 
+
+/* NOVA HUB 4.3.1 — Pendientes flotantes y muestras de color sólidas */
+/* El efecto gráfico se recorta dentro de su propia capa; la tarjeta permite
+   que la burbuja de pendientes sobresalga del borde sin perder el diseño. */
+.proj-full-card.colored.compact[data-nova-motion]{
+  overflow:visible!important;
+  isolation:isolate;
+}
+.proj-full-card.colored.compact .nova-card-fx{
+  overflow:hidden!important;
+  border-radius:inherit;
+  z-index:0!important;
+}
+.proj-masonry{padding:12px 10px 0;}
+.proj-full-card.colored.compact .proj-notif{
+  position:absolute!important;
+  top:-10px!important;
+  right:-10px!important;
+  left:auto!important;
+  width:29px!important;
+  min-width:29px!important;
+  max-width:29px!important;
+  height:29px!important;
+  min-height:29px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:50%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:#ff445d!important;
+  color:#fff!important;
+  border:2px solid #171c2a!important;
+  box-shadow:0 5px 16px rgba(255,68,93,.46),0 2px 9px rgba(0,0,0,.38)!important;
+  font-size:.72rem!important;
+  line-height:1!important;
+  font-weight:800!important;
+  text-align:center!important;
+  z-index:40!important;
+  transform-origin:center;
+  pointer-events:none;
+}
+.proj-full-card.colored.compact.pinned .proj-notif{right:-10px!important}
+.proj-full-card.colored.compact.pinned::before{right:14px;top:13px}
+@media(max-width:700px){
+  .proj-masonry{padding:12px 10px 0!important;}
+  .proj-full-card.colored.compact .proj-notif{top:-9px!important;right:-8px!important}
+  .proj-full-card.colored.compact.pinned .proj-notif{right:-8px!important}
+}
+/* Las muestras del selector son opacas y del color exacto seleccionado.
+   El acabado Minimal Liquid aplicado a proyectos y notas no se modifica. */
+.color-swatches .color-swatch{
+  background:var(--c)!important;
+  background-image:none!important;
+  opacity:1!important;
+}
+.accent-swatches .accent-swatch{
+  background:var(--swatch-color,var(--accent))!important;
+  background-image:none!important;
+  opacity:1!important;
+}
+
 </style>
 </head>
 <body>
