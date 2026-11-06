@@ -7974,6 +7974,10 @@ initNotifications();
      layer.appendChild(b);return {card,b};
    });
    position();
+   // Las tarjetas entran con transformaciones; seguir su borde hasta terminar la transición.
+   let frames=0;
+   const settle=()=>{position();if(++frames<48)requestAnimationFrame(settle)};
+   requestAnimationFrame(settle);
  };
  const position=()=>{
    for(const {card,b} of badges){
