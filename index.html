@@ -2539,6 +2539,40 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
  }
 }
 
+
+/* NOVA HUB 5.5 — Google Keep-style compact tiles on desktop.
+   Keep the gapless pinned layout engine and the two-column mobile view. */
+@media(min-width:701px){
+ #projFullList.proj-masonry,
+ #notesFullList.notes-masonry,
+ #notesMasonry.notes-masonry{
+   grid-template-columns:repeat(auto-fill,minmax(230px,270px))!important;
+   justify-content:start!important;
+   align-content:start!important;
+   column-gap:16px!important;
+ }
+ #projFullList.proj-masonry>.proj-full-card{
+   min-height:138px!important;
+   width:100%!important;
+   max-width:270px!important;
+ }
+ #notesFullList.notes-masonry>.note-card,
+ #notesMasonry.notes-masonry>.note-card{
+   width:100%!important;
+   max-width:270px!important;
+ }
+}
+@media(min-width:701px) and (max-width:780px){
+ #projFullList.proj-masonry,
+ #notesFullList.notes-masonry,
+ #notesMasonry.notes-masonry{
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ #projFullList.proj-masonry>.proj-full-card,
+ #notesFullList.notes-masonry>.note-card,
+ #notesMasonry.notes-masonry>.note-card{max-width:none!important}
+}
+
 </style>
 </head>
 <body>
