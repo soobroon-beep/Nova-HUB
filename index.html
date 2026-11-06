@@ -2097,6 +2097,20 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
 #psBgWrap,#novaTexture{display:none!important}
 @media(prefers-reduced-motion:reduce){#novaVortexBg canvas{opacity:.45}}
 
+
+/* NOVA HUB 4.5.1 — Vortex visible por encima del fondo opaco, por debajo de toda la interfaz. */
+#novaVortexBg{
+  z-index:0!important;
+  background:radial-gradient(ellipse at 40% 45%,#142045 0%,#080d20 75%)!important;
+}
+#novaVortexBg canvas{opacity:1!important;filter:saturate(125%)}
+#appShell{position:relative;z-index:1}
+#novaFloatingDock{z-index:98}
+#novaBadgeLayer{z-index:80}
+/* La burbuja cruza el borde superior pero queda dentro del extremo DERECHO de su propia tarjeta. */
+#novaBadgeLayer .nova-floating-badge{width:19px!important;height:19px!important;min-width:19px!important;max-width:19px!important;border-radius:50%!important;white-space:nowrap!important}
+@media(prefers-reduced-motion:reduce){#novaVortexBg canvas{opacity:.9!important}}
+
 </style>
 </head>
 <body>
@@ -7967,7 +7981,7 @@ initNotifications();
      const r=card.getBoundingClientRect();
      const show=r.bottom>0&&r.top<innerHeight&&r.left<innerWidth&&r.right>0;
      b.style.display=show?'flex':'none';
-     if(show){b.style.left=Math.round(r.right-10)+'px';b.style.top=Math.round(r.top-9)+'px'}
+     if(show){b.style.left=Math.round(r.right-22)+'px';b.style.top=Math.round(r.top-9)+'px'}
    }
  };
  const schedule=(rebuildNeeded=false)=>{
@@ -7992,13 +8006,13 @@ initNotifications();
  const canvas=document.createElement('canvas');wrap.appendChild(canvas);old.insertAdjacentElement('afterend',wrap);
  const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)return;
  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
- const particles=[];const count=210;
+ const particles=[];const count=innerWidth<800?220:560;
  let w=0,h=0,dpr=1,t=0,raf=0,last=0;
  const reset=(p,randomY=false)=>{
-   p.x=Math.random()*w;p.y=randomY?Math.random()*h:h*(.28+Math.random()*.4);
-   p.age=Math.random()*100;p.max=100+Math.random()*140;
-   p.speed=.15+Math.random()*.85;p.radius=.5+Math.random()*1.25;
-   p.hue=205+Math.random()*98;
+   p.x=Math.random()*w;p.y=randomY?Math.random()*h:h*(.12+Math.random()*.75);
+   p.age=Math.random()*120;p.max=120+Math.random()*210;
+   p.speed=.55+Math.random()*1.65;p.radius=.7+Math.random()*1.65;
+   p.hue=200+Math.random()*105;
  };
  const resize=()=>{
    dpr=Math.min(devicePixelRatio||1,1.5);w=innerWidth;h=innerHeight;
@@ -8010,18 +8024,33 @@ initNotifications();
    if(now-last<33){raf=requestAnimationFrame(draw);return}last=now;
    t+=.006;
    ctx.fillStyle='#10162b';ctx.fillRect(0,0,w,h);
-   const glow=ctx.createRadialGradient(w*.6,h*.42,0,w*.6,h*.42,Math.max(w,h)*.75);
-   glow.addColorStop(0,'rgba(49,43,105,.33)');glow.addColorStop(.6,'rgba(15,30,64,.18)');glow.addColorStop(1,'rgba(12,17,34,0)');
+   const cx=w*(.5+.10*Math.sin(t*.20)),cy=h*(.49+.08*Math.cos(t*.15));
+   const glow=ctx.createRadialGradient(cx,cy,5,cx,cy,Math.max(w,h)*.68);
+   glow.addColorStop(0,'rgba(55,55,129,.40)');
+   glow.addColorStop(.42,'rgba(19,40,93,.31)');
+   glow.addColorStop(1,'rgba(8,14,34,0)');
    ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
-   if(!reduce.matches)for(const p of particles){
-     const a=Math.sin(p.x*.007+Math.cos(p.y*.006+t)*2+t*.2)*2.3+Math.cos(p.y*.004-t*.9);
-     const dx=Math.cos(a)*p.speed,dy=Math.sin(a)*p.speed;
-     const alpha=Math.sin(Math.PI*Math.min(1,p.age/p.max))*.28;
-     ctx.strokeStyle='hsla('+p.hue+',95%,70%,'+alpha.toFixed(3)+')';
-     ctx.lineWidth=p.radius;ctx.lineCap='round';
-     ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+dx*2.8,p.y+dy*2.8);ctx.stroke();
-     p.x+=dx;p.y+=dy;p.age++;
-     if(p.x<0||p.x>w||p.y<0||p.y>h||p.age>=p.max)reset(p);
+   if(!reduce.matches){
+     ctx.globalCompositeOperation='lighter';
+     for(const p of particles){
+       const xx=p.x-cx,yy=(p.y-cy)*1.10;
+       const angle=Math.atan2(yy,xx)+Math.PI*.5+
+         .58*Math.sin(p.x*.0065+Math.cos(p.y*.005+t)*2.2+t*.27)+
+         .22*Math.cos(p.y*.008-t*.45);
+       const dx=Math.cos(angle)*p.speed,dy=Math.sin(angle)*p.speed;
+       const life=Math.max(.1,Math.sin(Math.PI*Math.min(1,p.age/p.max)));
+       const alpha=life*(p.radius>1.7?.66:.44);
+       ctx.strokeStyle='hsla('+p.hue+',98%,72%,'+alpha.toFixed(3)+')';
+       ctx.lineWidth=p.radius;ctx.lineCap='round';
+       ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+dx*5.5,p.y+dy*5.5);ctx.stroke();
+       if(p.radius>1.7 && p.age%4<1){
+         ctx.fillStyle='hsla('+p.hue+',100%,76%,'+(alpha*.5).toFixed(3)+')';
+         ctx.beginPath();ctx.arc(p.x,p.y,p.radius*2.2,0,Math.PI*2);ctx.fill();
+       }
+       p.x+=dx;p.y+=dy;p.age++;
+       if(p.x<0||p.x>w||p.y<0||p.y>h||p.age>=p.max)reset(p);
+     }
+     ctx.globalCompositeOperation='source-over';
    }
    if(!document.hidden)raf=requestAnimationFrame(draw);
  };
