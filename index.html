@@ -2430,6 +2430,40 @@ button,a,.nav-item,.tb-item,.card,.note-card,.cal-day,.fab,.btn,[role=button]{to
   background:linear-gradient(145deg,rgba(249,250,255,.94),rgba(235,238,250,.91))!important;
 }
 
+
+/* NOVA HUB 5.2 — independent dark Liquid Glass + adjacent to centered dock. */
+@media(min-width:901px){
+ #novaCreateFab{
+   width:54px!important;height:54px!important;
+   right:auto!important;bottom:auto!important;
+   display:grid!important;place-items:center!important;
+   background:linear-gradient(145deg,rgba(47,51,74,.83),rgba(15,20,35,.87))!important;
+   color:#f4f5ff!important;
+   border:1px solid rgba(255,255,255,.19)!important;
+   border-radius:19px!important;
+   -webkit-backdrop-filter:blur(24px) saturate(165%)!important;
+   backdrop-filter:blur(24px) saturate(165%)!important;
+   box-shadow:0 12px 32px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.15)!important;
+ }
+ #novaCreateFab .material-symbols-outlined{font-size:27px!important}
+ #novaCreateFab:hover{
+   background:linear-gradient(145deg,rgba(73,78,112,.88),rgba(25,30,52,.92))!important;
+   border-color:rgba(255,255,255,.32)!important;
+   box-shadow:0 16px 35px rgba(0,0,0,.44),inset 0 1px 0 rgba(255,255,255,.22)!important
+ }
+ #novaCreateMenu:not([hidden]){
+   right:auto!important;bottom:auto!important;
+   background:linear-gradient(145deg,rgba(35,39,59,.91),rgba(13,18,32,.94))!important;
+   border:1px solid rgba(255,255,255,.18)!important;
+   -webkit-backdrop-filter:blur(26px) saturate(150%)!important;
+   backdrop-filter:blur(26px) saturate(150%)!important;
+ }
+}
+[data-theme="light"] #novaCreateFab{
+ background:linear-gradient(145deg,rgba(255,255,255,.87),rgba(221,229,246,.85))!important;
+ color:#2d3450!important;border-color:rgba(55,68,103,.16)!important
+}
+
 </style>
 </head>
 <body>
@@ -8257,8 +8291,26 @@ initNotifications();
    });menu.appendChild(a);
  });
  document.body.append(btn,menu);
+ // The + is NOT a dock child: position its own glass bubble next to the
+ // right edge of the floating dock, automatically following layout/zoom changes.
+ const dock=document.getElementById('novaFloatingDock');
+ const alignBesideDock=()=>{
+   if(!dock||window.innerWidth<=900)return;
+   const r=dock.getBoundingClientRect();
+   if(!r.width)return;
+   const size=54,gap=14;
+   const left=Math.min(window.innerWidth-size-12,Math.round(r.right+gap));
+   const top=Math.min(window.innerHeight-size-12,Math.max(12,Math.round(r.top+(r.height-size)/2)));
+   btn.style.left=left+'px';btn.style.top=top+'px';
+   menu.style.left=Math.min(left,window.innerWidth-245)+'px';
+   menu.style.top=Math.max(12,top-menu.offsetHeight-13)+'px';
+ };
+ if(dock && typeof ResizeObserver!=='undefined')new ResizeObserver(alignBesideDock).observe(dock);
+ window.addEventListener('resize',alignBesideDock,{passive:true});
+ requestAnimationFrame(alignBesideDock);
  btn.addEventListener('click',()=>{
    menu.hidden=!menu.hidden;btn.setAttribute('aria-expanded',String(!menu.hidden));
+   if(!menu.hidden)requestAnimationFrame(alignBesideDock);
    const settingPop=document.getElementById('novaDockStatus');if(settingPop)settingPop.hidden=true;
  });
  document.addEventListener('click',e=>{
