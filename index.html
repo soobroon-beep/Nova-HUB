@@ -2952,6 +2952,38 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
   background:var(--solid-fx)!important;
 }
 
+/* NOVA HUB 5.9.2 — Formulario de proyectos desplazable en móvil.
+   Evita que un formulario alto quede cortado arriba/abajo de la pantalla. */
+@media (max-width:700px), (max-height:600px){
+  #projModal.modal-overlay{
+    box-sizing:border-box;
+    padding:12px max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  #projModal.modal-overlay > .modal{
+    box-sizing:border-box;
+    width:100%;
+    max-width:100%;
+    max-height:calc(100vh - 24px);
+    max-height:calc(100dvh - 24px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    padding:20px 18px 24px;
+    scrollbar-width:thin;
+  }
+  /* Una sola zona de scroll para el formulario y sus 16 animaciones. */
+  #projModal .nova-motion-options{
+    max-height:none;
+    overflow:visible;
+  }
+  #projModal .icon-picker-grid{max-height:150px}
+}
+
 </style>
 </head>
 <body>
@@ -5338,6 +5370,10 @@ const openModal=id=>{
   const del = id==='eventModal' ? ['evDelete','evId'] : id==='blockModal' ? ['blockDelete','blockId'] : null;
   if(del){ const b=document.getElementById(del[0]); if(b) b.style.display = document.getElementById(del[1])?.value ? '' : 'none'; }
   _prepareCardExpand(m);
+  if(id==='projModal'){
+    const form=m.querySelector('.modal');
+    if(form)form.scrollTop=0;
+  }
   m.classList.add('open');
   haptic('tap');
 };
