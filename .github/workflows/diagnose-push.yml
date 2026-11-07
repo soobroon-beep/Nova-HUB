@@ -20,13 +20,14 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          timeout 80 npx --yes wrangler@4 tail nova-hub-push --format json > tail.json 2>tail.err || true
+          npx --yes wrangler@4 --version
+          timeout 110 npx --yes wrangler@4 tail nova-hub-push --format json > tail.json 2>tail.err || true
           node -e "
             const L=require('fs').readFileSync('tail.json','utf8').split(/\n(?=\{)/).filter(Boolean);
             console.log('Eventos capturados:', L.length);
             for (const s of L) { try { const e=JSON.parse(s); console.log('-', e.event && e.event.cron ? 'cron '+e.event.cron : 'evento', '| resultado:', e.outcome, '| logs:', JSON.stringify((e.logs||[]).map(l=>l.message.join(' '))), '| errores:', JSON.stringify((e.exceptions||[]).map(x=>x.name+': '+x.message))); } catch(_) {} }
           "
-          grep -v "^$" tail.err | tail -5 || true
+          echo "bytes stdout: $(wc -c < tail.json) · stderr:"; head -c 800 tail.err; echo; head -c 400 tail.json
       - name: Revisar Firestore
         run: node scripts/diagnose-push.js
         env:
