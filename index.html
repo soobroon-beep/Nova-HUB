@@ -2984,6 +2984,23 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
   #projModal .icon-picker-grid{max-height:150px}
 }
 
+/* NOVA HUB 5.10 — Unificación iconográfica en la interfaz.
+   El contenido que escribe el usuario y los datos guardados no se alteran. */
+.nova-ui-icon.material-symbols-outlined{
+  display:inline-flex;align-items:center;justify-content:center;vertical-align:-.2em;
+  font-size:1.22em;line-height:1;width:1.05em;flex:0 0 auto;
+  pointer-events:none;font-variation-settings:'FILL' 0,'wght' 450,'GRAD' 0,'opsz' 24;
+  color:inherit;margin-right:.2em;
+}
+.nav-icon .nova-ui-icon,.nav-icon > .material-symbols-outlined{font-size:21px;width:22px;margin-right:0;vertical-align:middle}
+#tabSheet .em .nova-ui-icon{font-size:23px;margin-right:0}
+#tabbar .tb-item > .material-symbols-outlined{font-size:22px;line-height:24px;flex-shrink:0}
+.nova-dock-item > .material-symbols-outlined{font-size:23px}
+.md-ico > .material-symbols-outlined{font-size:26px}
+.stat-card .icon .nova-ui-icon{font-size:2rem;margin-right:0}
+.mood-btn .nova-ui-icon{font-size:1.5rem;margin-right:0}
+.nova-ui-icon[aria-hidden="true"]{user-select:none}
+
 </style>
 </head>
 <body>
@@ -3000,7 +3017,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
     <span id="appTitle">NOVA HUB</span>
   </div>
   <div class="nav-section">Principal</div>
-  <div class="nav-item active" data-view="dashboard"><span class="nav-icon">⊞</span> Dashboard</div>
+  <div class="nav-item active" data-view="dashboard"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span></span> Dashboard</div>
   <div class="nav-item" data-view="calendar"><span class="nav-icon">📅</span> Calendario & Horario</div>
   <div class="nav-item" data-view="notes"><span class="nav-icon">🗒️</span> Notas</div>
   <div class="nav-item" data-view="projects"><span class="nav-icon">🚀</span> Proyectos</div>
@@ -3009,7 +3026,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
   <div class="nav-item" data-view="habits"><span class="nav-icon">🔥</span> Hábitos</div>
   <div class="nav-section" style="margin-top:20px">Herramientas</div>
   <div class="nav-item" data-view="briefing"><span class="nav-icon">🗞️</span> Daily Briefing</div>
-  <div class="nav-item" data-view="ai"><span class="nav-icon">✦</span> IA Asistente</div>
+  <div class="nav-item" data-view="ai"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span></span> IA Asistente</div>
   <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span> Ajustes</div>
   <div class="sidebar-bottom">
     <div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:12px;cursor:pointer" id="levelPanel" title="Completa tareas para ganar XP">
@@ -5714,7 +5731,7 @@ const getDockTabs = () => DOCK_DEFAULT;
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
     bar.innerHTML = getDockTabs().map(v => { const m = DOCK_META[v];
-      return `<button type="button" class="tb-item" data-tab="${v}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg><span>${m.s}</span></button>`; }).join('');
+      return `<button type="button" class="tb-item" data-tab="${v}">${v==='projects'?'<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>':`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg>`}<span>${m.s}</span></button>`; }).join('');
     syncActive(); syncFab();
   };
   // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
@@ -5796,7 +5813,7 @@ const getDockTabs = () => DOCK_DEFAULT;
       t.className = 'md-tile' + (src.classList.contains('active') ? ' active' : '');
       t.style.setProperty('--i', i++);
       t.setAttribute('role', 'button'); t.tabIndex = 0;
-      const meta = DOCK_META[v], icoHtml = meta ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${meta.p}"/></svg>` : ico;
+      const meta = DOCK_META[v], icoHtml = v==='projects' ? '<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>' : meta ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${meta.p}"/></svg>` : ico;
       t.innerHTML = `<span class="md-ico">${icoHtml}</span><span>${label}</span>${subs[v] ? `<span class="md-sub">${subs[v]}</span>` : ''}`;
       const go = () => { closeDrawer(); setTimeout(() => src.click(), 200); };
       t.addEventListener('click', go);
@@ -5821,8 +5838,7 @@ const getDockTabs = () => DOCK_DEFAULT;
         clone.style.cursor = 'pointer';
         clone.addEventListener('click', () => {
           src.click();
-          const live = src.querySelectorAll('span');
-          clone.querySelectorAll('span').forEach((sp, k) => { if (live[k]) sp.textContent = live[k].textContent; });
+          clone.innerHTML = src.innerHTML;
           svgify(clone);
         });
       } else clone.style.cursor = 'default';
@@ -8898,7 +8914,7 @@ initNotifications();
   const dock=document.createElement('nav');
   dock.id='novaFloatingDock';
   dock.setAttribute('aria-label','Navegación flotante de Nova Hub');
-  const icon=(view)=>{const d=DOCK_META[view];return d && d.p ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d.p+'"></path></svg>' : '<span class="material-symbols-outlined" aria-hidden="true">apps</span>';};
+  const icon=(view)=>{const d=DOCK_META[view];if(view==='projects')return '<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>';return d && d.p ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d.p+'"></path></svg>' : '<span class="material-symbols-outlined" aria-hidden="true">apps</span>';};
   const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Daily Briefing',ai:'IA Asistente',settings:'Ajustes'};
   const button=(act,label,svg)=>'<button class="nova-dock-item" type="button" data-dock="'+act+'" data-tip="'+label+'" aria-label="'+label+'">'+svg+'</button>';
   dock.innerHTML=views.map((view,i)=>(i===7?'<span class="nova-dock-separator" aria-hidden="true"></span>':'')+button(view,labels[view],icon(view))).join('');
@@ -9188,6 +9204,104 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.error('SW error:', e));
   });
 }
+</script>
+
+<script>
+/* NOVA HUB 5.10 — Sustitución visual de emojis de la interfaz por Material
+   Symbols. Solo decora controles y cabeceras; no cambia campos, IDs,
+   contenido de notas, títulos que escribe el usuario ni estados guardados. */
+(function NovaInterfaceIcons(){
+  'use strict';
+  const icons={
+    '🚀':'rocket_launch','🗒️':'sticky_note_2','🗒':'sticky_note_2',
+    '📅':'calendar_month','🗓️':'event','🗓':'event',
+    '⏰':'notifications_active','📖':'menu_book','🔥':'local_fire_department',
+    '🗞️':'article','🗞':'article','⚙️':'settings','⚙':'settings',
+    '⭐':'star','☀️':'light_mode','☀':'light_mode','🌙':'dark_mode',
+    '🎯':'track_changes','✨':'auto_awesome','✦':'auto_awesome',
+    '🕓':'history','📊':'bar_chart','✅':'check_circle','✓':'check',
+    '🗑️':'delete_outline','🗑':'delete_outline',
+    '✏️':'edit','✏':'edit','📌':'push_pin','⏳':'hourglass_top',
+    '🧩':'widgets','🧭':'explore','🌌':'blur_on','🖼️':'image','🖼':'image',
+    '🎨':'palette','👤':'person','📦':'inventory_2','🔔':'notifications',
+    '🔕':'notifications_off','🔑':'key','☁️':'cloud','☁':'cloud',
+    '⚠️':'warning','⚠':'warning','❌':'error','🔄':'sync',
+    '📴':'signal_wifi_off','🌐':'language','🔎':'search','♻️':'restore',
+    '♻':'restore','🎉':'celebration','🏆':'emoji_events','🖋':'draw',
+    '🖋️':'draw','📆':'date_range','💡':'lightbulb','📥':'inbox',
+    '⬇️':'download','⬆️':'upload','↕️':'swap_vert',
+    '🙈':'visibility_off','▶️':'play_arrow','⏹️':'stop','🔒':'lock',
+    '🔓':'lock_open','🤖':'smart_toy','⚡':'bolt','⛅':'partly_cloudy_day',
+    '🌫️':'foggy','🌧️':'rainy','🌦️':'partly_cloudy_day',
+    '❄️':'ac_unit','⛈️':'thunderstorm','🌨️':'weather_snowy',
+    '🌡️':'thermostat','🟡':'circle','🔵':'circle','🟣':'circle',
+    '🌅':'wb_twilight','🌃':'nights_stay',
+    '😊':'sentiment_satisfied','😌':'sentiment_calm',
+    '😐':'sentiment_neutral','😔':'sentiment_dissatisfied',
+    '😢':'sentiment_sad','😡':'mood_bad','🤩':'sentiment_very_satisfied'
+  };
+  const tokens=Object.keys(icons).sort((a,b)=>b.length-a.length);
+  const escapeRe=s=>Array.from(s).map(c=>'\\^$.*+?()[]{}|'.includes(c)?'\\'+c:c).join('');
+  const rx=new RegExp('^(\\s*)('+tokens.map(escapeRe).join('|')+')(?:\\s+)?');
+  const SELECTORS=[
+    '#sidebar .nav-icon','#tabSheet .em','.fab-menu-item .nav-icon',
+    '#levelPanel span','#themeIcon','.theme-toggle > span',
+    '.modal h3','.modal .btn','.modal .qa-type-pill','.modal .pd-title',
+    '.modal .nd-title','.modal .pd-actions button','.modal .nd-actions button',
+    '#content .sec-title','#content .sec-title > span',
+    '#content .stat-card .icon','#content .activity-icon',
+    '#content .focus-title','#content .focus-tag','#content .focus-count',
+    '#content .focus-empty .emoji','#content .briefing-section-icon',
+    '#content .settings-section h3','#content .settings-label > span',
+    '#content .trash-item-icon','#content .trash-item-actions button',
+    '#content .btn','#content .mood-btn','#content .pin-note-btn',
+    '#content .reminder-card button','#content .diary-card button',
+    '#content .diary-card [style*="font-size:2rem"]',
+    '#content [style*="font-size:1.3rem"]',
+    '#content [style*="font-size:1.5rem"]',
+    '#content [style*="font-size:2.5rem"]',
+    '#content .widget .label','#content .weather-icon',
+    '#content .md-tile .md-ico','#moreDrawer .md-ico',
+    '#content .streak-pill','#streakPill','#toast'
+  ].join(',');
+  const USER_TEXT='.note-title,.note-body,.proj-name,.proj-card-title,.proj-card-desc,.nd-body,.pd-text,.activity-title,.focus-body-title,.ai-msg .bubble,.ai-msg .message,.diary-card .blur-content,.reminder-card .reminder-title,input,textarea,[contenteditable="true"]';
+  function decorate(node){
+    if(!node || node.nodeType!==Node.TEXT_NODE || !node.nodeValue)return;
+    const el=node.parentElement;
+    if(!el || el.closest('.nova-ui-icon,'+USER_TEXT))return;
+    const m=rx.exec(node.nodeValue);
+    if(!m)return;
+    const symbol=document.createElement('span');
+    symbol.className='material-symbols-outlined nova-ui-icon';
+    symbol.textContent=icons[m[2]];
+    symbol.setAttribute('aria-hidden','true');
+    const before=node.nodeValue.slice(0,m[1].length);
+    const after=node.nodeValue.slice(m[0].length);
+    node.replaceWith(document.createTextNode(before),symbol,document.createTextNode(after));
+  }
+  function scan(root){
+    if(root.nodeType===Node.TEXT_NODE){
+      const parent=root.parentElement;
+      if(parent?.matches?.(SELECTORS))decorate(root);
+      return;
+    }
+    if(root.nodeType!==Node.ELEMENT_NODE && root.nodeType!==Node.DOCUMENT_NODE)return;
+    if(root.matches?.(SELECTORS))Array.from(root.childNodes).forEach(decorate);
+    root.querySelectorAll?.(SELECTORS).forEach(el=>Array.from(el.childNodes).forEach(decorate));
+  }
+  scan(document.body);
+  let pending=new Set(),queued=false;
+  new MutationObserver(records=>{
+    for(const m of records)m.addedNodes.forEach(n=>pending.add(n));
+    if(queued || !pending.size)return;
+    queued=true;
+    requestAnimationFrame(()=>{
+      queued=false;
+      const batch=Array.from(pending);pending.clear();
+      batch.forEach(scan);
+    });
+  }).observe(document.body,{subtree:true,childList:true});
+})();
 </script>
 </body>
 </html>
