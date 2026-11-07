@@ -4982,7 +4982,7 @@ const disableNotifications = async () => {
 const localNotify = (title, body, tag) => {
   if (window.__fcmActive && !tag) return;
   if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
-  const opts = { body, icon: './icon-192.png', badge: './notif-badge-96.png', vibrate: [120,60,120], tag: tag || undefined, renotify: !!tag };
+  const opts = { body, icon: './icon-192.png', badge: './notif-badge-96.png', vibrate: [120,60,120], tag: tag || undefined, renotify: false }; // si el push y la app muestran el mismo aviso, el segundo lo reemplaza sin volver a sonar
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {
@@ -4995,6 +4995,7 @@ const localNotify = (title, body, tag) => {
 };
 
 // Notificaciones de inicio/fin de bloques de horario
+const _ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const scheduleNotifState = { notified: new Set(), day: new Date().toDateString() };
 const checkScheduleNotifications = () => {
   if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
@@ -5010,22 +5011,27 @@ const checkScheduleNotifications = () => {
     const startKey = b.id + '-start-' + todayStr, endKey = b.id + '-end-' + todayStr;
     if (nowMin === startMin && !scheduleNotifState.notified.has(startKey)) {
       scheduleNotifState.notified.add(startKey);
-      localNotify('▶️ NOVA HUB', `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, 'rt-' + b.id + '-start');
+      localNotify('▶️ NOVA HUB', `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, 'rt-' + b.id + '-start-' + _ymd(now));
       toast('▶️ Comienza: ' + b.title);
     }
     if (nowMin === endMin && !scheduleNotifState.notified.has(endKey)) {
       scheduleNotifState.notified.add(endKey);
-      localNotify('⏹️ NOVA HUB', `Terminó tu bloque "${b.title}"`, 'rt-' + b.id + '-end');
+      localNotify('⏹️ NOVA HUB', `Terminó tu bloque "${b.title}"`, 'rt-' + b.id + '-end-' + _ymd(now));
       toast('⏹️ Terminó: ' + b.title);
     }
   });
 };
+const _remShown = new Set(); // recordatorios ya mostrados en esta sesión (cuando el servidor es quien los marca)
 const initNotifications = () => {
   setInterval(() => {
     const now = new Date(); let changed = false;
     state.reminders.forEach(r => {
       if (!r.notified && !r._pushed && new Date(r.datetime) <= now) {
-        localNotify('⏰ NOVA HUB: ' + r.title, r.desc || '', 'rem-' + (r.id ?? r.datetime));
+        const tag = 'rem-' + (r.id ?? r.datetime);
+        // Con push activo NO se marca aquí: lo marca el servidor al mandar el push (si la app lo marcaba primero,
+        // el servidor ya no avisaba). Se muestra una sola vez por sesión con la misma etiqueta que el push.
+        if (window.__fcmActive) { if (!_remShown.has(tag)) { _remShown.add(tag); localNotify('⏰ NOVA HUB: ' + r.title, r.desc || '', tag); toast('⏰ Recordatorio: ' + r.title); } return; }
+        localNotify('⏰ NOVA HUB: ' + r.title, r.desc || '', tag);
         r.notified = true; changed = true; toast('⏰ Recordatorio: ' + r.title);
       }
     });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v24';
+const CACHE_NAME = 'nova-hub-v25';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -119,7 +119,7 @@ self.addEventListener('push', e => {
   const d = p.data || {}, n = p.notification || {};
   const title = d.title || n.title || 'NOVA HUB', body = d.body || n.body || '';
   e.waitUntil(self.registration.showNotification(title, {
-    body, tag: d.tag || undefined, renotify: !!d.tag,
+    body, tag: d.tag || undefined, renotify: false,
     icon: './icon-192.png', badge: './notif-badge-96.png', vibrate: [200, 100, 200],
     data: {url: d.url || './'}
   }));

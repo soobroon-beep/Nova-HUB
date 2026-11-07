@@ -65,8 +65,8 @@ export function dueFor(user, nowMs) {
   for (const b of Array.isArray(user.routines) ? user.routines : []) {
     if (!b || !repeatsToday(b, t.dow)) continue;
     const s = timeToMin(b.start), e = timeToMin(b.end), ks = `${b.id}-start`, ke = `${b.id}-end`;
-    if (isDue(s, t.minutes) && !log.has(ks)) out.push({kind: 'rt', key: ks, title: '▶️ NOVA HUB', body: `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, tag: 'rt-' + ks});
-    if (isDue(e, t.minutes) && !log.has(ke)) out.push({kind: 'rt', key: ke, title: '⏹️ NOVA HUB', body: `Terminó tu bloque "${b.title}"`, tag: 'rt-' + ke});
+    if (isDue(s, t.minutes) && !log.has(ks)) out.push({kind: 'rt', key: ks, title: '▶️ NOVA HUB', body: `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, tag: 'rt-' + ks + '-' + t.dateStr});
+    if (isDue(e, t.minutes) && !log.has(ke)) out.push({kind: 'rt', key: ke, title: '⏹️ NOVA HUB', body: `Terminó tu bloque "${b.title}"`, tag: 'rt-' + ke + '-' + t.dateStr});
   }
   return {items: out, dateStr: t.dateStr};
 }
