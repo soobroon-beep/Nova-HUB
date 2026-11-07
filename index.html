@@ -2996,6 +2996,9 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 #tabSheet .em .nova-ui-icon{font-size:23px;margin-right:0}
 #tabbar .tb-item > .material-symbols-outlined{font-size:22px;line-height:24px;flex-shrink:0}
 .nova-dock-item > .material-symbols-outlined{font-size:23px}
+#tabbar .tb-item > .material-symbols-outlined{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+#tabbar .tb-item.active > .material-symbols-outlined{transform:translateY(-2px) scale(1.12)}
+#tabbar .tb-item:active > .material-symbols-outlined{transform:scale(.86)}
 .md-ico > .material-symbols-outlined{font-size:26px}
 .stat-card .icon .nova-ui-icon{font-size:2rem;margin-right:0}
 .mood-btn .nova-ui-icon{font-size:1.5rem;margin-right:0}
@@ -9269,7 +9272,11 @@ if ('serviceWorker' in navigator) {
     '#content .focus-body-meta .focus-tag','#content .mood-picker .mood-btn',
     '#content .routine-hero-icon','#content .routine-section-hero span',
     '#content .md-tile .md-ico','#moreDrawer .md-ico',
-    '#content .streak-pill','#streakPill','#toast'
+    '#content .streak-pill','#streakPill','#toast',
+    '#content .wg-bl-title','#content .nova-mobile-event-title',
+    '#content .focus-body-meta .focus-tag','#content .briefing-section-icon',
+    '#content .weather-symbol','#content .weather-glyph',
+    '#content .empty-state-icon','#content .routine-block-dot'
   ].join(',');
   const USER_TEXT='.note-title,.note-body,.proj-name,.proj-card-title,.proj-card-desc,.nd-body,.pd-text,.activity-title,.focus-body-title,.ai-msg .bubble,.ai-msg .message,.diary-card .blur-content,.reminder-card .reminder-title,input,textarea,[contenteditable="true"]';
   function decorate(node){
