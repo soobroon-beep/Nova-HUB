@@ -231,7 +231,7 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .proj-footer{display:flex;justify-content:space-between;margin-top:6px;font-size:.72rem;color:var(--text3)}
 .proj-full-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px;transition:var(--trans);position:relative;break-inside:avoid;margin-bottom:20px}
 .proj-full-card:hover{border-color:rgba(124,106,247,.4)}
-.proj-full-card.pinned::before{content:'📌';position:absolute;top:14px;right:14px;font-size:.85rem}
+.proj-full-card.pinned::before{content:'push_pin';font-family:'Material Symbols Outlined';position:absolute;top:14px;right:14px;font-size:18px;line-height:1}
 .proj-icon-badge{width:38px;height:38px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c,var(--accent))}
 .proj-card-head{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .proj-card-info{display:flex;gap:10px;align-items:flex-start;min-width:0;flex:1 1 100%}
@@ -5355,7 +5355,7 @@ const renderProjects=()=>{
     const el=document.createElement('div'); el.className='project-item';
     el.dataset.novaMotion=NOVA_MOTIONS.includes(p.motion)?p.motion:'glow';
     el.setAttribute('style',cardToneStyle(p.color));
-    el.innerHTML=`<div class="proj-top"><div class="proj-name" style="display:flex;align-items:center;gap:8px"><span class="material-symbols-outlined" style="font-size:1.05rem;color:${p.color||'var(--accent)'}">${p.icon||'rocket_launch'}</span>${p.name}${p.pinned?' 📌':''}${(p.tasks||[]).some(t=>!t.done)?`<span class="proj-notif-inline">${(p.tasks||[]).filter(t=>!t.done).length}</span>`:''}</div><span class="proj-badge ${badges[p.status]}">${labels[p.status]}</span></div><div class="proj-desc">${p.desc||''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="proj-footer"><span>${p.tasks?.length||0} tareas</span><span>${pct}%</span></div>`;
+    el.innerHTML=`<div class="proj-top"><div class="proj-name" style="display:flex;align-items:center;gap:8px"><span class="material-symbols-outlined" style="font-size:1.05rem;color:${p.color||'var(--accent)'}">${p.icon||'rocket_launch'}</span>${p.name}${p.pinned?' <span class="material-symbols-outlined" aria-label="Fijado" style="font-size:17px">push_pin</span>':''}${(p.tasks||[]).some(t=>!t.done)?`<span class="proj-notif-inline">${(p.tasks||[]).filter(t=>!t.done).length}</span>`:''}</div><span class="proj-badge ${badges[p.status]}">${labels[p.status]}</span></div><div class="proj-desc">${p.desc||''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="proj-footer"><span>${p.tasks?.length||0} tareas</span><span>${pct}%</span></div>`;
     c.appendChild(el);
   });
 };
@@ -6206,7 +6206,7 @@ const renderFocusCard = () => {
   const kindMeta = { tattoo:{icon:'🖋',label:'Cita de tatuaje'}, reminder:{icon:'⏰',label:'Recordatorio'}, habit:{icon:'🔥',label:'Hábito'}, task:{icon:'✅',label:'Tarea'} };
   const countBadge = items.length
     ? `<div class="focus-count${overdueCount?' urgent':''}">${overdueCount ? overdueCount+' vencido'+(overdueCount>1?'s':'') : items.length+' pendiente'+(items.length>1?'s':'')}</div>`
-    : `<div class="focus-count clear">Al día ✅</div>`;
+    : `<div class="focus-count clear">Al día <span class="material-symbols-outlined" aria-hidden="true" style="font-size:1rem;vertical-align:middle">check_circle</span></div>`;
   const listHTML = items.length ? items.map(it => {
     const m = kindMeta[it.kind];
     return `<div class="focus-item${it.overdue?' overdue':''}${it.kind==='tattoo'?' tattoo':''}" data-kind="${it.kind}" data-id="${it.id}" ${it.idx!=null?`data-idx="${it.idx}"`:''}>
@@ -9236,9 +9236,9 @@ if ('serviceWorker' in navigator) {
     '❄️':'ac_unit','⛈️':'thunderstorm','🌨️':'weather_snowy',
     '🌡️':'thermostat','🟡':'circle','🔵':'circle','🟣':'circle',
     '🌅':'wb_twilight','🌃':'nights_stay',
-    '😊':'sentiment_satisfied','😌':'sentiment_calm',
+    '😊':'sentiment_satisfied','😌':'sentiment_satisfied',
     '😐':'sentiment_neutral','😔':'sentiment_dissatisfied',
-    '😢':'sentiment_sad','😡':'mood_bad','🤩':'sentiment_very_satisfied'
+    '😢':'sentiment_very_dissatisfied','😡':'mood_bad','🤩':'sentiment_very_satisfied'
   };
   const tokens=Object.keys(icons).sort((a,b)=>b.length-a.length);
   const escapeRe=s=>Array.from(s).map(c=>'\\^$.*+?()[]{}|'.includes(c)?'\\'+c:c).join('');
@@ -9249,6 +9249,9 @@ if ('serviceWorker' in navigator) {
     '.modal h3','.modal .btn','.modal .qa-type-pill','.modal .pd-title',
     '.modal .nd-title','.modal .pd-actions button','.modal .nd-actions button',
     '#content .sec-title','#content .sec-title > span',
+    '#content [style*="font-size:1.3rem"] > span',
+    '#content [style*="font-size:1.5rem"] > span',
+    '#content [style*="font-size:2.5rem"] > span',
     '#content .stat-card .icon','#content .activity-icon',
     '#content .focus-title','#content .focus-tag','#content .focus-count',
     '#content .focus-empty .emoji','#content .briefing-section-icon',
@@ -9261,6 +9264,10 @@ if ('serviceWorker' in navigator) {
     '#content [style*="font-size:1.5rem"]',
     '#content [style*="font-size:2.5rem"]',
     '#content .widget .label','#content .weather-icon',
+    '#content .ai-card .ai-icon','#content .ai-avatar.bot',
+    '#content .nova-bg-heading > span','#streakPill span',
+    '#content .focus-body-meta .focus-tag','#content .mood-picker .mood-btn',
+    '#content .routine-hero-icon','#content .routine-section-hero span',
     '#content .md-tile .md-ico','#moreDrawer .md-ico',
     '#content .streak-pill','#streakPill','#toast'
   ].join(',');
