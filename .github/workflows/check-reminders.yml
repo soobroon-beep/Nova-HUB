@@ -1,8 +1,8 @@
 name: Revisar recordatorios y horario, enviar push
 
+# Ya no corre solo: los avisos los manda el Worker «nova-hub-push» (worker/reminders.mjs) cada minuto desde Cloudflare.
+# GitHub corría este cron solo unas pocas veces al día. Se deja para lanzarlo a mano si hiciera falta.
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 jobs:

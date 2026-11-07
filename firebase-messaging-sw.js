@@ -32,7 +32,7 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, {
     body,
     icon: 'icon-192.png',
-    badge: 'icon-96.png',
+    badge: 'notif-badge-96.png',
     data: payload.data || {},
     tag: (payload.data && payload.data.reminderId) || undefined,
   });

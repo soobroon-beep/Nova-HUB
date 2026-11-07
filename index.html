@@ -4977,10 +4977,12 @@ const disableNotifications = async () => {
 // Usa el Service Worker (showNotification) cuando está disponible, porque
 // `new Notification()` no es fiable en móvil y está deprecado en algunos
 // navegadores; cae a `new Notification()` solo como último recurso.
-const localNotify = (title, body) => {
-  if (window.__fcmActive) return; // el push se encarga -> evita duplicados
+// tag: la misma etiqueta que usa el servidor de avisos (worker/reminders.mjs) → si llegan los dos, el celular muestra solo uno.
+// Sin tag y con push activo no se muestra (el push se encarga). badge: silueta blanca para la barra de estado de Android.
+const localNotify = (title, body, tag) => {
+  if (window.__fcmActive && !tag) return;
   if (!(state.settings.notificationsEnabled && window.Notification && Notification.permission === 'granted')) return;
-  const opts = { body, icon: './icon-192.png', badge: './icon-96.png', vibrate: [120,60,120] };
+  const opts = { body, icon: './icon-192.png', badge: './notif-badge-96.png', vibrate: [120,60,120], tag: tag || undefined, renotify: !!tag };
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {
@@ -5008,12 +5010,12 @@ const checkScheduleNotifications = () => {
     const startKey = b.id + '-start-' + todayStr, endKey = b.id + '-end-' + todayStr;
     if (nowMin === startMin && !scheduleNotifState.notified.has(startKey)) {
       scheduleNotifState.notified.add(startKey);
-      localNotify('▶️ NOVA HUB', `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`);
+      localNotify('▶️ NOVA HUB', `Comienza tu bloque "${b.title}" (${b.start} – ${b.end})`, 'rt-' + b.id + '-start');
       toast('▶️ Comienza: ' + b.title);
     }
     if (nowMin === endMin && !scheduleNotifState.notified.has(endKey)) {
       scheduleNotifState.notified.add(endKey);
-      localNotify('⏹️ NOVA HUB', `Terminó tu bloque "${b.title}"`);
+      localNotify('⏹️ NOVA HUB', `Terminó tu bloque "${b.title}"`, 'rt-' + b.id + '-end');
       toast('⏹️ Terminó: ' + b.title);
     }
   });
@@ -5023,7 +5025,7 @@ const initNotifications = () => {
     const now = new Date(); let changed = false;
     state.reminders.forEach(r => {
       if (!r.notified && !r._pushed && new Date(r.datetime) <= now) {
-        localNotify('⏰ NOVA HUB: ' + r.title, r.desc || '');
+        localNotify('⏰ NOVA HUB: ' + r.title, r.desc || '', 'rem-' + (r.id ?? r.datetime));
         r.notified = true; changed = true; toast('⏰ Recordatorio: ' + r.title);
       }
     });

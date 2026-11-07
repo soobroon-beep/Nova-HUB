@@ -1,0 +1,9 @@
+# Servidor de avisos de NOVA HUB (recordatorios y horario con la app cerrada).
+# Lo publica .github/workflows/deploy-push-worker.yml, que también sube el secreto FIREBASE_SERVICE_ACCOUNT.
+name = "nova-hub-push"
+main = "reminders.mjs"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]

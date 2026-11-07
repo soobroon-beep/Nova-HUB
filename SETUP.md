@@ -147,3 +147,13 @@ Pruebas automáticas del respaldo: `npm run test:backup`. Todas las pruebas: `np
 - **Restaurar**: Firebase Console → Firestore → `users` → tu uid → `backups` → copia el contenido del respaldo al documento principal (o pídeselo a Claude).
 - **Reglas** (`.github/workflows/deploy-firestore-rules.yml`): se publican solas al cambiar `firestore.rules` en `main`. Requiere el mismo secret `FIREBASE_SERVICE_ACCOUNT`.
 - **Job de recordatorios**: ya no reescribe la lista completa de recordatorios; dentro de una transacción solo marca `notified` en los avisados, así no pisa lo que guardes mientras corre.
+
+## Avisos con la app cerrada (servidor en Cloudflare)
+Los recordatorios y los avisos de inicio/fin de bloques de horario los manda el Worker `nova-hub-push` (`worker/reminders.mjs`) **cada minuto** desde Cloudflare (gratis). El cron de GitHub (`check-reminders.yml`) quedó solo manual: GitHub lo corría unas pocas veces al día.
+
+- Usa los mismos `fcmTokens` que ya registra la app: no hay que reconfigurar nada en el celular.
+- Las fechas de los recordatorios se leen en tu zona horaria (`tz`, por defecto America/Mexico_City). Antes se leían en UTC y salían 6 h antes.
+- Solo escribe `notified: true` en los recordatorios avisados, `routineNotified` y la limpieza de tokens vencidos, dentro de una transacción. Nunca toca notas, proyectos ni lo demás.
+- `sw.js` ahora muestra el aviso (antes no tenía manejador `push`) con el cerebro como silueta en la barra de estado (`notif-badge-96.png`).
+
+Publicación (una sola vez): secreto `CLOUDFLARE_API_TOKEN` en este repo (plantilla «Edit Cloudflare Workers"), y Actions → «Publicar servidor de avisos (nova-hub-push)» → Run workflow. El flujo sube también `FIREBASE_SERVICE_ACCOUNT` como secreto del Worker.
