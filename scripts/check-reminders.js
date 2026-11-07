@@ -46,6 +46,17 @@ function nowInTZ() {
   };
 }
 
+// «2026-11-07T10:00» (lo que guarda el input de la app) es hora LOCAL del usuario, no UTC.
+// Antes se leía con new Date() en el runner de GitHub (UTC) y los avisos salían 6 h antes.
+function parseLocal(str, tz) {
+  if (typeof str !== 'string' || !str) return NaN;
+  if (/(Z|[+-]\d\d:?\d\d)$/.test(str)) return Date.parse(str);
+  const m = /^(\d{4})-(\d\d)-(\d\d)(?:[T ](\d\d):(\d\d)(?::(\d\d))?)?/.exec(str); if (!m) return Date.parse(str);
+  const asUtc = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+  const off = ms => { const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(ms)); const g = t => Number(p.find(x => x.type === t).value); return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour') % 24, g('minute'), g('second')) - Math.floor(ms / 1000) * 1000; };
+  try { let ms = asUtc - off(asUtc); return asUtc - off(ms); } catch (_) { return Date.parse(str); }
+}
+
 const timeToMin = (hhmm) => {
   if (!hhmm || typeof hhmm !== 'string' || !hhmm.includes(':')) return null;
   const [h, m] = hhmm.split(':').map(Number);
@@ -120,7 +131,7 @@ async function run() {
       : new Set();
 
     // ── 1) Recordatorios sueltos (una sola vez, sin importar fecha) ──────
-    const dueReminders = reminders.filter(r => !r.notified && r.datetime && new Date(r.datetime).getTime() <= nowMs);
+    const dueReminders = reminders.filter(r => !r.notified && r.datetime && parseLocal(r.datetime, data.tz || TIMEZONE) <= nowMs);
 
     // ── 2) Bloques de horario que tocan hoy: inicio y fin ────────────────
     const dueRoutines = []; // {block, edge:'start'|'end'}

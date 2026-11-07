@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v23';
+const CACHE_NAME = 'nova-hub-v24';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -50,7 +50,8 @@ const ASSETS = [
   './maskable-neon-192.png',
   './maskable-neon-512.png',
   './manifest-neon.json',
-  './manifest-mono.json'
+  './manifest-mono.json',
+  './notif-badge-96.png'
 ];
 
 self.addEventListener('install', e => {
@@ -107,4 +108,27 @@ self.addEventListener('fetch', e => {
         .catch(() => cached);
     })
   );
+});
+
+// ── Avisos con la app cerrada ──────────────────────────────────────────
+// El Worker «nova-hub-push» (worker/reminders.mjs) manda por Firebase Cloud Messaging un mensaje de datos
+// {title, body, tag, url}. Aquí se muestra la notificación (antes este SW no tenía manejador y el aviso se perdía).
+// badge: el cerebro en blanco sobre transparente; Android solo usa la silueta en la barra de estado.
+self.addEventListener('push', e => {
+  let p = {}; try { p = e.data ? e.data.json() : {}; } catch (_) { p = {data: {body: e.data ? e.data.text() : ''}}; }
+  const d = p.data || {}, n = p.notification || {};
+  const title = d.title || n.title || 'NOVA HUB', body = d.body || n.body || '';
+  e.waitUntil(self.registration.showNotification(title, {
+    body, tag: d.tag || undefined, renotify: !!d.tag,
+    icon: './icon-192.png', badge: './notif-badge-96.png', vibrate: [200, 100, 200],
+    data: {url: d.url || './'}
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './';
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
+    for (const c of list) if ('focus' in c) return c.focus();
+    return self.clients.openWindow(url);
+  }));
 });
