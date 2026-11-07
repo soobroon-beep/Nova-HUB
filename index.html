@@ -3005,6 +3005,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 .nova-ui-icon[aria-hidden="true"]{user-select:none}
 
 </style>
+<link rel="stylesheet" href="pixel.css">
 </head>
 <body>
 
@@ -6558,6 +6559,15 @@ const renderAIView=()=>{
       <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1.1rem">✦</div><div><div style="font-size:.95rem;font-weight:700">IA Asistente</div><div style="font-size:.73rem;color:var(--green);display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>En línea · Claude Sonnet</div></div></div>
       <div style="display:flex;gap:8px"><button id="aiContextBtn" class="btn btn-ghost btn-sm" title="Enviar contexto de la app">📊 Contexto</button><button id="aiClearBtn" class="btn btn-ghost btn-sm">🗑 Limpiar chat</button></div>
     </div>
+    ${window.NovaPixel ? (() => { const c = state.settings.pixel || {}; const o = (v, l, cur) => `<option value="${v}"${cur===v?' selected':''}>${l}</option>`; return `<div class="pxc"><span aria-hidden="true">${window.NovaPixelHead('brain')}</span><div class="pxc-tx"><b>Nova Pixel · tu asistente</b><small>Vive en toda la app: anota ideas, crea proyectos y recordatorios, te dice qué tienes hoy y te enseña dónde está cada cosa. Funciona sin claves.</small></div><div class="pxc-bt"><button type="button" class="pxc-go" id="pxcGo">Hablar con Nova Pixel</button><button type="button" class="pxc-cfg" id="pxcCfg">Personalizar</button></div></div>
+    <form class="pxc-form" id="pxcForm" hidden>
+      <div class="row"><label>¿Cómo te llamo?<input name="nombre" maxlength="40" value="${_esc(c.nombre||'')}" placeholder="${_esc(state.settings.username||'Payi')}"></label>
+      <label>¿Cómo te contesta?<select name="tono">${o('normal','Claro y breve',c.tono||'normal')}${o('corto','Corto y directo',c.tono)}${o('detallado','Con detalle, paso a paso',c.tono)}</select></label>
+      <label>Color de su neón<select name="color">${o('auto','El de la app',c.color||'auto')}${o('#38d9ff','Cian',c.color)}${o('#9b7bff','Violeta',c.color)}${o('#ffc94a','Dorado',c.color)}${o('#ff4d6d','Carmesí',c.color)}${o('#2fe0a5','Jade',c.color)}</select></label></div>
+      <label>Cosas que siempre debe tener en cuenta<textarea name="notas" rows="3" maxlength="800" placeholder="Ej.: Mis citas de tatuaje son lo más importante. Los lunes no trabajo. Prioriza el proyecto del estudio.">${_esc(c.notas||'')}</textarea></label>
+      <label class="chk"><input type="checkbox" name="tips"${c.tips===false?'':' checked'}> Que se asome de vez en cuando con sugerencias</label>
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button type="submit" class="btn btn-primary btn-sm">Guardar</button></div>
+    </form>`; })() : ''}
     <div id="aiMessages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px"></div>
     <div class="ai-chips" id="aiChips">${AI_CHIPS.map(c=>`<button class="ai-chip">${c}</button>`).join('')}</div>
     <div id="aiInputBar" style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg2);display:flex;gap:10px;align-items:flex-end">
@@ -6570,6 +6580,10 @@ const renderAIView=()=>{
   else { msgs.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;opacity:.6"><div style="font-size:3rem">✦</div><div style="font-size:1rem;font-weight:700;color:var(--text)">Hola, ${state.settings.username||'Víctor'}</div><div style="font-size:.85rem;color:var(--text2);text-align:center;max-width:360px;line-height:1.6">Soy tu asistente personal de NOVA HUB. Puedo ayudarte con tus proyectos, notas, hábitos y más.</div></div>`; }
   document.getElementById('aiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAIMessage();} });
   document.getElementById('aiSendBtn').addEventListener('click',sendAIMessage);
+  document.getElementById('pxcGo')?.addEventListener('click',()=>window.NovaPixel && window.NovaPixel.show(true));
+  document.getElementById('pxcCfg')?.addEventListener('click',()=>{ const f=document.getElementById('pxcForm'); f.hidden=!f.hidden; });
+  document.getElementById('pxcForm')?.addEventListener('submit',e=>{ e.preventDefault(); const f=e.target, v=n=>f.elements[n].value.trim();
+    window.NovaHubBridge.setCfg({nombre:v('nombre'), tono:v('tono'), color:v('color'), notas:v('notas'), tips:f.elements.tips.checked}); f.hidden=true; toast('✅ Nova Pixel actualizado'); });
   document.getElementById('aiClearBtn').addEventListener('click',()=>{ if(!confirm('¿Borrar historial?')) return; state.aiHistory=[];save(); renderAIView(); toast('🗑 Historial borrado'); });
   document.getElementById('aiContextBtn').addEventListener('click',()=>{ document.getElementById('aiInput').value=`[Contexto de la app]\nProyectos: ${state.projects.length}, Notas: ${state.notes.length}, Hábitos: ${state.habits.length}\nAnaliza mi situación actual.`; document.getElementById('aiInput').focus(); });
   document.getElementById('aiChips').addEventListener('click',e=>{ const chip=e.target.closest('.ai-chip'); if(chip){ document.getElementById('aiInput').value=chip.textContent; sendAIMessage(); } });
@@ -9325,5 +9339,74 @@ if ('serviceWorker' in navigator) {
   }).observe(document.body,{subtree:true,childList:true});
 })();
 </script>
+<script>
+/* NOVA PIXEL · puente entre el asistente (pixel.js) y tus datos de NOVA HUB.
+   Todo lo que crea pasa por el mismo camino que la app (state + save → tu cuenta de Google en la nube);
+   Deshacer lo manda a la Papelera, igual que borrar a mano. */
+(function(){
+  'use strict';
+  const cur = () => document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
+  const refresh = () => { try { rerenderView(cur()); } catch (e) {} try { updateStats(); } catch (e) {} };
+  let lastId = 0; const nid = () => { let t = Date.now(); if (t <= lastId) t = lastId + 1; lastId = t; return t; }; // ids tipo fecha (como los de la app), únicos aunque cree varias cosas en el mismo milisegundo
+  const iso = () => new Date().toISOString(), isoDay = () => new Date().toISOString().split('T')[0];
+  const nrm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+  const list = v => (Array.isArray(v) ? v : v ? [v] : []).map(x => str(typeof x === 'object' && x ? x.title || x.name : x, 200)).filter(Boolean).slice(0, 25);
+  function best(arr, name, key) { // busca por nombre: exacto, contenido o por palabras
+    const q = nrm(name); if (!q) return null; const k = x => nrm(x[key]);
+    return arr.find(x => k(x) === q) || arr.find(x => k(x).includes(q) || (k(x) && q.includes(k(x)))) ||
+      arr.map(x => [x, q.split(/\s+/).filter(w => w.length > 2 && k(x).includes(w)).length]).filter(([, n]) => n).sort((a, b) => b[1] - a[1]).map(([x]) => x)[0] || null;
+  }
+  function generalProject() {
+    let p = state.projects.find(x => x.name === 'Tareas Generales');
+    if (!p) { p = {id: nid(), name: 'Tareas Generales', desc: 'Tareas rápidas sin proyecto asignado', status: 'active', color: '#7c6af7', icon: 'checklist', pinned: false, tasks: [], createdAt: iso()}; state.projects.unshift(p); }
+    return p;
+  }
+  const DT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, D = /^\d{4}-\d{2}-\d{2}$/, T = /^\d{2}:\d{2}$/;
+  function apply(a) {
+    let r = null;
+    switch (a.do) {
+      case 'note': { const title = str(a.title, 120) || str(a.body, 60); if (!title) return null; const n = {id: nid(), title, body: str(a.body, 4000), tags: list(a.tags).slice(0, 8), color: '#7c6af7', pinned: false, createdAt: iso()}; state.notes.unshift(n); r = {kind: 'note', id: n.id, label: `Anoté «${title}».`}; break; }
+      case 'project': { const name = str(a.name || a.title, 120); if (!name) return null; const p = {id: nid(), name, desc: str(a.desc, 600), status: 'active', color: '#7c6af7', icon: 'rocket_launch', pinned: false, tasks: list(a.tasks).map(t => ({title: t, done: false})), createdAt: iso()}; state.projects.unshift(p); r = {kind: 'project', id: p.id, label: `Creé el proyecto «${name}»${p.tasks.length ? ` con ${p.tasks.length} tareas` : ''}.`}; break; }
+      case 'task': { const ts = list(a.tasks && a.tasks.length ? a.tasks : a.title); if (!ts.length) return null; const p = (a.project && best(state.projects, a.project, 'name')) || generalProject(); p.tasks = p.tasks || []; const added = ts.map(t => ({title: t, done: false})); p.tasks.push(...added); p.updatedAt = iso(); r = {kind: 'task', id: p.id, pid: p.id, added, label: `Agregué ${added.length === 1 ? `«${added[0].title}»` : added.length + ' tareas'} a «${p.name}».`}; break; }
+      case 'reminder': { const title = str(a.title, 160), dt = str(a.datetime, 16).replace(' ', 'T'); if (!title || !DT.test(dt)) return null; const x = {id: nid(), title, desc: str(a.desc, 600), datetime: dt, color: '#7c6af7', tags: [], notified: false, createdAt: iso()}; state.reminders.push(x); r = {kind: 'reminder', id: x.id, label: `Te recordaré «${title}» el ${dt.replace('T', ' a las ')}.`}; break; }
+      case 'event': { const title = str(a.title, 160), date = str(a.date, 10); if (!title || !D.test(date)) return null; const e = {id: nid(), title, date, start: T.test(a.start || '') ? a.start : '', end: T.test(a.end || '') ? a.end : '', color: '#7c6af7'}; state.events.push(e); r = {kind: 'event', id: e.id, label: `Agendé «${title}» el ${date}${e.start ? ' a las ' + e.start : ''}.`}; break; }
+      case 'habit': { const name = str(a.name || a.title, 80); if (!name) return null; if (best(state.habits, name, 'name') && nrm(best(state.habits, name, 'name').name) === nrm(name)) return null; const h = {id: nid(), name, logs: [], createdAt: iso()}; state.habits.push(h); r = {kind: 'habit', id: h.id, label: `Creé el hábito «${name}».`}; break; }
+      case 'checkHabit': { const h = best(state.habits, a.name || a.title, 'name'); if (!h) return null; h.logs = h.logs || []; const d = isoDay(); if (h.logs.includes(d)) return {kind: 'checkHabit', id: h.id, noop: true, label: `«${h.name}» ya estaba marcado hoy.`}; h.logs.push(d); try { addXP(10); } catch (e) {} r = {kind: 'checkHabit', id: h.id, day: d, label: `Marqué «${h.name}» como hecho hoy.`}; break; }
+      case 'doneTask': { const p = a.project ? best(state.projects, a.project, 'name') : null, pool = p ? [p] : state.projects; let hit = null, hp = null; for (const pp of pool) { const t = best((pp.tasks || []).filter(x => !x.done), a.title, 'title'); if (t) { hit = t; hp = pp; break; } } if (!hit) return null; hit.done = true; hp.updatedAt = iso(); try { addXP(5); } catch (e) {} r = {kind: 'doneTask', id: hp.id, task: hit, label: `Taché «${hit.title}» en «${hp.name}».`}; break; }
+      case 'diary': { const content = str(a.content || a.text, 4000); if (!content) return null; const e = {id: nid(), mood: str(a.mood, 4) || '😊', content}; state.diary.push(e); r = {kind: 'diary', id: e.id, label: 'Lo escribí en tu diario.'}; break; }
+      default: return null;
+    }
+    save(); refresh(); return r;
+  }
+  function undo(batch) {
+    let n = 0;
+    for (const r of [...batch].reverse()) {
+      if (r.noop) continue;
+      const rm = (key, type) => { const x = state[key].find(i => i.id === r.id); if (x) { addToTrash(type, x); state[key] = state[key].filter(i => i.id !== r.id); n++; } };
+      if (r.kind === 'note') rm('notes', 'note'); else if (r.kind === 'project') rm('projects', 'project'); else if (r.kind === 'reminder') rm('reminders', 'reminder');
+      else if (r.kind === 'event') rm('events', 'event'); else if (r.kind === 'habit') rm('habits', 'habit'); else if (r.kind === 'diary') rm('diary', 'diary');
+      else if (r.kind === 'task') { const p = state.projects.find(x => x.id === r.pid); if (p) { p.tasks = (p.tasks || []).filter(t => !r.added.includes(t)); p.updatedAt = iso(); n++; } }
+      else if (r.kind === 'checkHabit') { const h = state.habits.find(x => x.id === r.id); if (h) { h.logs = (h.logs || []).filter(d => d !== r.day); n++; } }
+      else if (r.kind === 'doneTask') { r.task.done = false; n++; }
+    }
+    if (n) { save(); refresh(); } return n;
+  }
+  window.NovaHubBridge = {
+    view: cur,
+    go(v) { document.querySelector(`#sidebar .nav-item[data-view="${v}"]`)?.click(); },
+    user: () => state.settings.username || '',
+    accent: () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+    data: () => ({notes: state.notes || [], projects: state.projects || [], reminders: state.reminders || [], events: state.events || [], gcal: (typeof gcal !== 'undefined' && gcal.events) || [], habits: state.habits || [], routines: state.routines || [], diary: state.diary || []}),
+    isTattoo: e => { try { return gcal.isTattoo(e); } catch (x) { return false; } },
+    cfg: () => state.settings.pixel || {},
+    setCfg(o) { state.settings.pixel = {...(state.settings.pixel || {}), ...o}; save(); dispatchEvent(new Event('nh-pixel-cfg')); },
+    ai: () => ({key: state.settings.aiApiKey || '', provider: state.settings.aiProvider || 'claude'}),
+    toast: m => toast(m),
+    apply, undo
+  };
+})();
+</script>
+<script src="pixel.js"></script>
 </body>
 </html>
