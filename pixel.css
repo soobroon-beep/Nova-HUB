@@ -1,0 +1,92 @@
+/* NOVA PIXEL · el asistente flotante de NOVA HUB (pixel.js). El color de acento sigue al de la app (--px-acc). */
+.px-layer{position:fixed;inset:0;z-index:90;pointer-events:none;--px-acc:#38d9ff;--px-acc2:#9b7bff}
+.px-layer>*{pointer-events:auto}
+.px-layer.px-modal .px-peek,.px-layer.px-modal .px-tip{opacity:0;pointer-events:none}
+.px-ink{position:absolute;inset:0;width:100%;height:100%;pointer-events:none!important;transition:opacity .3s}.px-ink.fade{opacity:0}
+.px-av{position:absolute;left:0;top:0;z-index:2;will-change:transform;touch-action:none;filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
+.px-av[hidden]{display:none}
+.px-cv{width:100%;height:100%;display:block;cursor:grab}.px-cv:active{cursor:grabbing}
+.px-spin{display:none;position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid color-mix(in srgb,var(--px-acc) 25%,transparent);border-top-color:var(--px-acc);animation:pxSpin .8s linear infinite}
+.px-av.loading .px-spin{display:block}
+
+/* globo (liquid glass minimalista) */
+.px-bub{position:absolute;left:0;top:0;z-index:3;display:flex;flex-direction:column;gap:8px;padding:10px 10px 10px 12px;border-radius:18px;
+  border:1px solid color-mix(in srgb,var(--px-acc) 30%,rgba(255,255,255,.08));background:rgba(14,14,26,.62);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);box-shadow:0 14px 34px rgba(0,0,0,.45);
+  color:var(--text,#e2e2f0);font-family:inherit;animation:pxPop .32s cubic-bezier(.3,1.3,.5,1)}
+.px-bub[hidden]{display:none}
+.px-hd{display:flex;align-items:center;gap:7px;cursor:move;touch-action:none;user-select:none}
+.px-hd b{font-size:12.5px;letter-spacing:.3px}
+.px-st{font-size:10px;color:color-mix(in srgb,var(--px-acc) 70%,#fff);margin-right:auto}
+.px-dot{width:7px;height:7px;border-radius:50%;background:var(--px-acc);box-shadow:0 0 8px var(--px-acc)}
+.px-bub.working .px-dot{animation:pxBlink .7s ease-in-out infinite}
+.px-x{width:24px;height:24px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:var(--text2,#9d9dc4);font-size:16px;line-height:1;cursor:pointer;padding:0}
+.px-x:hover{background:rgba(248,113,113,.2);color:#f87171}
+.px-msg{font-size:13px;line-height:1.5;min-height:20px;max-height:150px;overflow:auto;white-space:pre-wrap;overscroll-behavior:contain}
+.px-bub.busy .px-msg::after{content:'';display:inline-block;width:14px;height:6px;margin-left:5px;background:radial-gradient(circle,var(--px-acc) 2px,transparent 2.5px) 0 0/7px 6px repeat-x;animation:pxDots 1s steps(3) infinite}
+.px-bub.long .px-msg{max-height:min(320px,45vh)}
+.px-chips{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.px-chips::-webkit-scrollbar{display:none}
+.px-chips:empty{display:none}
+.px-chips button{flex:0 0 auto;border:1px solid color-mix(in srgb,var(--px-acc) 35%,transparent);background:color-mix(in srgb,var(--px-acc) 10%,transparent);color:color-mix(in srgb,var(--px-acc) 35%,#fff);font:600 11px/1 inherit;padding:6px 10px;border-radius:14px;cursor:pointer;white-space:nowrap}
+.px-chips button:hover{background:color-mix(in srgb,var(--px-acc) 24%,transparent)}
+.px-in{display:flex;gap:6px}
+.px-in input{flex:1;min-width:0;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:inherit;padding:0 11px;font:16px/1 inherit;outline:0}
+@media(min-width:901px){.px-in input{font-size:13px}}
+.px-in input:focus{border-color:var(--px-acc)}
+.px-in button{width:36px;height:36px;flex:0 0 36px;border:0;border-radius:12px;display:grid;place-items:center;cursor:pointer}
+.px-in .px-send{background:var(--px-acc);color:#06121a}
+.px-in .px-mic{border:1px solid color-mix(in srgb,var(--px-acc) 40%,transparent);background:color-mix(in srgb,var(--px-acc) 12%,transparent);color:color-mix(in srgb,var(--px-acc) 35%,#fff)}
+.px-in .px-mic.on{background:#f06b79;border-color:#f06b79;color:#fff;animation:pxMicP 1.2s ease-out infinite}
+.px-bub.listening .px-dot{background:#f06b79;box-shadow:0 0 8px #f06b79;animation:pxBlink .7s ease-in-out infinite}
+[data-theme="light"] .px-bub{background:rgba(255,255,255,.8);border-color:rgba(0,0,0,.08);color:#1a1a35}
+[data-theme="light"] .px-chips button,[data-theme="light"] .px-in .px-mic{color:color-mix(in srgb,var(--px-acc) 70%,#000)}
+[data-theme="light"] .px-in input{background:#f4f4fb;border-color:rgba(0,0,0,.1)}
+
+/* escondido: media cabeza y el halo asomándose */
+.px-peek{position:absolute;z-index:1;width:60px;height:46px;padding:0;border:0;background:none;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:opacity .25s}
+.px-peek-in{position:absolute;left:0;right:0;top:2px;display:block;transform:translateY(0);transition:transform .45s cubic-bezier(.3,1.5,.5,1);animation:pkBob 3.4s ease-in-out infinite}
+.px-peek .nph{width:60px;height:55px;display:block;filter:drop-shadow(0 -2px 8px color-mix(in srgb,var(--px-acc) 55%,transparent))}
+.px-peek:hover .px-peek-in,.px-peek:focus-visible .px-peek-in,.px-peek.peek-up .px-peek-in{transform:translateY(-7px)}
+.px-peek:active .px-peek-in{transform:translateY(-10px) scale(1.05)}
+.px-peek.out .px-peek-in{transform:translateY(60px);animation:none}
+.px-peek.out{pointer-events:none}
+.nph-halo{transform-box:fill-box;transform-origin:center;animation:pkHalo 3s ease-in-out infinite}
+.nph-star{transform-box:fill-box;transform-origin:center;animation:pkStar 2.2s ease-in-out infinite}
+.nph-eyes{transform-box:fill-box;transform-origin:center;animation:pkBlink 4.2s infinite,pkLook 9s ease-in-out infinite}
+@media(max-width:900px){.px-peek{width:52px;height:40px}.px-peek .nph{width:52px;height:48px}.px-msg{font-size:12.5px;max-height:120px}}
+
+.px-tip{position:absolute;max-width:220px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--px-acc) 45%,transparent);border-radius:14px 14px 14px 4px;background:rgba(14,14,28,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#eef7ff;font:600 12.5px/1.35 inherit;text-align:left;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.4);animation:pxPop .35s cubic-bezier(.3,1.3,.5,1)}
+.px-tip[hidden]{display:none}
+
+/* lo que acaba de crear / lo que te señala */
+.px-spot{outline:3px solid var(--px-acc,#38d9ff)!important;outline-offset:3px;animation:pxSpot 1s ease-in-out infinite}
+
+/* tarjeta en IA Asistente */
+.pxc{display:flex;gap:14px;align-items:center;margin:14px 18px 0;padding:14px 16px;border-radius:18px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,transparent),rgba(255,255,255,.02))}
+.pxc .nph{width:64px;height:59px;flex:0 0 64px;animation:pxHop 2.8s ease-in-out infinite}
+.pxc-tx{flex:1;min-width:0}.pxc-tx b{display:block;font-size:.95rem}.pxc-tx small{display:block;color:var(--text2);font-size:.76rem;line-height:1.45;margin-top:2px}
+.pxc-bt{display:flex;flex-direction:column;gap:6px}
+.pxc-bt button{border:0;border-radius:12px;padding:9px 14px;font:700 .8rem/1 inherit;cursor:pointer;white-space:nowrap}
+.pxc-go{background:var(--accent);color:#fff}.pxc-cfg{background:rgba(255,255,255,.07);color:var(--text)}
+.pxc-form{margin:10px 18px 0;padding:14px 16px;border-radius:16px;background:var(--bg2);border:1px solid var(--border);display:grid;gap:10px}
+.pxc-form[hidden]{display:none}
+.pxc-form label{display:grid;gap:5px;font-size:.75rem;color:var(--text2);font-weight:600}
+.pxc-form input,.pxc-form select,.pxc-form textarea{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 11px;color:var(--text);font:inherit;font-size:.85rem}
+.pxc-form .row{display:flex;gap:10px;flex-wrap:wrap}.pxc-form .row>label{flex:1 1 140px}
+.pxc-form .chk{display:flex;align-items:center;gap:8px;font-size:.8rem}
+@media(max-width:600px){.pxc{flex-wrap:wrap}.pxc-bt{flex-direction:row;width:100%}.pxc-bt button{flex:1}}
+
+@keyframes pxSpin{to{transform:rotate(360deg)}}
+@keyframes pxPop{from{opacity:0;scale:.85}to{opacity:1;scale:1}}
+@keyframes pxBlink{50%{opacity:.25}}
+@keyframes pxDots{to{background-position:21px 0}}
+@keyframes pxMicP{0%{box-shadow:0 0 0 0 rgba(240,107,121,.6)}100%{box-shadow:0 0 0 12px rgba(240,107,121,0)}}
+@keyframes pxSpot{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--px-acc,#38d9ff) 70%,transparent)}50%{box-shadow:0 0 0 10px transparent}}
+@keyframes pxHop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+@keyframes pkBob{0%,100%{translate:0 3px}50%{translate:0 0}}
+@keyframes pkHalo{0%,100%{translate:0 0}50%{translate:0 -2px}}
+@keyframes pkStar{0%,100%{opacity:.6;scale:.8}50%{opacity:1;scale:1.15}}
+@keyframes pkBlink{0%,92%,100%{scale:1 1}95%{scale:1 .1}}
+@keyframes pkLook{0%,30%,100%{translate:0 0}38%,52%{translate:-7px 0}60%,75%{translate:7px 0}}
+@media(prefers-reduced-motion:reduce){.px-peek-in,.nph-halo,.nph-star,.nph-eyes,.pxc .nph{animation:none!important}}

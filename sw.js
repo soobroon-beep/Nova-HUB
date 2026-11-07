@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v25';
+const CACHE_NAME = 'nova-hub-v26';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -51,7 +51,10 @@ const ASSETS = [
   './maskable-neon-512.png',
   './manifest-neon.json',
   './manifest-mono.json',
-  './notif-badge-96.png'
+  './notif-badge-96.png',
+  './pixel.js',
+  './pixel.css'
+  // pixel-model.js y vendor/three.module.min.js (Nova Pixel 3D) se guardan solos la primera vez que lo abres
 ];
 
 self.addEventListener('install', e => {
