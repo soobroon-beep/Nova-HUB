@@ -32,7 +32,7 @@ test('qué toca avisar: recordatorios vencidos y bloques de horario de hoy', asy
   assert.strictEqual(dateStr, '2026-11-07');
   assert.deepStrictEqual(items.map(i => i.key), ['id:1', 'b1-start', 'b3-end']);
   assert.strictEqual(items[0].title, '⏰ NOVA HUB: Cita'); assert.strictEqual(items[0].tag, 'rem-1');
-  assert.strictEqual(items[1].tag, 'rt-b1-start'); assert.match(items[1].body, /Comienza tu bloque "Gym" \(10:00 – 11:00\)/);
+  assert.strictEqual(items[1].tag, 'rt-b1-start-2026-11-07'); assert.match(items[1].body, /Comienza tu bloque "Gym" \(10:00 – 11:00\)/);
   // con el error de antes (leer en UTC) el de las 10:30 ya habría salido a las 04:30
   assert.strictEqual(w.dueFor(user, Date.parse('2026-11-07T10:31:00Z')).items.filter(i => i.kind === 'rem').length, 0);
   // zona inválida → CDMX
