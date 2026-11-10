@@ -562,10 +562,27 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .ne-pane .nova-motion-option span{font-size:.95rem}
 [data-theme="light"] .modal.note-editor-modal{background:rgba(255,255,255,.98)}
 @media (max-width:640px){
-  #noteModal.modal-overlay{align-items:stretch}
-  .modal.note-editor-modal{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:none}
+  /* Celular: ventana flotante que ocupa casi toda la pantalla (no pantalla completa) */
+  .modal.note-editor-modal{width:calc(100vw - 20px);max-width:calc(100vw - 20px);height:calc(100dvh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none;border-radius:26px}
   .ne-body{font-size:1.02rem}
+  .ne-foot{padding-bottom:10px}
 }
+/* Ventana emergente con cristal y animación de entrada/salida */
+#noteModal.modal-overlay{background:rgba(4,4,12,.55);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%)}
+#noteModal .modal.note-editor-modal{background:linear-gradient(160deg,rgba(30,30,52,.86),rgba(14,14,26,.9));-webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);border:1px solid rgba(255,255,255,.11);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(124,106,247,.08),inset 0 1px 0 rgba(255,255,255,.06);position:relative}
+#noteModal .modal.note-editor-modal::before{content:'';position:absolute;top:0;left:18%;right:18%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7;pointer-events:none}
+[data-theme="light"] #noteModal .modal.note-editor-modal{background:linear-gradient(160deg,rgba(255,255,255,.94),rgba(246,244,255,.92));border-color:rgba(0,0,0,.08)}
+@keyframes neIn{0%{opacity:0;transform:translateY(48px) scale(.9);filter:blur(10px)}55%{opacity:1;filter:blur(0)}75%{transform:translateY(-4px) scale(1.008)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes neItem{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+#noteModal.modal-overlay.open .modal.note-editor-modal{animation:neIn .55s cubic-bezier(.22,1,.36,1) both}
+#noteModal.open .ne-head,#noteModal.open .ne-title,#noteModal.open .ne-tools,#noteModal.open .ne-body,#noteModal.open .ne-foot{animation:neItem .45s cubic-bezier(.22,1,.36,1) both}
+#noteModal.open .ne-head{animation-delay:.08s}
+#noteModal.open .ne-title{animation-delay:.13s}
+#noteModal.open .ne-tools{animation-delay:.18s}
+#noteModal.open .ne-body{animation-delay:.23s}
+#noteModal.open .ne-foot{animation-delay:.28s}
+#noteModal .modal.note-editor-modal.ne-closing{animation:none!important}
+@media (prefers-reduced-motion:reduce){#noteModal.modal-overlay.open .modal.note-editor-modal,#noteModal.open .ne-head,#noteModal.open .ne-title,#noteModal.open .ne-tools,#noteModal.open .ne-body,#noteModal.open .ne-foot{animation:none}}
 /* Formato de notas (editor, tarjetas y vista de detalle) */
 .nmd ul,.nmd ol{margin:4px 0;padding-left:1.4em}
 .nmd li{margin:2px 0}
@@ -5689,6 +5706,12 @@ document.getElementById('blockDelete')?.addEventListener('click',()=>{
 const closeModal=id=>{
   const m=document.getElementById(id); if(!m) return;
   const modal=m.querySelector('.modal');
+  // Editor de notas: se encoge y se desvanece con suavidad
+  if(id==='noteModal' && modal && m.classList.contains('open') && modal.animate && !_reduceMotion()){
+    modal.classList.add('ne-closing');
+    modal.animate([{opacity:1,transform:'translateY(0) scale(1)',filter:'blur(0)'},{opacity:0,transform:'translateY(36px) scale(.92)',filter:'blur(6px)'}],{duration:260,easing:'cubic-bezier(.4,0,.7,.2)'}).onfinish=()=>modal.classList.remove('ne-closing');
+    m.style.transition='opacity .26s ease'; m.classList.remove('open'); return;
+  }
   // Si se abrió desde una tarjeta, se encoge de vuelta hacia ella
   if(modal && m.classList.contains('open') && modal.classList.contains('expand-from-card') && modal.animate && !_reduceMotion()){
     const cs=modal.style, g=k=>cs.getPropertyValue(k)||'0';
