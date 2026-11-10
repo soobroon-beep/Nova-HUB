@@ -7,10 +7,14 @@
 //   4) En una transacción marca lo avisado SIN reescribir tus datos: solo agrega notified:true a esos recordatorios
 //      (conservando el valor exacto de todo lo demás), actualiza routineNotified y quita tokens vencidos.
 // Las fechas «YYYY-MM-DDTHH:MM» (sin zona) se leen en TU zona horaria (campo tz, por defecto America/Mexico_City).
+//   5) A las 8:30 (zona del usuario) genera el briefing del día con su API key de Claude (worker/briefing.mjs),
+//      lo guarda en users/{uid}.briefings y avisa «Tu briefing de hoy está listo».
 // Secreto del Worker: FIREBASE_SERVICE_ACCOUNT (lo sube solo .github/workflows/deploy-push-worker.yml).
 
+import * as B from './briefing.mjs';
+
 const TZ_DEFAULT = 'America/Mexico_City', WINDOW_MIN = 3, APP_URL = 'https://soobroon-beep.github.io/Nova-HUB/';
-const FIELDS = ['reminders', 'routines', 'fcmTokens', 'routineNotified', 'tz'];
+const FIELDS = ['reminders', 'routines', 'fcmTokens', 'routineNotified', 'tz', 'settings', 'briefings', 'briefingLock'];
 
 /* ───────── Firestore: valores tipados ───────── */
 export function decode(v) {
@@ -71,6 +75,34 @@ export function dueFor(user, nowMs) {
   return {items: out, dateStr: t.dateStr};
 }
 
+// ¿Toca generar el briefing de hoy? (8:30 en la zona del usuario; reintenta hasta 3 veces dentro de la ventana)
+export function briefingDue(user, nowMs) {
+  let zone = typeof user.tz === 'string' && user.tz ? user.tz : TZ_DEFAULT, t;
+  try { t = nowInTZ(nowMs, zone); } catch { zone = TZ_DEFAULT; t = nowInTZ(nowMs, zone); }
+  const s = user.settings && typeof user.settings === 'object' ? user.settings : {};
+  if (s.briefingAuto === false) return null;
+  const start = timeToMin(s.briefingTime || B.BRIEFING_TIME);
+  if (start === null || t.minutes < start || t.minutes >= start + B.BRIEFING_WINDOW_MIN) return null;
+  if ((Array.isArray(user.briefings) ? user.briefings : []).some(e => e && e.v === B.BRIEFING_VERSION && e.date === t.dateStr)) return null;
+  const apiKey = (s.aiProvider || 'claude') === 'claude' && typeof s.aiApiKey === 'string' ? s.aiApiKey.trim() : '';
+  if (!apiKey) return null;
+  const lock = user.briefingLock && user.briefingLock.date === t.dateStr ? user.briefingLock : null;
+  if (lock && ((nowMs - Number(lock.at || 0)) < 15 * 60000 || Number(lock.tries || 0) >= 3)) return null;
+  const name = (s.pixel && s.pixel.nombre) || s.username || 'Payi';
+  return {zone, dateStr: t.dateStr, apiKey, name, tries: (lock ? Number(lock.tries || 0) : 0) + 1};
+}
+
+// JS → valores tipados de Firestore
+export function encode(v) {
+  if (v === null || v === undefined) return {nullValue: null};
+  if (typeof v === 'boolean') return {booleanValue: v};
+  if (typeof v === 'number') return Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
+  if (typeof v === 'string') return {stringValue: v};
+  if (Array.isArray(v)) return {arrayValue: {values: v.map(encode)}};
+  if (typeof v === 'object') { const fields = {}; for (const [k, x] of Object.entries(v)) if (x !== undefined) fields[k] = encode(x); return {mapValue: {fields}}; }
+  return {stringValue: String(v)};
+}
+
 // Cambia SOLO notified:true en los recordatorios avisados, sobre los valores tipados tal como vienen de Firestore
 export function markRaw(rawReminders, keys) {
   if (!rawReminders || !rawReminders.arrayValue) return null; let changed = false;
@@ -112,8 +144,10 @@ export async function tick(env, nowMs = Date.now(), fetchFn = fetch) {
     docs.push(...(j.documents || [])); page = j.nextPageToken || '';
   } while (page);
   const stats = {users: docs.length, sent: 0, failed: 0, cleaned: 0};
+  const briefJobs = [];
   for (const d of docs) {
     const user = decodeFields(d.fields), {items, dateStr} = dueFor(user, nowMs);
+    const bj = briefingDue(user, nowMs); if (bj) briefJobs.push({d, user, bj});
     if (!items.length) continue;
     const tokens = (Array.isArray(user.fcmTokens) ? user.fcmTokens : []).filter(t => typeof t === 'string' && t);
     const bad = new Set();
@@ -127,7 +161,37 @@ export async function tick(env, nowMs = Date.now(), fetchFn = fetch) {
     await commit(base, d.name, H, fetchFn, {remKeys: new Set(items.filter(i => i.kind === 'rem').map(i => i.key)), rtKeys: items.filter(i => i.kind === 'rt').map(i => i.key), dateStr, bad});
     stats.cleaned += bad.size;
   }
+  // Briefings al final: tardan ~1 min (búsquedas en la web) y no deben retrasar los avisos
+  for (const {d, user, bj} of briefJobs) {
+    try { if (await runBriefing(base, d.name, H, fetchFn, pid, user, bj, nowMs)) stats.briefings = (stats.briefings || 0) + 1; }
+    catch (e) { console.error('briefing', e.message); stats.briefingErrors = (stats.briefingErrors || 0) + 1; }
+  }
   return stats;
+}
+
+// Genera el briefing, lo guarda en users/{uid}.briefings (solo ese campo) y avisa por push
+async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs) {
+  const patch = (fields) => fetchFn(`https://firestore.googleapis.com/v1/${name}?${Object.keys(fields).map(f => 'updateMask.fieldPaths=' + f).join('&')}&currentDocument.exists=true`, {method: 'PATCH', headers: H, body: JSON.stringify({fields})});
+  // Candado: evita que la ronda del minuto siguiente lo genere otra vez mientras este sigue en curso
+  await patch({briefingLock: encode({date: bj.dateStr, at: nowMs, tries: bj.tries})});
+  const entry = await B.generateBriefing({apiKey: bj.apiKey, name: bj.name, nowMs, tz: bj.zone, fetchFn, source: 'auto'});
+  const root = base.replace(/\/documents$/, '');
+  let saved = false;
+  for (let attempt = 0; attempt < 3 && !saved; attempt++) {
+    const tr = await (await fetchFn(`${root}/documents:beginTransaction`, {method: 'POST', headers: H, body: '{}'})).json();
+    const g = await fetchFn(`https://firestore.googleapis.com/v1/${name}?transaction=${encodeURIComponent(tr.transaction)}&mask.fieldPaths=briefings`, {headers: H});
+    const doc = await g.json(); if (!g.ok) throw new Error('Firestore get: ' + JSON.stringify(doc.error || doc).slice(0, 200));
+    const list = B.addToList(decode((doc.fields || {}).briefings) || [], entry);
+    const c = await fetchFn(`${root}/documents:commit`, {method: 'POST', headers: H, body: JSON.stringify({transaction: tr.transaction, writes: [{update: {name, fields: {briefings: encode(list)}}, updateMask: {fieldPaths: ['briefings']}, currentDocument: {exists: true}}]})});
+    if (c.ok) { saved = true; break; }
+    const e = await c.json().catch(() => ({})); if (!/ABORTED|contention/i.test(JSON.stringify(e))) throw new Error('Firestore commit: ' + JSON.stringify(e.error || e).slice(0, 200));
+  }
+  if (!saved) throw new Error('No se pudo guardar el briefing');
+  const {title, body} = B.pushText(entry);
+  for (const t of (Array.isArray(user.fcmTokens) ? user.fcmTokens : []).filter(t => typeof t === 'string' && t)) {
+    await fetchFn(`https://fcm.googleapis.com/v1/projects/${pid}/messages:send`, {method: 'POST', headers: H, body: JSON.stringify({message: {token: t, data: {title, body, tag: 'briefing-' + entry.date, url: APP_URL + '?view=dashboard'}, webpush: {headers: {Urgency: 'high', TTL: '7200'}}}})}).catch(() => null);
+  }
+  return true;
 }
 // Transacción: vuelve a leer el documento y solo toca reminders[*].notified, routineNotified y fcmTokens
 async function commit(base, name, H, fetchFn, {remKeys, rtKeys, dateStr, bad}) {
@@ -151,6 +215,6 @@ async function commit(base, name, H, fetchFn, {remKeys, rtKeys, dateStr, bad}) {
 }
 
 export default {
-  async fetch() { return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios y horario con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },
+  async fetch() { return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios, horario y briefing de las 8:30 con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },
   async scheduled(event, env, ctx) { ctx.waitUntil(tick(env, event.scheduledTime || Date.now()).then(r => console.log('ronda', JSON.stringify(r))).catch(e => console.error('ronda', e.message))); }
 };

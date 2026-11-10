@@ -1,5 +1,5 @@
 name: Publicar servidor de avisos (nova-hub-push)
-# Publica worker/reminders.mjs en tu Cloudflare como el Worker «nova-hub-push» (cron cada minuto) y le pasa
+# Publica worker/reminders.mjs (+ worker/briefing.mjs, el briefing de las 8:30) en tu Cloudflare como el Worker «nova-hub-push» (cron cada minuto) y le pasa
 # la cuenta de servicio de Firebase (el mismo secreto FIREBASE_SERVICE_ACCOUNT que ya usan los demás flujos).
 # Requiere el secreto CLOUDFLARE_API_TOKEN (plantilla «Edit Cloudflare Workers»). Sin él no hace nada.
 on:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22}
       - name: Pruebas del Worker
-        run: node --test tests/push-worker.test.js
+        run: node --test tests/push-worker.test.js tests/briefing.test.js
       - name: Publicar en Cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

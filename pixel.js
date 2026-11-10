@@ -156,7 +156,7 @@
     [/nube|sincroniz|iniciar sesion|cerrar sesion|cuenta de google|firebase/, 'Nube y cuenta', 'settings', SET('nube'), 'Tu sesión de Google: todo se guarda en tu cuenta.'],
     [/clave|api key|proveedor de ia/, 'IA Asistente (clave)', 'settings', SET('ia asistente'), 'Opcional: tu propia clave. Sin clave también funciono.'],
     [/nombre|perfil|username/, 'Perfil', 'settings', SET('perfil'), 'Cómo te llamo.'],
-    [/briefing/, 'Daily Briefing', 'briefing', null, 'Tu resumen del día.'],
+    [/briefing/, 'Briefing diario', 'briefing', null, 'Tu briefing de la mañana: clima de Orizaba, noticias, IA y una idea de tatuaje.'],
     [/diario/, 'Diario', 'diary', null, 'Tus entradas del día con tu estado de ánimo.'],
     [/habito/, 'Hábitos', 'habits', null, 'Tus hábitos y rachas.'],
     [/recordatorio/, 'Recordatorios', 'reminders', null, 'Tus avisos con fecha y hora.'],

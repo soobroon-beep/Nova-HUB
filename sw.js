@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-hub-v26';
+const CACHE_NAME = 'nova-hub-v27';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
@@ -53,7 +53,8 @@ const ASSETS = [
   './manifest-mono.json',
   './notif-badge-96.png',
   './pixel.js',
-  './pixel.css'
+  './pixel.css',
+  './worker/briefing.mjs'
   // pixel-model.js y vendor/three.module.min.js (Nova Pixel 3D) se guardan solos la primera vez que lo abres
 ];
 
@@ -131,7 +132,7 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || './';
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
-    for (const c of list) if ('focus' in c) return c.focus();
+    for (const c of list) if ('focus' in c) { c.postMessage({type: 'nova-open', url}); return c.focus(); }
     return self.clients.openWindow(url);
   }));
 });
