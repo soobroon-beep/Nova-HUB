@@ -646,6 +646,26 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .rx-loading{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--text2);padding:12px 2px}
 .rx-dots{display:inline-flex;gap:4px}.rx-dots i{width:6px;height:6px;border-radius:50%;background:var(--rx-c);animation:rxDot 1s ease-in-out infinite}.rx-dots i:nth-child(2){animation-delay:.15s}.rx-dots i:nth-child(3){animation-delay:.3s}
 @keyframes rxDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.rx-links{display:flex;gap:8px;margin-top:6px}.rx-links a{font-size:.72rem;color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.rx-trivia-box{position:relative;margin-bottom:12px}
+.rx-tr-q{font-size:.95rem;font-weight:600;line-height:1.5;margin-bottom:10px}
+.rx-tr-opts{display:grid;gap:7px}
+.rx-tr-o{text-align:left;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);border-radius:12px;padding:10px 12px;font-size:.84rem;font-family:inherit;cursor:pointer;transition:all .2s}
+.rx-tr-o.ok{border-color:#2fe0a5;background:rgba(47,224,165,.16)}.rx-tr-o.bad{border-color:#ff4d6d;background:rgba(255,77,109,.14)}.rx-tr-o.off{opacity:.5}
+.rx-tr-d{font-size:.8rem;color:var(--text2);margin-top:10px;line-height:1.5;animation:fadeSlideIn .3s ease}
+.rx-joke{font-size:.98rem;font-weight:500}.rx-joke::before{content:''}
+.rx-grat-in{display:grid;gap:8px;margin-bottom:12px;position:relative}
+.rx-in{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:10px 12px;color:var(--text);font-size:.85rem;font-family:inherit;outline:none}
+.rx-in:focus{border-color:var(--rx-c)}
+.rx-pal{display:flex;gap:6px;height:96px;position:relative}
+.rx-sw{flex:1;border:none;border-radius:14px;background:var(--c);cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;animation:rxSw .45s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*.06s);transition:flex .25s}
+.rx-sw:hover{flex:1.4}
+.rx-sw span{font-size:.62rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);letter-spacing:.3px}
+@keyframes rxSw{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+.rx-pause-t{text-align:center;font-size:2.6rem;font-weight:800;letter-spacing:2px;font-variant-numeric:tabular-nums;margin:6px 0 10px;position:relative}
+.rx-pause.on .rx-pause-t{color:var(--rx-c);text-shadow:0 0 22px color-mix(in srgb,var(--rx-c) 60%,transparent);animation:pulse 2s infinite}
+.rx-pause-idea{text-align:center;font-size:.8rem;color:var(--text2);margin-bottom:12px;position:relative}
+.rx-music,.rx-watch,.rx-trivia,.rx-laugh,.rx-grat,.rx-palette,.rx-pause{animation-delay:.22s}
 [data-theme="light"] .rx-card{background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(246,244,255,.85));border-color:rgba(0,0,0,.07)}
 @media(max-width:700px){.rx-wrap{grid-template-columns:1fr}.rx-top{flex-wrap:wrap}}
 
@@ -6046,7 +6066,7 @@ const DOCK_META = {
   dashboard: { s:'Dashboard', f:'Dashboard', i:'⊞', p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','relax','settings'];
+const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','settings'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -7035,6 +7055,168 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
 // ══════════════════════════════════════════════
 const RELAX_PLACES = ['Cerro del Borrego (subir a pie o en teleférico)', 'Teleférico de Orizaba', 'Paseo del Río Orizaba y su reserva animal', 'Palacio de Hierro (museos)', 'Museo de Arte del Estado de Veracruz', 'Parque Alameda Francisco Gabilondo Soler', 'Poliforum Mier y Pesado', 'Catedral de San Miguel Arcángel', 'Centro histórico y Parque Castillo', 'Cascada de Rincón Grande', 'Ojo de Agua', 'Cafés del centro', 'Mercado Cerritos (antojitos)', 'Pico de Orizaba (vista desde el mirador)'];
 const RELAX_QUOTES = ['Un trazo a la vez: así se hacen las obras grandes.', 'Hoy no tienes que ganarle a nadie, solo a tu yo de ayer.', 'La disciplina es elegir lo que quieres más sobre lo que quieres ahora.', 'Descansar también es avanzar.', 'Lo que hoy practicas en silencio, mañana se nota en tu trabajo.', 'No esperes la inspiración: ponte a trabajar y ella te alcanza.', 'Respira. Lo urgente casi nunca es tan importante.', 'Tu estilo es la suma de todas las veces que no te rendiste.', 'Haz algo hoy que tu yo del futuro te agradezca.', 'Las ideas llegan cuando las manos están ocupadas.'];
+// ── Tarjetas extra de la Zona Relax ──
+const RELAX_JOKES = ['¿Qué le dijo un tatuaje a otro? «Nos vemos en la piel».', '—Doctor, veo bichos por todos lados. —¿Y los ha tratado? —No, ellos me encuentran solos.', '¿Por qué el libro de matemáticas estaba triste? Porque tenía demasiados problemas.', 'Mi celular y yo tenemos algo en común: los dos necesitamos cargarnos a las 3 de la tarde.', '¿Cómo se despiden los químicos? Ácido un placer.'];
+const RELAX_TRIVIA = [{p: '¿Cuál es la montaña más alta de México?', o: ['Popocatépetl', 'Pico de Orizaba', 'Iztaccíhuatl'], r: 1, d: 'El Citlaltépetl o Pico de Orizaba mide unos 5,600 m: es la más alta del país.'}, {p: '¿Qué animal tiene tres corazones?', o: ['El pulpo', 'La ballena', 'El camaleón'], r: 0, d: 'El pulpo tiene un corazón principal y dos que bombean sangre a las branquias.'}, {p: '¿En qué país nació el irezumi, el tatuaje tradicional?', o: ['China', 'Corea', 'Japón'], r: 2, d: 'El irezumi es el tatuaje tradicional japonés, raíz del estilo neo-japonés.'}];
+const relaxPalette = () => { // paleta armónica al azar (análoga, complementaria o triada)
+  const h = Math.random() * 360, mode = ['análoga', 'complementaria', 'triada'][Math.floor(Math.random() * 3)];
+  const hs = mode === 'análoga' ? [h, h + 25, h + 50, h - 25, h] : mode === 'complementaria' ? [h, h + 12, h + 180, h + 192, h] : [h, h + 120, h + 240, h + 120, h];
+  const ls = [52, 62, 48, 70, 14], ss = [78, 70, 82, 55, 30];
+  const hex = (H, S, L) => { S /= 100; L /= 100; const k = n => (n + H / 30) % 12, a = S * Math.min(L, 1 - L), f = n => L - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+  return {mode, colors: hs.map((x, i) => hex(((x % 360) + 360) % 360, ss[i], ls[i]))};
+};
+
+const relaxExtraHTML = () => `
+    <section class="rx-card rx-music" id="rxMusic" style="--rx-c:#9b7bff">
+      <div class="rx-h"><span class="rx-ico">🎧</span><div><b>Música para el momento</b><small>Una mini playlist según cómo te sientes</small></div></div>
+      <div class="rx-chips" id="rxMuMood">${[['relajar', '😌 Relajarme'], ['tatuar', '🖋️ Tatuar'], ['energia', '⚡ Energía'], ['nostalgia', '🌅 Nostalgia'], ['descubrir', '🧭 Descubrir']].map(([k, l], i) => `<button type="button" class="rx-chip${i ? '' : ' on'}" data-k="${k}">${l}</button>`).join('')}</div>
+      <div class="rx-list" id="rxMuOut"><div class="rx-empty">Elige un ánimo y toca «Recomiéndame».</div></div>
+      <button type="button" class="rx-go" id="rxMuGo">✦ Recomiéndame</button>
+    </section>
+
+    <section class="rx-card rx-watch" id="rxWatch" style="--rx-c:#ff8a3d">
+      <div class="rx-h"><span class="rx-ico">🎬</span><div><b>¿Qué veo?</b><small>Película, serie o anime para hoy</small></div></div>
+      <div class="rx-chips" id="rxWaMood">${[['pelicula', '🎞️ Película'], ['serie', '📺 Serie'], ['anime', '🐉 Anime'], ['documental', '🌍 Documental'], ['corto', '⏱️ Algo corto']].map(([k, l], i) => `<button type="button" class="rx-chip${i ? '' : ' on'}" data-k="${k}">${l}</button>`).join('')}</div>
+      <div class="rx-list" id="rxWaOut"><div class="rx-empty">Elige qué quieres ver.</div></div>
+      <button type="button" class="rx-go" id="rxWaGo">✦ Sugiéreme algo</button>
+    </section>
+
+    <section class="rx-card rx-trivia" id="rxTrivia" style="--rx-c:#2fe0a5">
+      <div class="rx-h"><span class="rx-ico">🧩</span><div><b>Trivia rápida</b><small>Pon a prueba tu cerebro <span id="rxTrScore"></span></small></div></div>
+      <div id="rxTrOut" class="rx-trivia-box"></div>
+      <button type="button" class="rx-go" id="rxTrGo">✦ Otra pregunta</button>
+    </section>
+
+    <section class="rx-card rx-laugh" id="rxLaugh" style="--rx-c:#ffc94a">
+      <div class="rx-h"><span class="rx-ico">😂</span><div><b>Algo para reír</b><small>Un chiste o una ocurrencia</small></div></div>
+      <div class="rx-q rx-joke" id="rxJoke">${_esc(RELAX_JOKES[Math.floor(Math.random() * RELAX_JOKES.length)])}</div>
+      <div class="rx-row"><button type="button" class="rx-btn" id="rxJokeGo">↻ Otro</button><button type="button" class="rx-btn" id="rxJokeCopy">⧉ Compartir</button></div>
+    </section>
+
+    <section class="rx-card rx-grat" id="rxGrat" style="--rx-c:#ff7ad9">
+      <div class="rx-h"><span class="rx-ico">🙏</span><div><b>Tres cosas buenas</b><small>Agradece algo de hoy (se guarda en tu Diario)</small></div></div>
+      <div class="rx-grat-in">${[1, 2, 3].map(i => `<input class="rx-in" data-g="${i}" placeholder="${['Algo que salió bien…', 'Alguien que te ayudó…', 'Algo pequeño que disfrutaste…'][i - 1]}" maxlength="140">`).join('')}</div>
+      <button type="button" class="rx-go" id="rxGratGo">💗 Guardar en mi Diario</button>
+    </section>
+
+    <section class="rx-card rx-palette" id="rxPal" style="--rx-c:#dc143c">
+      <div class="rx-h"><span class="rx-ico">🎨</span><div><b>Paleta del día</b><small id="rxPalMode">Inspiración de color para tu próximo diseño</small></div></div>
+      <div class="rx-pal" id="rxPalOut"></div>
+      <div class="rx-row"><button type="button" class="rx-go" id="rxPalGo">🎲 Nueva paleta</button><button type="button" class="rx-btn" id="rxPalMine">Mi paleta</button></div>
+    </section>
+
+    <section class="rx-card rx-pause" id="rxPause" style="--rx-c:#38d9ff">
+      <div class="rx-h"><span class="rx-ico">📵</span><div><b>Pausa sin pantalla</b><small>Suelta el celular un rato; te aviso al terminar</small></div></div>
+      <div class="rx-pause-t" id="rxPauseT">05:00</div>
+      <div class="rx-chips" id="rxPauseMin" style="justify-content:center">${[3, 5, 10, 15].map((m, i) => `<button type="button" class="rx-chip${m === 5 ? ' on' : ''}" data-m="${m}">${m} min</button>`).join('')}</div>
+      <div class="rx-pause-idea" id="rxPauseIdea">Estírate, mira por la ventana o tómate un vaso de agua.</div>
+      <button type="button" class="rx-go" id="rxPauseGo">▶ Empezar pausa</button>
+    </section>`;
+
+let _relaxPauseT = 0;
+const bindRelaxExtra = ($, pick, loading) => {
+  // Música
+  const muMood = pick($('rxMuMood'), 'k');
+  const doMusic = async () => {
+    const b = $('rxMuGo'), out = $('rxMuOut'); b.disabled = true; loading(out, 'Armando tu playlist…');
+    const tx = {relajar: 'relajarme y bajar el estrés', tatuar: 'concentrarme mientras tatúo (ritmo constante, sin distraer)', energia: 'tener energía y motivación', nostalgia: 'algo nostálgico y bonito', descubrir: 'descubrir artistas nuevos'}[muMood()];
+    try {
+      const arr = relaxJSON(await callAI(`Recomiéndame 4 canciones reales y conocidas (variadas en género, incluye algo en español) para ${tx}. Responde SOLO JSON: [{"cancion":"","artista":"","por":"por qué, máx 10 palabras"}]`, 'Eres un curador musical. Solo recomiendas canciones que existen. Español de México. Solo JSON.', {maxTokens: 450, temperature: .9}));
+      const it = (Array.isArray(arr) ? arr : []).filter(x => x && x.cancion).slice(0, 4); if (!it.length) throw new Error('vacío');
+      out.innerHTML = it.map((x, i) => { const q = encodeURIComponent(`${x.cancion} ${x.artista || ''}`); return `<div class="rx-plan" style="--i:${i}"><span class="rx-plan-e">🎵</span><div style="flex:1;min-width:0"><b>${_esc(x.cancion)}</b> <small>· ${_esc(x.artista || '')}</small><p>${_esc(x.por || '')}</p><div class="rx-links"><a href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">Spotify</a><a href="https://music.youtube.com/search?q=${q}" target="_blank" rel="noopener">YouTube Music</a></div></div></div>`; }).join('');
+      b.textContent = '↻ Otra playlist';
+    } catch (e) { out.innerHTML = '<div class="rx-empty">No pude traer música ahorita. Prueba otra vez.</div>'; }
+    b.disabled = false;
+  };
+  $('rxMuGo').addEventListener('click', doMusic);
+
+  // Qué ver
+  const waMood = pick($('rxWaMood'), 'k');
+  const doWatch = async () => {
+    const b = $('rxWaGo'), out = $('rxWaOut'); b.disabled = true; loading(out, 'Buscando algo bueno…');
+    const tx = {pelicula: 'una película', serie: 'una serie', anime: 'un anime', documental: 'un documental', corto: 'algo corto (menos de 40 min)'}[waMood()];
+    try {
+      const arr = relaxJSON(await callAI(`Recomiéndame 2 opciones de ${tx} reales y bien valoradas para ver hoy ${relaxNow().momento === 'noche' ? 'en la noche' : ''}. Me gusta el arte, el diseño, la cultura japonesa y la tecnología, pero puede ser de cualquier tema. Responde SOLO JSON: [{"titulo":"","anio":"","tipo":"","por":"por qué verla en 1-2 frases, sin spoilers"}]`, 'Recomiendas películas y series reales. Español de México. Solo JSON.', {maxTokens: 450, temperature: .9}));
+      const it = (Array.isArray(arr) ? arr : []).filter(x => x && x.titulo).slice(0, 2); if (!it.length) throw new Error('vacío');
+      out.innerHTML = it.map((x, i) => `<div class="rx-plan" style="--i:${i}"><span class="rx-plan-e">🍿</span><div><b>${_esc(x.titulo)}</b> <small>${_esc([x.anio, x.tipo].filter(Boolean).join(' · '))}</small><p>${_esc(x.por || '')}</p></div></div>`).join('');
+      b.textContent = '↻ Otras opciones';
+    } catch (e) { out.innerHTML = '<div class="rx-empty">No pude traer recomendaciones ahorita. Prueba otra vez.</div>'; }
+    b.disabled = false;
+  };
+  $('rxWaGo').addEventListener('click', doWatch);
+
+  // Trivia
+  let score = {ok: 0, n: 0};
+  const showTrivia = q => {
+    const out = $('rxTrOut');
+    out.innerHTML = `<div class="rx-tr-q">${_esc(q.p)}</div><div class="rx-tr-opts">${q.o.map((o, i) => `<button type="button" class="rx-tr-o" data-i="${i}">${_esc(o)}</button>`).join('')}</div><div class="rx-tr-d" hidden>${_esc(q.d || '')}</div>`;
+    out.querySelectorAll('.rx-tr-o').forEach(btn => btn.addEventListener('click', () => {
+      if (out.dataset.done) return; out.dataset.done = '1'; const ok = +btn.dataset.i === q.r; score.n++; if (ok) score.ok++;
+      out.querySelectorAll('.rx-tr-o').forEach((x, i) => x.classList.add(i === q.r ? 'ok' : (x === btn ? 'bad' : 'off')));
+      out.querySelector('.rx-tr-d').hidden = false; haptic(ok ? 'success' : 'warn'); $('rxTrScore').textContent = `· ${score.ok}/${score.n}`;
+    }));
+    delete out.dataset.done;
+  };
+  const doTrivia = async () => {
+    const b = $('rxTrGo'), out = $('rxTrOut'); b.disabled = true; loading(out, 'Pensando una pregunta…');
+    const temas = ['ciencia', 'historia de México', 'arte y pintura', 'Japón', 'animales', 'tecnología', 'geografía', 'música', 'cine', 'el espacio'];
+    try {
+      const q = relaxJSON(await callAI(`Hazme UNA pregunta de trivia divertida y verificable sobre ${temas[Math.floor(Math.random() * temas.length)]}, dificultad media. Responde SOLO JSON: {"p":"pregunta","o":["opción A","opción B","opción C"],"r":índice de la correcta (0-2),"d":"dato curioso que explica la respuesta, 1 frase"}`, 'Haces trivias con datos correctos y verificables. Español de México. Solo JSON.', {maxTokens: 300, temperature: .9}));
+      if (!q || !q.p || !Array.isArray(q.o) || q.o.length < 2 || !(q.r >= 0 && q.r < q.o.length)) throw new Error('vacío');
+      showTrivia(q);
+    } catch (e) { showTrivia(RELAX_TRIVIA[Math.floor(Math.random() * RELAX_TRIVIA.length)]); }
+    b.disabled = false;
+  };
+  showTrivia(RELAX_TRIVIA[new Date().getDate() % RELAX_TRIVIA.length]);
+  $('rxTrGo').addEventListener('click', doTrivia);
+
+  // Risa
+  const doJoke = async () => {
+    const j = $('rxJoke'), b = $('rxJokeGo'); b.disabled = true; j.classList.add('rx-fade'); let t;
+    try { t = String(await callAI('Cuéntame UN chiste corto, original y limpio (blanco), que dé risa de verdad. Puede ser de tatuadores, programadores, la vida diaria o juego de palabras. Solo el chiste.', 'Eres un comediante ingenioso de humor blanco. Español de México.', {maxTokens: 120, temperature: 1})).trim(); }
+    catch (e) { t = ''; }
+    if (!t || t.length > 400) t = RELAX_JOKES[Math.floor(Math.random() * RELAX_JOKES.length)];
+    setTimeout(() => { j.textContent = t; j.classList.remove('rx-fade'); b.disabled = false; }, 180);
+  };
+  $('rxJokeGo').addEventListener('click', doJoke);
+  $('rxJokeCopy').addEventListener('click', () => { const t = $('rxJoke').textContent; if (navigator.share) navigator.share({text: t}).catch(() => {}); else navigator.clipboard?.writeText(t).then(() => toast('📋 Copiado')); });
+
+  // Gratitud → Diario
+  $('rxGratGo').addEventListener('click', () => {
+    const vals = [...document.querySelectorAll('#rxGrat .rx-in')].map(i => i.value.trim()).filter(Boolean);
+    if (!vals.length) { toast('✍️ Escribe al menos una'); return; }
+    state.diary.push({id: Date.now(), mood: '🙏', content: 'Tres cosas buenas de hoy:\n' + vals.map(v => '• ' + v).join('\n')}); save();
+    document.querySelectorAll('#rxGrat .rx-in').forEach(i => { i.value = ''; }); haptic('success'); toast('💗 Guardado en tu Diario');
+    try { goldRain(30); } catch (e) {}
+  });
+
+  // Paleta del día
+  const showPal = (p, label) => {
+    $('rxPalMode').textContent = label || `Armonía ${p.mode} · toca un color para copiarlo`;
+    $('rxPalOut').innerHTML = p.colors.map((c, i) => `<button type="button" class="rx-sw" style="--c:${c};--i:${i}" data-c="${c}"><span>${c.toUpperCase()}</span></button>`).join('');
+  };
+  showPal(relaxPalette());
+  $('rxPalGo').addEventListener('click', () => { showPal(relaxPalette()); haptic('tap'); });
+  $('rxPalMine').addEventListener('click', () => showPal({mode: 'firma', colors: ['#dc143c', '#ffd700', '#00a86b', '#0a0a0a', '#f5f0e8']}, 'Tu paleta firma: carmesí, dorado, jade y negro'));
+  $('rxPalOut').addEventListener('click', e => { const b = e.target.closest('.rx-sw'); if (!b) return; navigator.clipboard?.writeText(b.dataset.c).then(() => toast('🎨 ' + b.dataset.c.toUpperCase() + ' copiado')); });
+
+  // Pausa sin pantalla
+  const IDEAS = ['Estírate, mira por la ventana o tómate un vaso de agua.', 'Cierra los ojos y escucha 5 sonidos distintos a tu alrededor.', 'Sal un momento y busca algo verde.', 'Ordena tu mesa de trabajo o tus tintas.', 'Dibuja algo sin pensar en una hoja de papel.', 'Llama a alguien que quieras, sin mirar la pantalla.'];
+  const pMin = pick($('rxPauseMin'), 'm'), tEl = $('rxPauseT'), pGo = $('rxPauseGo');
+  const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  $('rxPauseMin').addEventListener('click', () => { if (!_relaxPauseT) setTimeout(() => { tEl.textContent = fmt(+pMin() * 60); }, 0); });
+  pGo.addEventListener('click', () => {
+    if (_relaxPauseT) { clearInterval(_relaxPauseT); _relaxPauseT = 0; pGo.textContent = '▶ Empezar pausa'; tEl.textContent = fmt(+pMin() * 60); $('rxPause').classList.remove('on'); return; }
+    const end = Date.now() + (+pMin()) * 60000; $('rxPauseIdea').textContent = IDEAS[Math.floor(Math.random() * IDEAS.length)]; $('rxPause').classList.add('on'); pGo.textContent = '■ Terminar ya';
+    const tick = () => { const left = Math.max(0, Math.round((end - Date.now()) / 1000)); const el = document.getElementById('rxPauseT'); if (el) el.textContent = fmt(left);
+      if (left <= 0) { clearInterval(_relaxPauseT); _relaxPauseT = 0; try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} toast('✨ Terminó tu pausa. ¡Bien hecho!');
+        try { if (Notification && Notification.permission === 'granted') navigator.serviceWorker?.ready.then(r => r.showNotification('✨ Terminó tu pausa', {body: '¡Bien hecho! Vuelve cuando quieras.', icon: 'icon-192.png', badge: 'notif-badge-96.png'})); } catch (e) {}
+        const b2 = document.getElementById('rxPauseGo'); if (b2) b2.textContent = '▶ Empezar pausa'; document.getElementById('rxPause')?.classList.remove('on'); } };
+    tick(); _relaxPauseT = setInterval(tick, 1000);
+  });
+  return {doMusic, doWatch, doTrivia, doJoke};
+};
+
 const relaxJSON = raw => { const t = String(raw || '').replace(/```json|```/gi, ''); const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']')); if (a < 0 || b <= a) return null; try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; } };
 const relaxNow = () => { const d = new Date(), h = d.getHours(); return { dia: d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }), hora: d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), momento: h < 12 ? 'mañana' : h < 19 ? 'tarde' : 'noche', finde: [0, 6].includes(d.getDay()) }; };
 let _relaxWeather = null, _relaxBreath = null;
@@ -7047,6 +7229,7 @@ const renderRelaxView = () => {
   const content = document.getElementById('content'); if (!content) return;
   content.style.padding = '16px';
   if (_relaxBreath) { _relaxBreath.stop(); _relaxBreath = null; }
+  if (_relaxPauseT) { clearInterval(_relaxPauseT); _relaxPauseT = 0; }
   const favs = (state.settings.relaxFavs || []);
   content.innerHTML = `
   <div class="rx-wrap">
@@ -7094,6 +7277,7 @@ const renderRelaxView = () => {
       <div id="rxChalOut" class="rx-chal"><div class="rx-empty">Elige un tipo y toca «Dame un reto».</div></div>
       <div class="rx-row"><button type="button" class="rx-go" id="rxChalGo">✦ Dame un reto</button><button type="button" class="rx-btn" id="rxChalSave" hidden>🗒️ Guardar como nota</button></div>
     </section>
+${relaxExtraHTML()}
   </div>`;
 
   const $ = id => document.getElementById(id);
@@ -7184,9 +7368,10 @@ Responde SOLO con JSON: [{"emoji":"","titulo":"","que":"qué hacer, 1-2 frases",
     save(); toast('🗒️ Reto guardado en tus notas'); $('rxChalSave').hidden = true;
   });
 
+  const X = bindRelaxExtra($, pick, loading);
   // ── Sorpréndeme: elige una tarjeta al azar ──
   $('rxSurprise').addEventListener('click', () => {
-    const opts = [['rxPlans', doPlans], ['rxQuote', doQuote], ['rxBreath', () => { if (!breath.run) breath.start(); }], ['rxChal', doChal]];
+    const opts = [['rxPlans', doPlans], ['rxQuote', doQuote], ['rxBreath', () => { if (!breath.run) breath.start(); }], ['rxChal', doChal], ['rxMusic', X.doMusic], ['rxWatch', X.doWatch], ['rxTrivia', X.doTrivia], ['rxLaugh', X.doJoke], ['rxPal', () => document.getElementById('rxPalGo').click()]];
     const [id, fn] = opts[Math.floor(Math.random() * opts.length)];
     const el = $(id); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('rx-pop'); void el.offsetWidth; el.classList.add('rx-pop'); haptic('tap'); fn();
   });
