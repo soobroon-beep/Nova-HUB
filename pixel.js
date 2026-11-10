@@ -20,31 +20,42 @@
   const GEN_URL = 'https://gen.pollinations.ai/v1/chat/completions', POLLEN_KEY = 'sk_1XvEYtOmiFixsgMve0FAqQz5ghhy7FFT'; // respaldo directo (Pollinations, gratuito)
   const accent = () => { const c = CFG().color; if (c && c !== 'auto') return c; try { return H().accent() || '#38d9ff'; } catch { return '#38d9ff'; } };
 
-  /* Cabeza de Nova Pixel en SVG (ligera, sin 3D): se asoma escondida y sale en la tarjeta de la IA */
+  /* Cabeza de Cortex en SVG (ligera, sin 3D): se asoma escondida y sale en la tarjeta de la IA */
   let hid = 0;
-  function headSVG(mode) {
-    const i = ++hid, A = 'var(--px-acc,#38d9ff)';
-    const face = mode === 'brain'
-      ? `<g class="nph-face" filter="url(#npg${i})" fill="none" stroke="#ecfbff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M58 50c-5-4-13-3-15 2-5 1-6 7-3 10-3 4 0 9 5 9 2 4 9 5 13 1zM62 50c5-4 13-3 15 2 5 1 6 7 3 10 3 4 0 9-5 9-2 4-9 5-13 1z"/><path d="M58 56h-6l-3 3M58 63h-8M62 56h6l3 3M62 63h8"/><circle cx="48.5" cy="59.5" r="1.4" fill="#ecfbff"/><circle cx="71.5" cy="59.5" r="1.4" fill="#ecfbff"/></g>`
-      : `<g class="nph-face" filter="url(#npg${i})"><g class="nph-eyes"><rect x="41" y="55" width="11" height="15" rx="5.5" fill="#ecfbff"/><rect x="68" y="55" width="11" height="15" rx="5.5" fill="#ecfbff"/></g></g>`;
-    return `<svg class="nph" viewBox="0 0 120 110" aria-hidden="true"><defs><linearGradient id="nph${i}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#4a4766"/><stop offset="1" stop-color="#1e1c2e"/></linearGradient><radialGradient id="npv${i}" cx=".35" cy=".25" r=".95"><stop offset="0" stop-color="#262a44"/><stop offset=".55" stop-color="#05060c"/></radialGradient><filter id="npg${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.8" result="b"/><feFlood style="flood-color:${A}"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-      <g class="nph-halo"><ellipse cx="60" cy="11" rx="27" ry="6.5" fill="none" stroke="#a48bff" stroke-width="3"/><path class="nph-star" d="M86 9l1.4 3.2 3.2 1.4-3.2 1.4L86 18.2l-1.4-3.2-3.2-1.4 3.2-1.4z" fill="#ffd36a"/></g><rect x="57" y="16" width="6" height="8" rx="3" fill="#eceaf7"/>
-      <ellipse cx="60" cy="63" rx="47" ry="43" fill="url(#nph${i})"/><ellipse cx="44" cy="30" rx="16" ry="5" fill="#fff" opacity=".12"/><circle cx="13" cy="66" r="11" fill="#eceaf7"/><circle cx="13" cy="66" r="7" fill="#14131f" style="stroke:${A}" stroke-width="2.6"/><circle cx="107" cy="66" r="11" fill="#eceaf7"/><circle cx="107" cy="66" r="7" fill="#14131f" style="stroke:${A}" stroke-width="2.6"/>
-      <rect x="22" y="40" width="76" height="48" rx="24" fill="url(#npv${i})" style="stroke:${A}" stroke-opacity=".45" stroke-width="1.2"/><ellipse cx="42" cy="47" rx="11" ry="3.6" fill="#fff" opacity=".16"/>${face}</svg>`;
+  function headSVG(mode) { // Cortex: cerebro de neón (cian / violeta) con circuitos y su anillo orbital
+    const i = ++hid, A = 'var(--px-acc,#38d9ff)', V = '#a46bff';
+    const hemi = k => k < 0
+      ? 'M58 30C51 22 38 21 32 28C23 28 17 37 19 45C12 50 12 61 18 66C15 75 22 83 31 82C36 89 49 90 58 84Z'
+      : 'M62 30C69 22 82 21 88 28C97 28 103 37 101 45C108 50 108 61 102 66C105 75 98 83 89 82C84 89 71 90 62 84Z';
+    const lines = k => { const m = x => k < 0 ? x : 120 - x; return `<path d="M${m(57)} 40H${m(45)}L${m(39)} 34M${m(57)} 52H${m(41)}L${m(33)} 46M${m(57)} 64H${m(44)}L${m(36)} 70M${m(57)} 75H${m(47)}M${m(30)} 56H${m(24)}" fill="none"/><g class="nph-node"><circle cx="${m(39)}" cy="34" r="2.6"/><circle cx="${m(33)}" cy="46" r="2.6"/><circle cx="${m(36)}" cy="70" r="2.6"/><circle cx="${m(47)}" cy="75" r="2.2"/><circle cx="${m(24)}" cy="56" r="2.2"/></g>`; };
+    return `<svg class="nph nph-cortex" viewBox="0 0 120 110" aria-hidden="true"><defs>
+      <radialGradient id="nhL${i}" cx=".45" cy=".35" r=".8"><stop offset="0" style="stop-color:${A}" stop-opacity=".55"/><stop offset="1" stop-color="#0b0d2c" stop-opacity=".95"/></radialGradient>
+      <radialGradient id="nhR${i}" cx=".55" cy=".35" r=".8"><stop offset="0" stop-color="${V}" stop-opacity=".55"/><stop offset="1" stop-color="#140b2e" stop-opacity=".95"/></radialGradient>
+      <filter id="npg${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <g class="nph-halo"><path d="M6 56A54 11 0 0 1 114 56" fill="none" style="stroke:${A}" stroke-width="2.2" opacity=".75" filter="url(#npg${i})"/></g>
+      <g class="nph-face" filter="url(#npg${i})" stroke-linecap="round" stroke-linejoin="round">
+        <path d="${hemi(-1)}" fill="url(#nhL${i})" style="stroke:${A}" stroke-width="2.6"/>
+        <path d="${hemi(1)}" fill="url(#nhR${i})" stroke="${V}" stroke-width="2.6"/>
+        <g style="stroke:${A};fill:${A}" stroke-width="2">${lines(-1)}</g>
+        <g stroke="${V}" fill="${V}" stroke-width="2">${lines(1)}</g>
+        <ellipse cx="40" cy="33" rx="9" ry="3" fill="#fff" opacity=".22" stroke="none"/><ellipse cx="80" cy="33" rx="9" ry="3" fill="#fff" opacity=".18" stroke="none"/>
+      </g>
+      <g class="nph-halo"><path d="M6 56A54 11 0 0 0 114 56" fill="none" style="stroke:${A}" stroke-width="2.6" filter="url(#npg${i})"/><circle class="nph-star" cx="99" cy="63" r="3" fill="#e9fbff"/></g>
+      <path d="M52 92h16l-3 6-5 5-5-5z" fill="#2b2846" stroke="${V}" stroke-width="1"/><path d="M60 94l2.5 4-2.5 4-2.5-4z" style="fill:${A}" filter="url(#npg${i})"/></svg>`;
   }
   window.NovaPixelHead = headSVG;
 
   /* ── DOM ── */
   const layer = document.createElement('div'); layer.className = 'px-layer'; layer.style.setProperty('--px-acc', accent());
-  const fab = document.createElement('button'); fab.type = 'button'; fab.className = 'px-peek'; fab.title = 'Nova Pixel · tócalo para que salga'; fab.setAttribute('aria-label', 'Llamar a Nova Pixel');
+  const fab = document.createElement('button'); fab.type = 'button'; fab.className = 'px-peek'; fab.title = 'Cortex · tócalo para que salga'; fab.setAttribute('aria-label', 'Llamar a Cortex');
   fab.innerHTML = `<span class="px-peek-in">${headSVG('eyes')}</span>`; // escondido: solo se asoman media cabeza y el halo
   const ink = document.createElement('canvas'); ink.className = 'px-ink'; ink.setAttribute('aria-hidden', 'true');
-  const av = document.createElement('div'); av.className = 'px-av'; av.hidden = true; av.innerHTML = '<canvas class="px-cv" aria-label="Nova Pixel: arrástralo de lado a lado para girarlo; tócalo para que salude"></canvas><span class="px-spin" aria-hidden="true"></span>';
-  const bub = document.createElement('div'); bub.className = 'px-bub'; bub.hidden = true; bub.setAttribute('role', 'dialog'); bub.setAttribute('aria-label', 'Nova Pixel');
-  bub.innerHTML = `<div class="px-hd" title="Arrastra para moverlo"><span class="px-dot"></span><b>Nova Pixel</b><small class="px-st">IA de NOVA HUB</small><button type="button" class="px-x" data-px="close" aria-label="Despedir a Nova Pixel">&times;</button></div>
+  const av = document.createElement('div'); av.className = 'px-av'; av.hidden = true; av.innerHTML = '<canvas class="px-cv" aria-label="Cortex: arrástralo de lado a lado para girarlo; tócalo para que salude"></canvas><span class="px-spin" aria-hidden="true"></span>';
+  const bub = document.createElement('div'); bub.className = 'px-bub'; bub.hidden = true; bub.setAttribute('role', 'dialog'); bub.setAttribute('aria-label', 'Cortex');
+  bub.innerHTML = `<div class="px-hd" title="Arrastra para moverlo"><span class="px-dot"></span><b>Cortex</b><small class="px-st">IA de NOVA HUB</small><button type="button" class="px-x" data-px="close" aria-label="Despedir a Nova Pixel">&times;</button></div>
     <div class="px-msg" aria-live="polite"></div>
     <div class="px-chips"></div>
-    <form class="px-in"><input type="text" placeholder="Pídeme algo: «anota una idea…»" autocomplete="off" enterkeyhint="send" aria-label="Escríbele a Nova Pixel"><button type="button" class="px-mic" aria-label="Hablarle a Nova Pixel" title="Háblale"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button type="submit" class="px-send" aria-label="Enviar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></form>`;
+    <form class="px-in"><input type="text" placeholder="Pídeme algo: «anota una idea…»" autocomplete="off" enterkeyhint="send" aria-label="Escríbele a Cortex"><button type="button" class="px-mic" aria-label="Hablarle a Cortex" title="Háblale"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button type="submit" class="px-send" aria-label="Enviar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></form>`;
   const tip = document.createElement('button'); tip.type = 'button'; tip.className = 'px-tip'; tip.hidden = true;
   layer.append(ink, av, bub, fab, tip); document.body.appendChild(layer);
   const cv = av.querySelector('.px-cv'), msg = bub.querySelector('.px-msg'), input = bub.querySelector('input'), st = bub.querySelector('.px-st');
@@ -201,7 +212,7 @@
     if (c.tono) out.push(`Háblale ${c.tono === 'corto' ? 'corto y directo (máximo 3 frases)' : c.tono === 'detallado' ? 'con más detalle y paso a paso (máximo 8 frases o viñetas)' : 'claro y breve (máximo 4 frases)'}, en tono ${c.trato || 'cercano y con buena onda'}.`);
     return out.length ? '\nPERFIL DEL USUARIO:\n' + out.join('\n') : '';
   }
-  const SYS = `Eres NOVA PIXEL, el asistente de NOVA HUB: un robot astronauta amable con un halo orbital que vive dentro de la app de productividad del usuario (tatuador profesional y desarrollador en Veracruz, México).
+  const SYS = `Eres CORTEX, el asistente de NOVA HUB: un cerebro de neón amable con un anillo orbital, capa morada y guantes flotantes, que vive dentro de la app de productividad del usuario (tatuador profesional y desarrollador en Veracruz, México).
 Tu enfoque: sus NOTAS, PROYECTOS y tareas, RECORDATORIOS, CALENDARIO (incluye sus citas de tatuaje del calendario «🔥Tatuajes🔥»), HÁBITOS, HORARIO y DIARIO. Le ayudas a organizarse, priorizar, recordar, resumir y crear cosas.
 NO hablas de trading, cripto, bolsa ni inversiones: si te pregunta de eso, dile amablemente que de eso se encarga Nexus Pixel en VORTEX y regresa a lo suyo.
 Habla en español de México, claro, breve y con buena onda. Usa SOLO sus datos (te los paso en JSON); si algo no está, dilo, no inventes.
@@ -315,19 +326,19 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   }
   const GREET = {dashboard: 'Te digo qué tienes hoy, te ayudo a priorizar o anoto lo que se te ocurra.', notes: 'Puedo anotar ideas, resumir tus notas o buscar algo en ellas.', projects: 'Te digo qué sigue, divido un proyecto en tareas o agrego pendientes.', reminders: 'Dime «recuérdame…» y yo lo agendo.', calendar: 'Reviso tus eventos y citas de tatuaje, o agendo algo nuevo.', diary: 'Puedo escribir en tu diario o contarte cómo ha ido tu semana.', habits: 'Te digo cómo vas con tus rachas o marco un hábito.', settings: 'Pregúntame dónde se configura cualquier cosa.'};
   async function show(greet) {
-    if (open) return; open = true; ls.open = true; store(); fab.classList.add('on'); fab.setAttribute('aria-label', 'Nova Pixel está activo');
+    if (open) return; open = true; ls.open = true; store(); fab.classList.add('on'); fab.setAttribute('aria-label', 'Cortex está activo');
     const s = AV(), pk = peekSpot(); place(pk.x - s.w / 2, pk.y + 30); av.hidden = false; fab.classList.add('out');
-    try { await ensureModel(); M.pause(false); } catch { av.hidden = true; open = false; fab.classList.remove('on', 'out'); try { H().toast('⚠️ No se pudo cargar a Nova Pixel. Revisa tu conexión.'); } catch {} return; }
+    try { await ensureModel(); M.pause(false); } catch { av.hidden = true; open = false; fab.classList.remove('on', 'out'); try { H().toast('⚠️ No se pudo cargar a Cortex. Revisa tu conexión.'); } catch {} return; }
     mood('excited', 'fly'); const h = home(); await flyTo(h.x, h.y, greet ? 1000 : 500);
     setChips(); const name = CFG().nombre || H().user();
-    if (greet) { mood('happy', 'wave'); say(`¡Hola${name ? ', ' + name : ''}! Soy Nova Pixel. ${GREET[section()] || GREET.dashboard}`); setTimeout(() => { if (!busy) mood('neutral', 'idle'); }, 2400); }
+    if (greet) { mood('happy', 'wave'); say(`¡Hola${name ? ', ' + name : ''}! Soy Cortex. ${GREET[section()] || GREET.dashboard}`); setTimeout(() => { if (!busy) mood('neutral', 'idle'); }, 2400); }
     else { mood('neutral', 'idle'); say('Aquí sigo. ¿Qué organizamos?', {instant: true}); }
     lastAct = Date.now();
   }
   async function hide() {
     if (!open) return; stopMic(); open = false; ls.open = false; store(); bub.hidden = true; mood('wink', 'wave'); await sleep(REDUCED ? 0 : 450); mood('happy', 'fly');
     { const s = AV(), pk = peekSpot(); await flyTo(pk.x - s.w / 2, pk.y - s.h * .6, 600); await flyTo(pk.x - s.w / 2, pk.y + 20, 260); }
-    av.hidden = true; fab.classList.remove('on', 'out'); fab.setAttribute('aria-label', 'Llamar a Nova Pixel'); if (M) M.pause(true);
+    av.hidden = true; fab.classList.remove('on', 'out'); fab.setAttribute('aria-label', 'Llamar a Cortex'); if (M) M.pause(true);
   }
   fab.addEventListener('click', () => { if (open) { if (bub.hidden) { bub.hidden = false; placeBubble(); input.focus({preventScroll: true}); } else hide(); } else show(true); });
   bub.addEventListener('click', e => { const q = e.target.closest('[data-q]'); if (q) { ask(q.dataset.q); return; } if (e.target.closest('[data-px=close]')) hide(); });

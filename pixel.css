@@ -53,6 +53,8 @@
 .px-peek.out{pointer-events:none}
 .nph-halo{transform-box:fill-box;transform-origin:center;animation:pkHalo 3s ease-in-out infinite}
 .nph-star{transform-box:fill-box;transform-origin:center;animation:pkStar 2.2s ease-in-out infinite}
+.nph-node{animation:pkNode 2.6s ease-in-out infinite}.nph-node circle:nth-child(2n){animation:pkNode 2.6s ease-in-out .9s infinite}
+@keyframes pkNode{0%,100%{opacity:1}50%{opacity:.35}}
 .nph-eyes{transform-box:fill-box;transform-origin:center;animation:pkBlink 4.2s infinite,pkLook 9s ease-in-out infinite}
 @media(max-width:900px){.px-peek{width:52px;height:40px}.px-peek .nph{width:52px;height:48px}.px-msg{font-size:12.5px;max-height:120px}}
 
@@ -89,4 +91,4 @@
 @keyframes pkStar{0%,100%{opacity:.6;scale:.8}50%{opacity:1;scale:1.15}}
 @keyframes pkBlink{0%,92%,100%{scale:1 1}95%{scale:1 .1}}
 @keyframes pkLook{0%,30%,100%{translate:0 0}38%,52%{translate:-7px 0}60%,75%{translate:7px 0}}
-@media(prefers-reduced-motion:reduce){.px-peek-in,.nph-halo,.nph-star,.nph-eyes,.pxc .nph{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.px-peek-in,.nph-halo,.nph-star,.nph-eyes,.nph-node,.nph-node circle,.pxc .nph{animation:none!important}}
