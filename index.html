@@ -597,6 +597,58 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .note-card .note-body.nmd ul,.note-card .note-body.nmd ol{margin:2px 0}
 .nd-body.nmd ul.nchk>li{cursor:pointer}
 
+/* ── ZONA RELAX ── */
+.rx-wrap{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:20px}
+.rx-top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}
+.rx-title{font-size:1.35rem;font-weight:800}
+.rx-sub{font-size:.82rem;color:var(--text2);margin-top:2px}
+.rx-card{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:fadeSlideIn .45s ease both}
+.rx-card::before{content:'';position:absolute;inset:-40% -20% auto auto;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,var(--rx-c) 0%,transparent 65%);opacity:.22;pointer-events:none;filter:blur(6px)}
+.rx-orizaba{--rx-c:#2fe0a5;grid-column:1/-1}.rx-quote{--rx-c:#ffc94a;animation-delay:.06s}.rx-breath{--rx-c:#38d9ff;animation-delay:.12s}.rx-challenge{--rx-c:#ff4d6d;grid-column:1/-1;animation-delay:.18s}
+.rx-pop{animation:rxPop .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes rxPop{0%{transform:scale(1)}40%{transform:scale(1.025);box-shadow:0 0 0 2px var(--rx-c)}100%{transform:scale(1)}}
+.rx-h{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}
+.rx-h b{display:block;font-size:.98rem}.rx-h small{font-size:.76rem;color:var(--text2)}
+.rx-ico{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:color-mix(in srgb,var(--rx-c) 16%,transparent);border:1px solid color-mix(in srgb,var(--rx-c) 35%,transparent);flex-shrink:0}
+.rx-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:10px;position:relative}
+.rx-chips::-webkit-scrollbar{display:none}
+.rx-chip{flex-shrink:0;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:999px;padding:7px 12px;font-size:.78rem;font-family:inherit;cursor:pointer;transition:all .2s}
+.rx-chip.on{background:color-mix(in srgb,var(--rx-c) 18%,transparent);border-color:color-mix(in srgb,var(--rx-c) 60%,transparent);color:var(--text)}
+.rx-go{position:relative;width:100%;border:none;border-radius:14px;padding:12px;font-weight:700;font-size:.88rem;font-family:inherit;cursor:pointer;color:#0b0b14;background:linear-gradient(135deg,var(--rx-c),color-mix(in srgb,var(--rx-c) 55%,#fff));transition:transform .15s,opacity .2s}
+.rx-go:active{transform:scale(.97)}.rx-go:disabled{opacity:.6}
+.rx-go-sm{width:auto;padding:10px 22px}
+.rx-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;position:relative}
+.rx-row .rx-go{flex:1}
+.rx-btn{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);border-radius:12px;padding:9px 14px;font-size:.8rem;font-family:inherit;cursor:pointer}
+.rx-btn:disabled{opacity:.5}
+.rx-empty{font-size:.82rem;color:var(--text3);padding:10px 2px}
+.rx-list{display:grid;gap:10px;margin-bottom:12px;position:relative}
+.rx-plan{display:flex;gap:12px;padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);animation:fadeSlideIn .4s ease both;animation-delay:calc(var(--i)*.08s)}
+.rx-plan-e{font-size:1.6rem;line-height:1}
+.rx-plan b{font-size:.9rem}.rx-plan p{font-size:.82rem;color:var(--text2);margin:3px 0 4px;line-height:1.5}.rx-plan small{font-size:.75rem;color:var(--text3)}
+.rx-q{margin:0;padding:6px 2px 4px;font-size:1.08rem;line-height:1.55;font-weight:600;color:var(--text);min-height:70px;transition:opacity .18s,transform .18s;position:relative}
+.rx-q::before{content:'“';font-size:2.4rem;line-height:0;vertical-align:-.45em;color:var(--rx-c);margin-right:4px;opacity:.8}
+.rx-q.rx-fade{opacity:0;transform:translateY(6px)}
+.rx-favs{margin-top:12px;font-size:.8rem;color:var(--text2);position:relative}
+.rx-favs summary{cursor:pointer;padding:4px 0}
+.rx-fav{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--border)}
+.rx-fav span{flex:1;line-height:1.5}.rx-fav button{background:none;border:none;color:var(--text3);cursor:pointer}
+.rx-orb-wrap{position:relative;height:190px;display:flex;align-items:center;justify-content:center}
+.rx-orb{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.72rem;font-weight:700;color:#e9fbff;cursor:pointer;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),color-mix(in srgb,var(--rx-c) 70%,transparent) 45%,color-mix(in srgb,var(--rx-c) 25%,transparent) 75%);box-shadow:0 0 30px color-mix(in srgb,var(--rx-c) 55%,transparent),inset 0 0 18px rgba(255,255,255,.25)}
+.rx-orb span{transform:scale(1);padding:0 8px}
+.rx-orb.on span{font-size:.85rem}
+.rx-orb-ring{position:absolute;width:160px;height:160px;border-radius:50%;border:1px dashed color-mix(in srgb,var(--rx-c) 45%,transparent);animation:rxSpin 18s linear infinite}
+@keyframes rxSpin{to{transform:rotate(360deg)}}
+.rx-chal{position:relative;margin-bottom:4px}
+.rx-chal-card{padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);animation:fadeSlideIn .4s ease both}
+.rx-chal-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}.rx-chal-top span{font-size:1.5rem}.rx-chal-top b{flex:1;font-size:.95rem}.rx-chal-top em{font-style:normal;font-size:.72rem;color:var(--text2);background:rgba(255,255,255,.06);padding:3px 8px;border-radius:999px}
+.rx-chal-card p{font-size:.85rem;line-height:1.6;color:var(--text);margin:0 0 6px}.rx-chal-card small{font-size:.78rem;color:var(--text2)}
+.rx-loading{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--text2);padding:12px 2px}
+.rx-dots{display:inline-flex;gap:4px}.rx-dots i{width:6px;height:6px;border-radius:50%;background:var(--rx-c);animation:rxDot 1s ease-in-out infinite}.rx-dots i:nth-child(2){animation-delay:.15s}.rx-dots i:nth-child(3){animation-delay:.3s}
+@keyframes rxDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+[data-theme="light"] .rx-card{background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(246,244,255,.85));border-color:rgba(0,0,0,.07)}
+@media(max-width:700px){.rx-wrap{grid-template-columns:1fr}.rx-top{flex-wrap:wrap}}
+
 /* ═══════════════════════════════════════════════════════
    NOVA HUB — PROFESSIONAL ANIMATION SYSTEM
    ═══════════════════════════════════════════════════════ */
@@ -3143,6 +3195,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
   <div class="nav-item" data-view="habits"><span class="nav-icon">🔥</span> Hábitos</div>
   <div class="nav-section" style="margin-top:20px">Herramientas</div>
   <div class="nav-item" data-view="briefing"><span class="nav-icon">☀️</span> Briefing diario</div>
+  <div class="nav-item" data-view="relax"><span class="nav-icon">🌿</span> Zona Relax</div>
   <div class="nav-item" data-view="ai"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span></span> IA Asistente</div>
   <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span> Ajustes</div>
   <div class="sidebar-bottom">
@@ -4958,6 +5011,7 @@ function rerenderView(v) {
   else if(v==='habits') renderHabitsView();
   else if(v==='settings') renderSettingsView();
   else if(v==='briefing') renderBriefingView();
+  else if(v==='relax') renderRelaxView();
 }
 
 // Aplica datos recibidos de Firestore al state local y re-renderiza
@@ -5988,10 +6042,11 @@ const DOCK_META = {
   habits:    { s:'Hábitos',    f:'Hábitos',        i:'🔥', p:'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z' },
   briefing:  { s:'Briefing',   f:'Briefing diario', i:'☀️', p:'M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14H5v-4h6v4zm0-6H5V7h6v4zm8 6h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V7h6v2z' },
   ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
+  relax:     { s:'Relax',      f:'Zona Relax',     i:'🌿', p:'M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z' },
   dashboard: { s:'Dashboard', f:'Dashboard', i:'⊞', p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','settings'];
+const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','relax','settings'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -6973,6 +7028,170 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
 };
 
 // ── Vista «Briefing» ─────────────────────────
+// ══════════════════════════════════════════════
+// ZONA RELAX — para cuando estés aburrido o necesites un respiro:
+// planes en Orizaba (IA + clima + hora), frase motivadora, respiración guiada y retos creativos.
+// Usa la IA gratuita de modelos abiertos (callAI). Tus frases favoritas se guardan en Ajustes (se sincronizan).
+// ══════════════════════════════════════════════
+const RELAX_PLACES = ['Cerro del Borrego (subir a pie o en teleférico)', 'Teleférico de Orizaba', 'Paseo del Río Orizaba y su reserva animal', 'Palacio de Hierro (museos)', 'Museo de Arte del Estado de Veracruz', 'Parque Alameda Francisco Gabilondo Soler', 'Poliforum Mier y Pesado', 'Catedral de San Miguel Arcángel', 'Centro histórico y Parque Castillo', 'Cascada de Rincón Grande', 'Ojo de Agua', 'Cafés del centro', 'Mercado Cerritos (antojitos)', 'Pico de Orizaba (vista desde el mirador)'];
+const RELAX_QUOTES = ['Un trazo a la vez: así se hacen las obras grandes.', 'Hoy no tienes que ganarle a nadie, solo a tu yo de ayer.', 'La disciplina es elegir lo que quieres más sobre lo que quieres ahora.', 'Descansar también es avanzar.', 'Lo que hoy practicas en silencio, mañana se nota en tu trabajo.', 'No esperes la inspiración: ponte a trabajar y ella te alcanza.', 'Respira. Lo urgente casi nunca es tan importante.', 'Tu estilo es la suma de todas las veces que no te rendiste.', 'Haz algo hoy que tu yo del futuro te agradezca.', 'Las ideas llegan cuando las manos están ocupadas.'];
+const relaxJSON = raw => { const t = String(raw || '').replace(/```json|```/gi, ''); const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']')); if (a < 0 || b <= a) return null; try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; } };
+const relaxNow = () => { const d = new Date(), h = d.getHours(); return { dia: d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }), hora: d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), momento: h < 12 ? 'mañana' : h < 19 ? 'tarde' : 'noche', finde: [0, 6].includes(d.getDay()) }; };
+let _relaxWeather = null, _relaxBreath = null;
+const relaxWeather = async () => {
+  if (_relaxWeather && Date.now() - _relaxWeather.t < 30 * 60000) return _relaxWeather.w;
+  try { const B = await loadBriefCore(); const w = await B.fetchWeather(); _relaxWeather = { t: Date.now(), w }; return w; } catch (e) { return { ok: false }; }
+};
+
+const renderRelaxView = () => {
+  const content = document.getElementById('content'); if (!content) return;
+  content.style.padding = '16px';
+  if (_relaxBreath) { _relaxBreath.stop(); _relaxBreath = null; }
+  const favs = (state.settings.relaxFavs || []);
+  content.innerHTML = `
+  <div class="rx-wrap">
+    <div class="rx-top">
+      <div><div class="rx-title">🌿 Zona Relax</div><div class="rx-sub">Un respiro para ti. Toca lo que te llame.</div></div>
+      <button class="btn btn-primary btn-sm" id="rxSurprise">🎲 Sorpréndeme</button>
+    </div>
+
+    <section class="rx-card rx-orizaba" id="rxPlans">
+      <div class="rx-h"><span class="rx-ico">📍</span><div><b>¿Qué hago en Orizaba?</b><small id="rxWx">Ideas según el clima y la hora</small></div></div>
+      <div class="rx-chips" id="rxPlanMood">
+        ${[['ahora', '⚡ Ahorita'], ['naturaleza', '🌲 Naturaleza'], ['comer', '🌮 Comer algo'], ['cultura', '🏛️ Cultura'], ['gratis', '🆓 Gratis'], ['tranqui', '☕ Tranqui']].map(([k, l], i) => `<button type="button" class="rx-chip${i ? '' : ' on'}" data-k="${k}">${l}</button>`).join('')}
+      </div>
+      <div class="rx-list" id="rxPlanList"><div class="rx-empty">Elige un plan y toca «Dame ideas».</div></div>
+      <button type="button" class="rx-go" id="rxPlanGo">✦ Dame ideas</button>
+    </section>
+
+    <section class="rx-card rx-quote" id="rxQuote">
+      <div class="rx-h"><span class="rx-ico">💬</span><div><b>Frase para ti</b><small>Algo que te mueva hoy</small></div></div>
+      <blockquote class="rx-q" id="rxQText">${_esc(RELAX_QUOTES[new Date().getDate() % RELAX_QUOTES.length])}</blockquote>
+      <div class="rx-row">
+        <button type="button" class="rx-btn" id="rxQNew">↻ Otra</button>
+        <button type="button" class="rx-btn" id="rxQFav">♡ Guardar</button>
+        <button type="button" class="rx-btn" id="rxQCopy">⧉ Copiar</button>
+      </div>
+      ${favs.length ? `<details class="rx-favs"><summary>Mis frases guardadas (${favs.length})</summary>${favs.map((f, i) => `<div class="rx-fav"><span>${_esc(f)}</span><button type="button" data-del="${i}" aria-label="Quitar">✕</button></div>`).join('')}</details>` : ''}
+    </section>
+
+    <section class="rx-card rx-breath" id="rxBreath">
+      <div class="rx-h"><span class="rx-ico">🫁</span><div><b>Respira</b><small>Un minuto para bajar el ritmo</small></div></div>
+      <div class="rx-chips" id="rxBMode">
+        <button type="button" class="rx-chip on" data-m="calma">Calma 4·6</button>
+        <button type="button" class="rx-chip" data-m="caja">Caja 4·4·4·4</button>
+        <button type="button" class="rx-chip" data-m="sueno">Dormir 4·7·8</button>
+      </div>
+      <div class="rx-orb-wrap"><div class="rx-orb" id="rxOrb"><span id="rxOrbTx">Toca para empezar</span></div><div class="rx-orb-ring"></div></div>
+      <div class="rx-row" style="justify-content:center"><button type="button" class="rx-go rx-go-sm" id="rxBGo">▶ Empezar · 1 min</button></div>
+    </section>
+
+    <section class="rx-card rx-challenge" id="rxChal">
+      <div class="rx-h"><span class="rx-ico">🎯</span><div><b>Reto o idea creativa</b><small>Para despertar la mente y las manos</small></div></div>
+      <div class="rx-chips" id="rxCMood">
+        ${[['dibujo', '✏️ Dibujo / tatuaje'], ['mente', '🧠 Mente'], ['cuerpo', '💪 Cuerpo'], ['aprender', '📚 Aprender algo'], ['social', '🤝 Con alguien']].map(([k, l], i) => `<button type="button" class="rx-chip${i ? '' : ' on'}" data-k="${k}">${l}</button>`).join('')}
+      </div>
+      <div id="rxChalOut" class="rx-chal"><div class="rx-empty">Elige un tipo y toca «Dame un reto».</div></div>
+      <div class="rx-row"><button type="button" class="rx-go" id="rxChalGo">✦ Dame un reto</button><button type="button" class="rx-btn" id="rxChalSave" hidden>🗒️ Guardar como nota</button></div>
+    </section>
+  </div>`;
+
+  const $ = id => document.getElementById(id);
+  const pick = (wrap, attr) => { wrap.addEventListener('click', e => { const c = e.target.closest('.rx-chip'); if (!c) return; wrap.querySelectorAll('.rx-chip').forEach(x => x.classList.toggle('on', x === c)); haptic('tap'); }); return () => wrap.querySelector('.rx-chip.on')?.dataset[attr]; };
+  const planMood = pick($('rxPlanMood'), 'k'), chalMood = pick($('rxCMood'), 'k'), bMode = pick($('rxBMode'), 'm');
+  const loading = (el, t) => { el.innerHTML = `<div class="rx-loading"><span class="rx-dots"><i></i><i></i><i></i></span>${t}</div>`; };
+  relaxWeather().then(w => { const e = $('rxWx'); if (e && w && w.ok) e.textContent = `${w.icon} ${w.tempC}° ${w.desc} · ${relaxNow().momento}`; });
+
+  // ── Planes en Orizaba ──
+  const doPlans = async () => {
+    const btn = $('rxPlanGo'), list = $('rxPlanList'); if (!btn) return;
+    btn.disabled = true; loading(list, 'Buscando planes en Orizaba…');
+    const w = await relaxWeather(), n = relaxNow(), mood = planMood();
+    const moodTx = { ahora: 'algo que pueda hacer ya mismo', naturaleza: 'naturaleza y aire libre', comer: 'comer o tomar algo rico', cultura: 'cultura, museos, historia o arte', gratis: 'planes gratis', tranqui: 'algo tranquilo para relajarse' }[mood];
+    const prompt = `Estoy en Orizaba, Veracruz (México). Es ${n.dia}, ${n.hora} (${n.momento})${n.finde ? ', fin de semana' : ''}. Clima: ${w && w.ok ? `${w.desc}, ${w.tempC}°C, lluvia ${w.rainPct}%` : 'desconocido'}.
+Estoy aburrido y quiero ${moodTx}. Soy tatuador y me gusta el arte.
+Dame 3 planes concretos y reales en Orizaba o muy cerca, adecuados a la hora y al clima (si llueve, bajo techo). Lugares conocidos que puedes usar: ${RELAX_PLACES.join('; ')}.
+Responde SOLO con JSON: [{"emoji":"","titulo":"","que":"qué hacer, 1-2 frases","tip":"un consejo corto (hora, qué llevar, qué pedir)"}]`;
+    try {
+      const arr = relaxJSON(await callAI(prompt, 'Eres un amigo local de Orizaba, cálido y práctico. Español de México. Solo recomiendas lugares reales; no inventas datos. Responde solo JSON.', { maxTokens: 700, temperature: .8 }));
+      const items = (Array.isArray(arr) ? arr : []).filter(x => x && x.titulo).slice(0, 3);
+      if (!items.length) throw new Error('vacío');
+      list.innerHTML = items.map((x, i) => `<div class="rx-plan" style="--i:${i}"><span class="rx-plan-e">${_esc(x.emoji || '📍')}</span><div><b>${_esc(x.titulo)}</b><p>${_esc(x.que || '')}</p>${x.tip ? `<small>💡 ${_esc(x.tip)}</small>` : ''}</div></div>`).join('');
+      btn.textContent = '↻ Otras ideas';
+    } catch (e) { list.innerHTML = `<div class="rx-empty">No pude traer ideas ahorita (${_esc(e.message)}). Prueba otra vez.</div>`; }
+    btn.disabled = false;
+  };
+  $('rxPlanGo').addEventListener('click', doPlans);
+
+  // ── Frase ──
+  let curQ = $('rxQText').textContent;
+  const doQuote = async () => {
+    const q = $('rxQText'), b = $('rxQNew'); b.disabled = true; q.classList.add('rx-fade');
+    try {
+      const t = String(await callAI(`Escribe UNA frase motivadora original y corta (máximo 22 palabras) para ${briefName()}, tatuador y creador de apps. Tono cercano, sin clichés ni comillas, sin autor. Momento del día: ${relaxNow().momento}. Solo la frase.`, 'Escribes frases motivadoras originales en español de México. Responde solo con la frase.', { maxTokens: 80, temperature: 1 })).replace(/^["«“\s]+|["»”\s]+$/g, '').split('\n')[0].trim();
+      curQ = t && t.length < 220 ? t : RELAX_QUOTES[Math.floor(Math.random() * RELAX_QUOTES.length)];
+    } catch (e) { curQ = RELAX_QUOTES[Math.floor(Math.random() * RELAX_QUOTES.length)]; }
+    setTimeout(() => { q.textContent = curQ; q.classList.remove('rx-fade'); b.disabled = false; $('rxQFav').textContent = '♡ Guardar'; }, 180);
+  };
+  $('rxQNew').addEventListener('click', doQuote);
+  $('rxQFav').addEventListener('click', () => {
+    const f = state.settings.relaxFavs = state.settings.relaxFavs || [];
+    if (!f.includes(curQ)) { f.unshift(curQ); state.settings.relaxFavs = f.slice(0, 50); save(); }
+    $('rxQFav').textContent = '♥ Guardada'; haptic('success'); toast('💬 Frase guardada');
+  });
+  $('rxQCopy').addEventListener('click', () => { navigator.clipboard?.writeText(curQ).then(() => toast('📋 Copiada')).catch(() => {}); });
+  $('rxQuote').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (!d) return; state.settings.relaxFavs.splice(+d.dataset.del, 1); save(); renderRelaxView(); });
+
+  // ── Respiración guiada ──
+  const PATTERNS = { calma: [['Inhala', 4, 1], ['Exhala', 6, 0]], caja: [['Inhala', 4, 1], ['Sostén', 4, 1], ['Exhala', 4, 0], ['Sostén', 4, 0]], sueno: [['Inhala', 4, 1], ['Sostén', 7, 1], ['Exhala', 8, 0]] };
+  const orb = $('rxOrb'), orbTx = $('rxOrbTx'), bGo = $('rxBGo');
+  const breath = { run: false, to: 0, end: 0,
+    stop() { this.run = false; clearTimeout(this.to); orb.style.transition = 'transform 1s ease'; orb.style.transform = 'scale(1)'; orb.classList.remove('on'); orbTx.textContent = 'Toca para empezar'; bGo.textContent = '▶ Empezar · 1 min'; },
+    start() {
+      const pat = PATTERNS[bMode()] || PATTERNS.calma; this.run = true; this.end = Date.now() + 60000; orb.classList.add('on'); bGo.textContent = '■ Detener'; let i = 0;
+      const step = () => {
+        if (!this.run) return;
+        if (Date.now() > this.end && i % pat.length === 0) { this.stop(); orbTx.textContent = '✨ Bien hecho'; haptic('success'); return; }
+        const [lbl, sec, big] = pat[i % pat.length]; i++;
+        orbTx.textContent = lbl; orb.style.transition = `transform ${sec}s cubic-bezier(.45,0,.55,1)`; orb.style.transform = `scale(${big ? 1.55 : 1})`;
+        try { navigator.vibrate && navigator.vibrate(18); } catch (e) {}
+        this.to = setTimeout(step, sec * 1000);
+      };
+      step();
+    } };
+  _relaxBreath = breath;
+  const toggleB = () => breath.run ? breath.stop() : breath.start();
+  bGo.addEventListener('click', toggleB); orb.addEventListener('click', toggleB);
+
+  // ── Reto creativo ──
+  let lastChal = null;
+  const doChal = async () => {
+    const btn = $('rxChalGo'), out = $('rxChalOut'); btn.disabled = true; loading(out, 'Pensando un reto…');
+    const k = chalMood(), tx = { dibujo: 'dibujo o diseño de tatuaje (estilo neo-japonés / new school, paleta carmesí, dorado, jade y negro)', mente: 'un reto mental o de creatividad', cuerpo: 'moverse un poco o estirarse (sin equipo)', aprender: 'aprender algo nuevo y curioso en poco tiempo', social: 'conectar con alguien (amigos, familia, clientes)' }[k];
+    try {
+      const o = relaxJSON(await callAI(`Dame UN reto divertido y concreto de ${tx}, que se pueda hacer en 5 a 30 minutos, para alguien aburrido en ${relaxNow().momento}. Responde SOLO JSON: {"emoji":"","titulo":"","reto":"instrucciones claras en 2-3 frases","tiempo":"ej. 15 min","extra":"un giro opcional para hacerlo más interesante"}`, 'Eres un coach creativo, divertido y concreto. Español de México. Solo JSON.', { maxTokens: 400, temperature: .95 }));
+      if (!o || !o.titulo) throw new Error('vacío');
+      lastChal = o;
+      out.innerHTML = `<div class="rx-chal-card"><div class="rx-chal-top"><span>${_esc(o.emoji || '🎯')}</span><b>${_esc(o.titulo)}</b>${o.tiempo ? `<em>⏱ ${_esc(o.tiempo)}</em>` : ''}</div><p>${_esc(o.reto || '')}</p>${o.extra ? `<small>🔥 Extra: ${_esc(o.extra)}</small>` : ''}</div>`;
+      $('rxChalSave').hidden = false; btn.textContent = '↻ Otro reto';
+    } catch (e) { out.innerHTML = `<div class="rx-empty">No pude traer un reto ahorita. Prueba otra vez.</div>`; }
+    btn.disabled = false;
+  };
+  $('rxChalGo').addEventListener('click', doChal);
+  $('rxChalSave').addEventListener('click', () => {
+    if (!lastChal) return;
+    state.notes.unshift({ id: Date.now(), title: `${lastChal.emoji || '🎯'} ${lastChal.titulo}`, body: `${lastChal.reto || ''}${lastChal.tiempo ? `\n\n⏱ ${lastChal.tiempo}` : ''}${lastChal.extra ? `\n**Extra:** ${lastChal.extra}` : ''}\n\n[ ] Hecho`, tags: ['reto'], color: '#14b8a6', motion: 'glow', pinned: false, createdAt: new Date().toISOString() });
+    save(); toast('🗒️ Reto guardado en tus notas'); $('rxChalSave').hidden = true;
+  });
+
+  // ── Sorpréndeme: elige una tarjeta al azar ──
+  $('rxSurprise').addEventListener('click', () => {
+    const opts = [['rxPlans', doPlans], ['rxQuote', doQuote], ['rxBreath', () => { if (!breath.run) breath.start(); }], ['rxChal', doChal]];
+    const [id, fn] = opts[Math.floor(Math.random() * opts.length)];
+    const el = $(id); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('rx-pop'); void el.offsetWidth; el.classList.add('rx-pop'); haptic('tap'); fn();
+  });
+};
+
 const renderBriefingView = () => {
   const content = document.getElementById('content');
   if (!content) return;
@@ -8900,12 +9119,12 @@ initNotifications();
   const shell=document.getElementById('appShell');
   const sidebar=document.getElementById('sidebar');
   if(!shell||!sidebar||document.getElementById('novaFloatingDock'))return;
-  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','ai','settings'];
+  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','ai','settings'];
   const dock=document.createElement('nav');
   dock.id='novaFloatingDock';
   dock.setAttribute('aria-label','Navegación flotante de Nova Hub');
   const icon=(view)=>{const d=DOCK_META[view];if(view==='projects')return '<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>';return d && d.p ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d.p+'"></path></svg>' : '<span class="material-symbols-outlined" aria-hidden="true">apps</span>';};
-  const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',ai:'IA Asistente',settings:'Ajustes'};
+  const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',relax:'Zona Relax',ai:'IA Asistente',settings:'Ajustes'};
   const button=(act,label,svg)=>'<button class="nova-dock-item" type="button" data-dock="'+act+'" data-tip="'+label+'" aria-label="'+label+'">'+svg+'</button>';
   dock.innerHTML=views.map((view,i)=>(i===7?'<span class="nova-dock-separator" aria-hidden="true"></span>':'')+button(view,labels[view],icon(view))).join('');
   shell.insertAdjacentElement('afterend',dock);

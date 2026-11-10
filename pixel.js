@@ -141,7 +141,7 @@
   }
 
   /* ════════ Secciones, sugerencias y «¿dónde está…?» ════════ */
-  const NAMES = {dashboard: 'Dashboard', calendar: 'Calendario', notes: 'Notas', projects: 'Proyectos', reminders: 'Recordatorios', diary: 'Diario', habits: 'Hábitos', briefing: 'Daily Briefing', ai: 'IA Asistente', settings: 'Ajustes'};
+  const NAMES = {dashboard: 'Dashboard', calendar: 'Calendario', notes: 'Notas', projects: 'Proyectos', reminders: 'Recordatorios', diary: 'Diario', habits: 'Hábitos', briefing: 'Briefing diario', relax: 'Zona Relax', ai: 'IA Asistente', settings: 'Ajustes'};
   const CHIPS = {
     dashboard: [['¿Qué tengo hoy?', '¿Qué tengo hoy?'], ['Prioriza mis pendientes', 'Ayúdame a priorizar mis pendientes de hoy'], ['Plan de la semana', 'Arma un plan para mi semana con lo que tengo'], ['Anotar una idea', 'Anota una idea: ']],
     notes: [['Nueva nota', 'Anota: '], ['Resume mis notas', 'Resume mis notas más recientes'], ['Busca en mis notas', 'Busca en mis notas: '], ['Ideas para tatuajes', '¿Qué ideas de tatuajes tengo anotadas?']],
@@ -231,7 +231,7 @@ Acciones (úsalas solo cuando el usuario pida crear, anotar, agendar, recordar, 
 {"do":"event","title":"…","date":"AAAA-MM-DD","start":"HH:MM","end":"HH:MM"} evento en el calendario
 {"do":"habit","name":"…"} hábito nuevo · {"do":"checkHabit","name":"…"} marcar hábito de hoy como hecho
 {"do":"doneTask","project":"…","title":"…"} tachar una tarea · {"do":"diary","content":"…","mood":"😊"} entrada de diario
-{"do":"go","view":"dashboard|calendar|notes|projects|reminders|diary|habits|briefing|settings"} abrir una sección
+{"do":"go","view":"dashboard|calendar|notes|projects|reminders|diary|habits|briefing|relax|settings"} abrir una sección
 Cuando crees algo, en "reply" confirma en una frase qué hiciste. Si falta un dato importante (por ejemplo la hora de un recordatorio que sí importa), pregúntalo y deja "actions":[].
 Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "reply" (puedes usar viñetas con •) y deja "actions":[].`;
 
