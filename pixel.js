@@ -218,25 +218,19 @@ Acciones (úsalas solo cuando el usuario pida crear, anotar, agendar, recordar, 
 Cuando crees algo, en "reply" confirma en una frase qué hiciste. Si falta un dato importante (por ejemplo la hora de un recordatorio que sí importa), pregúntalo y deja "actions":[].
 Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "reply" (puedes usar viñetas con •) y deja "actions":[].`;
 
-  /* ════════ IA: tu clave (si la pusiste en Ajustes) o la IA gratuita de tu servidor ════════ */
+  /* ════════ IA gratuita de modelos abiertos (sin claves) ════════ */
   async function fetchT(url, init, ms) { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), ms); try { return await fetch(url, {...init, signal: ctl.signal}); } finally { clearTimeout(to); } }
-  async function userAI(messages, maxTokens) {
-    const {key, provider} = H().ai(); if (!key) throw new Error('sin clave');
-    const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n'), conv = messages.filter(m => m.role !== 'system');
-    if (provider === 'claude') { const r = await fetchT('https://api.anthropic.com/v1/messages', {method: 'POST', headers: {'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true'}, body: JSON.stringify({model: 'claude-sonnet-4-6', max_tokens: maxTokens, system: sys, messages: conv})}, 40000); const d = await r.json(); const t = d.content && d.content.find(c => c.type === 'text'); if (!r.ok || !t) throw new Error(d.error && d.error.message || 'Claude'); return t.text; }
-    if (provider === 'openai') { const r = await fetchT('https://api.openai.com/v1/chat/completions', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + key}, body: JSON.stringify({model: 'gpt-4o-mini', max_tokens: maxTokens, messages})}, 40000); const d = await r.json(); const t = d.choices && d.choices[0] && d.choices[0].message.content; if (!r.ok || !t) throw new Error('OpenAI'); return t; }
-    if (provider === 'gemini') { const r = await fetchT(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({systemInstruction: {parts: [{text: sys}]}, contents: conv.map(m => ({role: m.role === 'assistant' ? 'model' : 'user', parts: [{text: m.content}]}))})}, 40000); const d = await r.json(); const t = d.candidates && d.candidates[0] && d.candidates[0].content.parts[0].text; if (!r.ok || !t) throw new Error('Gemini'); return t; }
-    throw new Error('proveedor');
-  }
   async function freeAI(messages, maxTokens) {
-    const body = JSON.stringify({model: 'openai', messages, max_tokens: maxTokens, temperature: .4});
+    const body = JSON.stringify({model: 'deepseek', messages, max_tokens: maxTokens, temperature: .4}); // modelo abierto
     const read = async r => { if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(), t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content; if (!t) throw new Error('vacía'); return t; };
     try { return await read(await fetchT(VX + '/ai', {method: 'POST', headers: {'content-type': 'application/json'}, body}, 35000)); }
     catch (e) { return await read(await fetchT(GEN_URL, {method: 'POST', headers: {'content-type': 'application/json', authorization: 'Bearer ' + POLLEN_KEY}, body}, 35000)); }
   }
   async function chat(messages, maxTokens = 700) {
-    if (H().ai().key) { try { status('pensando… (tu IA)'); return await userAI(messages, maxTokens); } catch (e) { console.warn('Nova Pixel: tu clave falló, uso la IA gratuita', e); } }
-    status('pensando…'); return await freeAI(messages, maxTokens);
+    status('pensando…');
+    // La misma IA gratuita de modelos abiertos que usa toda la app (worker/ai.mjs); si aún no carga, la ruta directa
+    if (window.NovaAI) return (await window.NovaAI.chat(messages, {maxTokens, temperature: .4})).text;
+    return await freeAI(messages, maxTokens);
   }
   async function llmAsk(text) {
     const msgs = [{role: 'system', content: SYS + profile()}, ...hist.slice(-6), {role: 'user', content: `${text}\n\nMIS DATOS (JSON): ${JSON.stringify(context(text)).slice(0, 14000)}`}];

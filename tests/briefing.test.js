@@ -32,10 +32,26 @@ test('parseo tolerante: texto alrededor, citas y campos raros', async () => {
   assert.strictEqual(B.parseBriefing('{}'), null);
 });
 
-test('con web search se une el texto posterior a la última búsqueda', async () => {
+test('titulares reales: RSS de Google Noticias, sin repetidos y sin cripto en el prompt', async () => {
   const B = await Bm();
-  const c = [{type: 'text', text: 'Voy a buscar'}, {type: 'server_tool_use'}, {type: 'web_search_tool_result'}, {type: 'text', text: '{"saludo":'}, {type: 'text', text: '"hola"}'}];
-  assert.strictEqual(B.finalText(c), '{"saludo":"hola"}');
+  const xml = '<rss><channel><title>x</title><item><title><![CDATA[Gran noticia &amp; más - Medio]]></title></item><item><title>Gran noticia &amp; más - Medio</title></item><item><title>Otra</title></item></channel></rss>';
+  assert.deepStrictEqual(B.parseRss(xml), ['Gran noticia & más - Medio', 'Otra']);
+  const p = B.buildPrompt({dateLabel: 'hoy', dateStr: '2026-11-10', headlines: {mexico: ['Sube el bitcoin a récord', 'Reforma aprobada'], ia: ['Nuevo modelo abierto'], tech: [], orizaba: ['Festival en Orizaba']}});
+  assert.ok(p.includes('Reforma aprobada') && p.includes('Nuevo modelo abierto') && p.includes('Festival en Orizaba'));
+  assert.ok(!p.includes('bitcoin'), 'los titulares de cripto se filtran');
+  assert.match(p, /sin titulares disponibles/);
+});
+
+test('IA gratuita: prueba modelos abiertos primero y salta los que piden créditos', async () => {
+  const AI = await import('../worker/ai.mjs'), tried = [];
+  const fake = async (url, init) => { const b = JSON.parse(init.body); tried.push(b.model + '@' + (url.includes('vortex') ? 'vx' : 'gen'));
+    if (b.model === 'deepseek') return new Response('{"error":{"message":"busy"}}', {status: 503});
+    if (b.model === 'mistral') return new Response(JSON.stringify({choices: [{message: {content: 'You do not have enough credits, top up'}}]}));
+    return new Response(JSON.stringify({choices: [{message: {content: '<think>x</think>Hola Payi'}}]})); };
+  const r = await AI.chat([{role: 'user', content: 'hola'}], {fetchFn: fake});
+  assert.deepStrictEqual(r, {text: 'Hola Payi', model: 'qwen-coder'});
+  assert.deepStrictEqual(tried, ['deepseek@gen', 'deepseek@vx', 'mistral@gen', 'qwen-coder@gen']);
+  assert.ok(AI.OPEN_MODELS.every(m => /deepseek|mistral|qwen|llama/.test(m)));
 });
 
 test('la lista guarda 7, la más nueva primero, una por día y sin briefings viejos de cripto', async () => {
@@ -48,20 +64,20 @@ test('la lista guarda 7, la más nueva primero, una por día y sin briefings vie
   assert.ok(list.every(e => e.v === 2));
 });
 
-test('cuándo toca: 8:30 en su zona, con API key de Claude, una vez al día, con candado', async () => {
+test('cuándo toca: 8:30 en su zona, una vez al día, con candado', async () => {
   const w = await W();
   const at = (hhmm) => Date.parse(`2026-11-10T${hhmm}:00-06:00`);
   const u = {tz: CDMX, settings: {aiProvider: 'claude', aiApiKey: 'sk-ant-x', username: 'Víctor', pixel: {nombre: 'Payi'}}};
   assert.strictEqual(w.briefingDue(u, at('08:29')), null);
   const due = w.briefingDue(u, at('08:30'));
-  assert.deepStrictEqual(due, {zone: CDMX, dateStr: '2026-11-10', apiKey: 'sk-ant-x', name: 'Payi', tries: 1});
+  assert.deepStrictEqual(due, {zone: CDMX, dateStr: '2026-11-10', name: 'Payi', tries: 1});
   assert.strictEqual(w.briefingDue(u, at('10:30')), null, 'fuera de la ventana');
   assert.strictEqual(w.briefingDue({...u, briefings: [{v: 2, date: '2026-11-10'}]}, at('08:31')), null, 'ya hay de hoy');
   assert.ok(w.briefingDue({...u, briefings: [{v: 2, date: '2026-11-09'}]}, at('08:31')), 'el de ayer no cuenta');
   assert.strictEqual(w.briefingDue({...u, briefingLock: {date: '2026-11-10', at: at('08:30'), tries: 1}}, at('08:35')), null, 'otro en curso');
   assert.strictEqual(w.briefingDue({...u, briefingLock: {date: '2026-11-10', at: at('08:30'), tries: 1}}, at('08:46')).tries, 2, 'reintento');
   assert.strictEqual(w.briefingDue({...u, briefingLock: {date: '2026-11-10', at: at('08:30'), tries: 3}}, at('09:30')), null, 'máximo 3 intentos');
-  assert.strictEqual(w.briefingDue({...u, settings: {...u.settings, aiProvider: 'openai'}}, at('08:30')), null);
+  assert.ok(w.briefingDue({tz: CDMX, settings: {}}, at('08:30')), 'ya no necesita API key: usa la IA gratuita');
   assert.strictEqual(w.briefingDue({...u, settings: {...u.settings, briefingAuto: false}}, at('08:30')), null);
 });
 
@@ -73,7 +89,7 @@ test('ronda de las 8:30: genera, guarda solo el campo briefings y avisa', async 
   const NAME = 'projects/nova-hub-2a8a0/databases/(default)/documents/users/U1';
   const fields = {
     tz: {stringValue: CDMX},
-    settings: w.encode({aiProvider: 'claude', aiApiKey: 'sk-ant-test', username: 'Payi'}),
+    settings: w.encode({username: 'Payi'}),
     fcmTokens: {arrayValue: {values: [{stringValue: 'tok'}]}},
     briefings: w.encode([{v: 2, id: 1, date: '2026-11-09', sections: {}}])
   };
@@ -83,7 +99,8 @@ test('ronda de las 8:30: genera, guarda solo el campo briefings y avisa', async 
     url = String(url);
     if (url.startsWith('https://oauth2.googleapis.com/token')) return J({access_token: 'AT'});
     if (url.startsWith('https://api.open-meteo.com/')) { assert.match(url, /latitude=18\.85/); return J({current: {temperature_2m: 17.4, apparent_temperature: 16, relative_humidity_2m: 80, weather_code: 3, wind_speed_10m: 8}, daily: {temperature_2m_max: [22], temperature_2m_min: [12], precipitation_probability_max: [40]}}); }
-    if (url.startsWith('https://api.anthropic.com/')) { assert.strictEqual(init.headers['x-api-key'], 'sk-ant-test'); claudeBody = JSON.parse(init.body); return J({stop_reason: 'end_turn', content: [{type: 'server_tool_use'}, {type: 'web_search_tool_result'}, {type: 'text', text: JSON.stringify(SAMPLE)}]}); }
+    if (url.startsWith('https://news.google.com/')) return new Response('<rss><item><title>Titular real</title></item></rss>');
+    if (url.startsWith('https://gen.pollinations.ai/')) { claudeBody = JSON.parse(init.body); return J({choices: [{message: {content: '```json\n' + JSON.stringify(SAMPLE) + '\n```'}}]}); }
     assert.strictEqual(init.headers && init.headers.authorization, 'Bearer AT');
     if (url.includes('/documents/users?')) { assert.match(url, /mask\.fieldPaths=briefings/); return J({documents: [{name: NAME, fields}]}); }
     if (init.method === 'PATCH') { patches.push({url, body: JSON.parse(init.body)}); return J({}); }
@@ -96,7 +113,7 @@ test('ronda de las 8:30: genera, guarda solo el campo briefings y avisa', async 
   const r = await w.tick({FIREBASE_SERVICE_ACCOUNT: JSON.stringify(sa)}, Date.parse('2026-11-10T08:30:20-06:00'), fake);
   assert.strictEqual(r.briefings, 1);
   assert.match(patches[0].url, /updateMask\.fieldPaths=briefingLock/); assert.ok(!/fieldPaths=(notes|settings)/.test(patches[0].url));
-  assert.ok(claudeBody.tools.some(t => t.type === 'web_search_20250305'));
+  assert.strictEqual(claudeBody.model, 'deepseek', 'modelo abierto'); assert.ok(claudeBody.messages[1].content.includes('Titular real'));
   const wr = commit.writes[0];
   assert.deepStrictEqual(wr.updateMask.fieldPaths, ['briefings'], 'nunca toca notas, proyectos ni ajustes');
   const saved = w.decode(wr.update.fields.briefings);

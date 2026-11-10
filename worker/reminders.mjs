@@ -7,7 +7,7 @@
 //   4) En una transacción marca lo avisado SIN reescribir tus datos: solo agrega notified:true a esos recordatorios
 //      (conservando el valor exacto de todo lo demás), actualiza routineNotified y quita tokens vencidos.
 // Las fechas «YYYY-MM-DDTHH:MM» (sin zona) se leen en TU zona horaria (campo tz, por defecto America/Mexico_City).
-//   5) A las 8:30 (zona del usuario) genera el briefing del día con su API key de Claude (worker/briefing.mjs),
+//   5) A las 8:30 (zona del usuario) genera el briefing del día con la IA gratuita de modelos abiertos (worker/briefing.mjs),
 //      lo guarda en users/{uid}.briefings y avisa «Tu briefing de hoy está listo».
 // Secreto del Worker: FIREBASE_SERVICE_ACCOUNT (lo sube solo .github/workflows/deploy-push-worker.yml).
 
@@ -79,17 +79,15 @@ export function dueFor(user, nowMs) {
 export function briefingDue(user, nowMs) {
   let zone = typeof user.tz === 'string' && user.tz ? user.tz : TZ_DEFAULT, t;
   try { t = nowInTZ(nowMs, zone); } catch { zone = TZ_DEFAULT; t = nowInTZ(nowMs, zone); }
-  const s = user.settings && typeof user.settings === 'object' ? user.settings : {};
-  if (s.briefingAuto === false) return null;
+  const s = user.settings && typeof user.settings === 'object' ? user.settings : null;
+  if (!s || s.briefingAuto === false) return null; // solo cuentas que ya abrieron la app (tienen ajustes)
   const start = timeToMin(s.briefingTime || B.BRIEFING_TIME);
   if (start === null || t.minutes < start || t.minutes >= start + B.BRIEFING_WINDOW_MIN) return null;
   if ((Array.isArray(user.briefings) ? user.briefings : []).some(e => e && e.v === B.BRIEFING_VERSION && e.date === t.dateStr)) return null;
-  const apiKey = (s.aiProvider || 'claude') === 'claude' && typeof s.aiApiKey === 'string' ? s.aiApiKey.trim() : '';
-  if (!apiKey) return null;
   const lock = user.briefingLock && user.briefingLock.date === t.dateStr ? user.briefingLock : null;
   if (lock && ((nowMs - Number(lock.at || 0)) < 15 * 60000 || Number(lock.tries || 0) >= 3)) return null;
   const name = (s.pixel && s.pixel.nombre) || s.username || 'Payi';
-  return {zone, dateStr: t.dateStr, apiKey, name, tries: (lock ? Number(lock.tries || 0) : 0) + 1};
+  return {zone, dateStr: t.dateStr, name, tries: (lock ? Number(lock.tries || 0) : 0) + 1};
 }
 
 // JS → valores tipados de Firestore
@@ -174,7 +172,7 @@ async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs) {
   const patch = (fields) => fetchFn(`https://firestore.googleapis.com/v1/${name}?${Object.keys(fields).map(f => 'updateMask.fieldPaths=' + f).join('&')}&currentDocument.exists=true`, {method: 'PATCH', headers: H, body: JSON.stringify({fields})});
   // Candado: evita que la ronda del minuto siguiente lo genere otra vez mientras este sigue en curso
   await patch({briefingLock: encode({date: bj.dateStr, at: nowMs, tries: bj.tries})});
-  const entry = await B.generateBriefing({apiKey: bj.apiKey, name: bj.name, nowMs, tz: bj.zone, fetchFn, source: 'auto'});
+  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, source: 'auto'});
   const root = base.replace(/\/documents$/, '');
   let saved = false;
   for (let attempt = 0; attempt < 3 && !saved; attempt++) {
@@ -215,6 +213,12 @@ async function commit(base, name, H, fetchFn, {remKeys, rtKeys, dateStr, bad}) {
 }
 
 export default {
-  async fetch() { return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios, horario y briefing de las 8:30 con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },
+  async fetch(req) {
+    // Titulares reales para «Generar ahora» en la app (el navegador no puede leer Google Noticias directo)
+    if (req && new URL(req.url).pathname === '/briefing/feeds') {
+      const h = await B.fetchHeadlines();
+      return new Response(JSON.stringify(h), {headers: {'content-type': 'application/json', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=900'}});
+    }
+    return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios, horario y briefing de las 8:30 con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },
   async scheduled(event, env, ctx) { ctx.waitUntil(tick(env, event.scheduledTime || Date.now()).then(r => console.log('ronda', JSON.stringify(r))).catch(e => console.error('ronda', e.message))); }
 };

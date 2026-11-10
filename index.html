@@ -527,6 +527,59 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .bf-pending-tx{flex:1;font-size:.86rem;color:var(--text2);line-height:1.5}
 .bf-prev{display:block;width:100%;background:none;border:none;border-top:1px solid var(--border);color:var(--accent);font-size:.8rem;font-weight:600;padding:12px;cursor:pointer;font-family:inherit;text-transform:none}
 
+/* ── EDITOR DE NOTAS (el texto es lo principal) ── */
+.modal.note-editor-modal{background:rgba(18,18,32,.97);width:760px;max-width:96vw;height:min(90vh,900px);padding:0;display:flex;flex-direction:column;overflow:hidden}
+.ne-head{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.ne-head h3{flex:1;margin:0!important;font-size:.82rem!important;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
+.ne-x{width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ne-x:hover{background:rgba(255,255,255,.07)}
+.ne-title{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-size:1.35rem;font-weight:700;padding:4px 20px 8px;font-family:inherit}
+.ne-title::placeholder{color:var(--text3)}
+.ne-tools{display:flex;align-items:center;gap:2px;padding:4px 12px;margin:0 8px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.ne-tools::-webkit-scrollbar{display:none}
+.ne-tools button{flex-shrink:0;width:38px;height:36px;border:none;border-radius:9px;background:transparent;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s}
+.ne-tools button:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.ne-tools button.on{background:rgba(124,106,247,.2);color:var(--accent)}
+.ne-tools .material-symbols-outlined{font-size:1.25rem}
+.ne-sep{width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0}
+.ne-body{flex:1;min-height:180px;overflow-y:auto;padding:14px 20px 20px;outline:none;color:var(--text);font-size:1rem;line-height:1.7;overflow-wrap:break-word;-webkit-overflow-scrolling:touch;cursor:text}
+.ne-body.is-empty::before{content:attr(data-placeholder);color:var(--text3);position:absolute;pointer-events:none}
+.ne-foot{border-top:1px solid var(--border);padding:8px 12px calc(10px + env(safe-area-inset-bottom));flex-shrink:0}
+.ne-opts{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.ne-opts::-webkit-scrollbar{display:none}
+.ne-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:.78rem;font-family:inherit;cursor:pointer;max-width:200px}
+.ne-chip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ne-chip .material-symbols-outlined{font-size:1rem}
+.ne-chip.on{border-color:var(--accent);color:var(--text);background:rgba(124,106,247,.12)}
+.ne-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+.ne-pane{padding-top:10px;animation:fadeSlideIn .2s ease}
+.ne-pane .color-swatches{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px}
+.ne-tags{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:.85rem;outline:none;font-family:inherit}
+.ne-tags:focus{border-color:var(--accent)}
+.ne-pane .nova-motion-options{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.ne-pane .nova-motion-options::-webkit-scrollbar{display:none}
+.ne-pane .nova-motion-option{min-height:0;flex-direction:row;flex-shrink:0;height:32px;padding:0 12px;border-radius:999px;font-size:.76rem;gap:5px}
+.ne-pane .nova-motion-option span{font-size:.95rem}
+[data-theme="light"] .modal.note-editor-modal{background:rgba(255,255,255,.98)}
+@media (max-width:640px){
+  #noteModal.modal-overlay{align-items:stretch}
+  .modal.note-editor-modal{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:none}
+  .ne-body{font-size:1.02rem}
+}
+/* Formato de notas (editor, tarjetas y vista de detalle) */
+.nmd ul,.nmd ol{margin:4px 0;padding-left:1.4em}
+.nmd li{margin:2px 0}
+.nmd h3{font-size:1.12em;font-weight:700;margin:8px 0 2px;line-height:1.4}
+.nmd ul.nchk{list-style:none;padding-left:0}
+.nmd ul.nchk>li{position:relative;padding-left:28px}
+.nmd ul.nchk>li::before{content:'';position:absolute;left:2px;top:.32em;width:16px;height:16px;border-radius:5px;border:2px solid var(--text3);box-sizing:border-box;cursor:pointer;transition:all .15s}
+.nmd ul.nchk>li[data-done="1"]{color:var(--text3);text-decoration:line-through}
+.nmd ul.nchk>li[data-done="1"]::before{background:var(--accent);border-color:var(--accent)}
+.nmd ul.nchk>li[data-done="1"]::after{content:'';position:absolute;left:7.5px;top:calc(.32em + 3px);width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.note-card .note-body.nmd,.nd-body.nmd{white-space:normal}
+.note-card .note-body.nmd ul,.note-card .note-body.nmd ol{margin:2px 0}
+.nd-body.nmd ul.nchk>li{cursor:pointer}
+
 /* ═══════════════════════════════════════════════════════
    NOVA HUB — PROFESSIONAL ANIMATION SYSTEM
    ═══════════════════════════════════════════════════════ */
@@ -3140,18 +3193,36 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 
 <!-- MODALS -->
 <div class="modal-overlay" id="noteModal">
-  <div class="modal">
-    <h3 id="noteModalTitle">🗒️ Nueva Nota</h3>
-    <input type="hidden" id="noteId"/>
-    <div class="field"><label>Título</label><input id="noteTitle" placeholder="Título de la nota…"/></div>
-    <div class="field"><label>Contenido</label><textarea id="noteBody" rows="4" placeholder="Escribe aquí…"></textarea></div>
-    <div class="field"><label>Etiquetas (separadas por coma)</label><input id="noteTags" placeholder="idea, trabajo, personal…"/></div>
-    <div class="field"><label>Color</label>
-      <input id="noteColor" type="hidden" value="#7c6af7" data-colorpick>
-        
+  <div class="modal note-editor-modal">
+    <div class="ne-head">
+      <button type="button" class="ne-x" id="noteCancel" aria-label="Cerrar"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+      <h3 id="noteModalTitle">🗒️ Nueva Nota</h3>
+      <button type="button" class="btn btn-primary btn-sm" id="noteSave">Guardar</button>
     </div>
-    <div class="field">
-      <label>Animación de la nota</label>
+    <input type="hidden" id="noteId"/>
+    <input id="noteTitle" class="ne-title" placeholder="Título" autocomplete="off"/>
+    <div class="ne-tools" id="noteTools" role="toolbar" aria-label="Formato del texto">
+      <button type="button" data-cmd="bold" title="Negrita" aria-label="Negrita"><span class="material-symbols-outlined">format_bold</span></button>
+      <button type="button" data-cmd="italic" title="Cursiva" aria-label="Cursiva"><span class="material-symbols-outlined">format_italic</span></button>
+      <button type="button" data-cmd="strikeThrough" title="Tachar" aria-label="Tachar"><span class="material-symbols-outlined">strikethrough_s</span></button>
+      <button type="button" data-cmd="heading" title="Subtítulo" aria-label="Subtítulo"><span class="material-symbols-outlined">title</span></button>
+      <span class="ne-sep" aria-hidden="true"></span>
+      <button type="button" data-cmd="ul" title="Lista con viñetas" aria-label="Lista con viñetas"><span class="material-symbols-outlined">format_list_bulleted</span></button>
+      <button type="button" data-cmd="ol" title="Lista numerada" aria-label="Lista numerada"><span class="material-symbols-outlined">format_list_numbered</span></button>
+      <button type="button" data-cmd="chk" title="Lista de pendientes" aria-label="Lista de pendientes"><span class="material-symbols-outlined">checklist</span></button>
+      <span class="ne-sep" aria-hidden="true"></span>
+      <button type="button" data-cmd="clear" title="Quitar formato" aria-label="Quitar formato"><span class="material-symbols-outlined">format_clear</span></button>
+    </div>
+    <div id="noteBody" class="ne-body nmd" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Contenido de la nota" data-placeholder="Escribe tu nota…"></div>
+    <div class="ne-foot">
+      <div class="ne-opts">
+        <button type="button" class="ne-chip" data-pane="color"><span class="ne-dot" id="neDot"></span><span>Color</span></button>
+        <button type="button" class="ne-chip" data-pane="tags"><span class="material-symbols-outlined">sell</span><span id="neTagsLbl">Etiquetas</span></button>
+        <button type="button" class="ne-chip" data-pane="motion"><span class="material-symbols-outlined">auto_awesome</span><span id="neMotionLbl">Glow</span></button>
+      </div>
+      <div class="ne-pane" data-pane="color" hidden><input id="noteColor" type="hidden" value="#7c6af7" data-colorpick></div>
+      <div class="ne-pane" data-pane="tags" hidden><input id="noteTags" class="ne-tags" placeholder="idea, trabajo, personal… (separadas por coma)" autocomplete="off"/></div>
+      <div class="ne-pane" data-pane="motion" hidden>
       <input type="hidden" id="noteMotion" value="glow"/>
       <div class="nova-motion-options" id="noteMotionPicker" role="group" aria-label="Animación de la nota">
         <button type="button" class="nova-motion-option" data-motion="orbit"><span>◎</span>Órbita</button>
@@ -3171,11 +3242,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
         <button type="button" class="nova-motion-option" data-motion="scan"><span>▥</span>Escáner</button>
         <button type="button" class="nova-motion-option" data-motion="vortex"><span>⊛</span>Vórtice</button>
       </div>
-      <div class="nova-motion-help">Se guarda únicamente el efecto visual de esta nota.</div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" id="noteCancel">Cancelar</button>
-      <button class="btn btn-primary" id="noteSave">Guardar</button>
+            </div>
     </div>
   </div>
 </div>
@@ -5353,7 +5420,7 @@ const renderNotes=()=>{
     const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':'');
     el.setAttribute('style', cardToneStyle(n.color));
     el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
-    el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="note-title">${n.title||'Sin título'}</div><button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button></div><div class="note-body">${n.body||''}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
+    el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span><div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="note-title">${n.title||'Sin título'}</div><button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button></div><div class="note-body nmd">${noteMd(n.body)}</div>${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}`;
     el.querySelector('.pin-note-btn').addEventListener('click',(e)=>{ e.stopPropagation(); if(_suppressNextCardClick) return; setNotePinned(n,!n.pinned); renderNotes(); toast(n.pinned?'📌 Anclada':'Desanclada'); });
     el.addEventListener('click',()=>{ if(_suppressNextCardClick) return; openNoteDetail(n.id); }); c.appendChild(el);
   });
@@ -5395,6 +5462,149 @@ document.getElementById('noteMotionPicker')?.addEventListener('click',event=>{
   const button=event.target.closest('[data-motion]');
   if(button)setNoteMotion(button.dataset.motion);
 });
+// ══════════════════════════════════════════════
+// EDITOR DE NOTAS con formato (negrita, cursiva, tachado, subtítulo, viñetas, numeradas y pendientes)
+// La nota se sigue guardando como TEXTO (n.body) con marcas sencillas, así funciona igual en la nube,
+// en el respaldo y con Nova Pixel:  **negrita**  *cursiva*  ~~tachado~~  ## Subtítulo
+//   - viñeta   1. numerada   [ ] pendiente   [x] hecho
+// ══════════════════════════════════════════════
+const _nmdInline = t => _esc(t)
+  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+  .replace(/~~(.+?)~~/g, '<s>$1</s>')
+  .replace(/(^|[^*\w])\*(?!\s)(.+?)\*(?!\w)/g, '$1<i>$2</i>');
+const NMD_CHK = /^\s*(?:[-*•]\s+)?\[( |x|X)\]\s?(.*)$/, NMD_UL = /^\s*[-*•]\s+(.*)$/, NMD_OL = /^\s*(\d+)[.)]\s+(.*)$/, NMD_H = /^\s*#{1,3}\s+(.*)$/;
+// Texto → HTML (para el editor y para mostrar). Todo se escapa: no entra HTML de afuera.
+const noteMd = (text, { lines: withLines = false } = {}) => {
+  const src = String(text || '').replace(/\r/g, '').split('\n');
+  let html = '', list = null;
+  const close = () => { if (list) { html += `</${list === 'ol' ? 'ol' : 'ul'}>`; list = null; } };
+  const open = t => { if (list !== t) { close(); html += t === 'ol' ? '<ol>' : t === 'chk' ? '<ul class="nchk">' : '<ul>'; list = t; } };
+  src.forEach((ln, i) => {
+    let m;
+    if ((m = NMD_CHK.exec(ln))) { open('chk'); html += `<li${m[1].trim() ? ' data-done="1"' : ''}${withLines ? ` data-line="${i}"` : ''}>${_nmdInline(m[2]) || '<br>'}</li>`; }
+    else if ((m = NMD_UL.exec(ln))) { open('ul'); html += `<li>${_nmdInline(m[1]) || '<br>'}</li>`; }
+    else if ((m = NMD_OL.exec(ln))) { open('ol'); html += `<li>${_nmdInline(m[2]) || '<br>'}</li>`; }
+    else if ((m = NMD_H.exec(ln))) { close(); html += `<h3>${_nmdInline(m[1])}</h3>`; }
+    else { close(); html += `<div>${_nmdInline(ln) || '<br>'}</div>`; }
+  });
+  close();
+  return html;
+};
+// HTML del editor → texto con marcas
+const _nmdWrap = (inner, mk) => { const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(inner); return m[2] ? `${m[1]}${mk}${m[2]}${mk}${m[3]}` : inner; };
+const _nmdInl = node => {
+  let out = '';
+  node.childNodes.forEach(c => {
+    if (c.nodeType === 3) { out += c.nodeValue.replace(/ /g, ' '); return; }
+    if (c.nodeType !== 1) return;
+    const tag = c.tagName, st = c.style || {};
+    if (tag === 'BR') { out += ' '; return; }
+    if (tag === 'UL' || tag === 'OL') return; // listas anidadas: las maneja el bloque
+    let inner = _nmdInl(c);
+    const bold = tag === 'B' || tag === 'STRONG' || /^(bold|[6-9]00)$/.test(st.fontWeight || '');
+    const ital = tag === 'I' || tag === 'EM' || st.fontStyle === 'italic';
+    const strk = tag === 'S' || tag === 'STRIKE' || tag === 'DEL' || /line-through/.test(st.textDecoration || st.textDecorationLine || '');
+    if (strk) inner = _nmdWrap(inner, '~~');
+    if (ital) inner = _nmdWrap(inner, '*');
+    if (bold) inner = _nmdWrap(inner, '**');
+    out += inner;
+  });
+  return out;
+};
+const _NMD_BLOCK = /^(DIV|P|H1|H2|H3|H4|H5|H6|UL|OL|BLOCKQUOTE|PRE|LI)$/;
+const _nmdBlocks = el => {
+  const lines = []; let buf = '', has = false;
+  const flush = () => { if (has || buf) lines.push(buf); buf = ''; has = false; };
+  el.childNodes.forEach(c => {
+    if (c.nodeType === 3) { buf += c.nodeValue.replace(/ /g, ' '); has = true; return; }
+    if (c.nodeType !== 1) return;
+    const tag = c.tagName;
+    if (tag === 'BR') { lines.push(buf); buf = ''; has = false; return; }
+    if (!_NMD_BLOCK.test(tag)) { buf += _nmdInl({ childNodes: [c] }); has = true; return; }
+    flush();
+    if (/^H\d$/.test(tag)) { const t = _nmdInl(c).trim(); lines.push(t ? '## ' + t : ''); return; }
+    if (tag === 'UL' || tag === 'OL') {
+      const chk = c.classList.contains('nchk');
+      [...c.children].filter(li => li.tagName === 'LI').forEach((li, i) => {
+        const pre = chk ? (li.dataset.done === '1' ? '[x] ' : '[ ] ') : tag === 'OL' ? `${i + 1}. ` : '- ';
+        lines.push(pre + _nmdInl(li).trim());
+        li.querySelectorAll(':scope > ul, :scope > ol').forEach(sub => lines.push(..._nmdBlocks({ childNodes: [sub] })));
+      });
+      return;
+    }
+    const sub = _nmdBlocks(c); lines.push(...(sub.length ? sub : ['']));
+  });
+  flush();
+  return lines;
+};
+const noteHtmlToMd = el => _nmdBlocks(el).join('\n').replace(/\n+$/, '').replace(/^\n+/, '');
+
+(function initNoteEditor() {
+  const ed = document.getElementById('noteBody'), tools = document.getElementById('noteTools'), modal = document.getElementById('noteModal');
+  if (!ed || !tools || !modal) return;
+  // Todo el código que hace noteBody.value = … / .value sigue funcionando
+  Object.defineProperty(ed, 'value', { configurable: true, get: () => noteHtmlToMd(ed), set: v => { ed.innerHTML = noteMd(v); ed.classList.toggle('is-empty', !String(v || '').trim()); } });
+  try { document.execCommand('defaultParagraphSeparator', false, 'div'); document.execCommand('styleWithCSS', false, false); } catch (e) {}
+  const sel = () => window.getSelection();
+  const inEditor = n => n && (n === ed || ed.contains(n));
+  const curEl = () => { const s = sel(); if (!s || !s.rangeCount) return null; let n = s.anchorNode; if (n && n.nodeType === 3) n = n.parentNode; return inEditor(n) ? n : null; };
+  const listOf = () => { const n = curEl(); return n ? n.closest('ul,ol') : null; };
+  const refreshEmpty = () => ed.classList.toggle('is-empty', !ed.textContent.trim() && !ed.querySelector('li'));
+  const refreshTools = () => {
+    const n = curEl(); if (!n) return;
+    const q = c => { try { return document.queryCommandState(c); } catch (e) { return false; } };
+    const l = listOf();
+    const on = { bold: q('bold'), italic: q('italic'), strikeThrough: q('strikeThrough'), heading: !!n.closest('h3,h2,h1'), ul: !!(l && l.tagName === 'UL' && !l.classList.contains('nchk')), ol: !!(l && l.tagName === 'OL'), chk: !!(l && l.classList.contains('nchk')) };
+    tools.querySelectorAll('[data-cmd]').forEach(b => b.classList.toggle('on', !!on[b.dataset.cmd]));
+  };
+  const run = cmd => {
+    if (!curEl()) { ed.focus(); const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel().removeAllRanges(); sel().addRange(r); }
+    const ex = (c, v) => { try { document.execCommand(c, false, v); } catch (e) {} };
+    const l = listOf();
+    if (cmd === 'bold' || cmd === 'italic' || cmd === 'strikeThrough') ex(cmd);
+    else if (cmd === 'heading') { const n = curEl(); ex('formatBlock', n && n.closest('h3,h2,h1') ? 'div' : 'h3'); }
+    else if (cmd === 'ul') { if (l && l.classList.contains('nchk')) l.classList.remove('nchk'); else ex('insertUnorderedList'); }
+    else if (cmd === 'ol') ex('insertOrderedList');
+    else if (cmd === 'chk') {
+      if (l && l.classList.contains('nchk')) ex('insertUnorderedList');            // quitar la lista
+      else if (l && l.tagName === 'UL') l.classList.add('nchk');
+      else { if (l) ex('insertOrderedList'); ex('insertUnorderedList'); const nl = listOf(); if (nl) nl.classList.add('nchk'); }
+    }
+    else if (cmd === 'clear') { ex('removeFormat'); const n = curEl(); if (n && n.closest('h3,h2,h1')) ex('formatBlock', 'div'); }
+    refreshEmpty(); refreshTools();
+  };
+  // pointerdown + preventDefault: el teclado del celular no se cierra y no se pierde la selección
+  tools.addEventListener('pointerdown', e => { const b = e.target.closest('[data-cmd]'); if (!b) return; e.preventDefault(); run(b.dataset.cmd); haptic && haptic('tap'); });
+  tools.addEventListener('click', e => { if (e.target.closest('[data-cmd]')) e.preventDefault(); });
+  document.addEventListener('selectionchange', () => { if (modal.classList.contains('open')) refreshTools(); });
+  ed.addEventListener('input', () => {
+    refreshEmpty();
+    ed.querySelectorAll('ul.nchk > li[data-done]').forEach(li => { if (!li.textContent.trim()) delete li.dataset.done; }); // renglón nuevo: sin palomita
+  });
+  // Tocar la casilla de un pendiente lo marca o desmarca
+  ed.addEventListener('click', e => {
+    const li = e.target.closest('ul.nchk > li'); if (!li || !inEditor(li)) return;
+    if (e.clientX - li.getBoundingClientRect().left < 30) { if (li.dataset.done === '1') delete li.dataset.done; else li.dataset.done = '1'; haptic && haptic('tap'); }
+  });
+  // Pegar siempre como texto limpio
+  ed.addEventListener('paste', e => { e.preventDefault(); const t = (e.clipboardData || window.clipboardData).getData('text/plain'); try { document.execCommand('insertText', false, t); } catch (err) {} });
+  // Ajustes compactos: color, etiquetas y animación se abren uno a la vez
+  const panes = modal.querySelectorAll('.ne-pane'), chips = modal.querySelectorAll('.ne-chip');
+  const showPane = name => { panes.forEach(p => { p.hidden = p.dataset.pane !== name || !p.hidden; }); chips.forEach(c => c.classList.toggle('on', [...panes].some(p => !p.hidden && p.dataset.pane === c.dataset.pane))); };
+  chips.forEach(c => c.addEventListener('click', () => showPane(c.dataset.pane)));
+  const refreshOpts = () => {
+    const col = document.getElementById('noteColor')?.value || '#7c6af7', dot = document.getElementById('neDot'); if (dot) dot.style.background = col;
+    const tags = (document.getElementById('noteTags')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+    const tl = document.getElementById('neTagsLbl'); if (tl) tl.textContent = tags.length ? tags.slice(0, 2).join(', ') + (tags.length > 2 ? ` +${tags.length - 2}` : '') : 'Etiquetas';
+    const mo = document.getElementById('noteMotion')?.value || 'glow', mb = modal.querySelector(`#noteMotionPicker [data-motion="${mo}"]`), ml = document.getElementById('neMotionLbl');
+    if (ml) ml.textContent = mb ? (mb.lastChild && mb.lastChild.nodeType === 3 ? mb.lastChild.nodeValue.trim() : mb.textContent.trim()) : 'Animación';
+  };
+  modal.addEventListener('click', () => setTimeout(refreshOpts, 0));
+  modal.addEventListener('input', refreshOpts);
+  window._noteEditorOnOpen = () => { panes.forEach(p => { p.hidden = true; }); chips.forEach(c => c.classList.remove('on')); refreshOpts(); refreshEmpty(); tools.querySelectorAll('.on').forEach(b => b.classList.remove('on')); };
+})();
+
+
 
 const renderIconPicker = (selected) => {
   const grid = document.getElementById('projIconPicker'); if(!grid) return;
@@ -5452,6 +5662,7 @@ const openModal=id=>{
   const del = id==='eventModal' ? ['evDelete','evId'] : id==='blockModal' ? ['blockDelete','blockId'] : null;
   if(del){ const b=document.getElementById(del[0]); if(b) b.style.display = document.getElementById(del[1])?.value ? '' : 'none'; }
   _prepareCardExpand(m);
+  if(id==='noteModal' && window._noteEditorOnOpen) window._noteEditorOnOpen();
   if(id==='projModal'){
     const form=m.querySelector('.modal');
     if(form)form.scrollTop=0;
@@ -6446,7 +6657,6 @@ const setupQuickAdd = () => {
   async function runQuickAdd(){
     const text = input.value.trim();
     if(!text){ toast('⚠️ Escribe o dicta algo primero'); return; }
-    if(!(state.settings.aiApiKey||'')){ showAuthSetupModal('⚙️ Configura tu IA','Para usar "Agregar con IA" necesitas configurar tu proveedor y API key en Ajustes → IA Asistente.'); return; }
     const icon = sendBtn.querySelector('.material-symbols-outlined');
     sendBtn.disabled = true; sendBtn.classList.add('qa-loading'); if(icon) icon.textContent='progress_activity';
     try {
@@ -6457,7 +6667,7 @@ const setupQuickAdd = () => {
       openQuickAddResult(data, text);
       closeBar();
     } catch(e) {
-      toast('⚠️ No se pudo analizar: ' + (e.message==='no_key' ? 'configura tu API key en Ajustes' : 'intenta de nuevo'));
+      toast('⚠️ No se pudo analizar: ' + (e.message || 'intenta de nuevo'));
     } finally {
       sendBtn.disabled = false; sendBtn.classList.remove('qa-loading'); if(icon) icon.textContent='arrow_upward';
     }
@@ -6609,7 +6819,7 @@ const renderAIView=()=>{
   document.getElementById('content').innerHTML=`
   <div id="aiChatWrap" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
     <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between">
-      <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1.1rem">✦</div><div><div style="font-size:.95rem;font-weight:700">IA Asistente</div><div style="font-size:.73rem;color:var(--green);display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>En línea · Claude Sonnet</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:1.1rem">✦</div><div><div style="font-size:.95rem;font-weight:700">IA Asistente</div><div style="font-size:.73rem;color:var(--green);display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>En línea · IA abierta gratuita</div></div></div>
       <div style="display:flex;gap:8px"><button id="aiContextBtn" class="btn btn-ghost btn-sm" title="Enviar contexto de la app">📊 Contexto</button><button id="aiClearBtn" class="btn btn-ghost btn-sm">🗑 Limpiar chat</button></div>
     </div>
     ${window.NovaPixel ? (() => { const c = state.settings.pixel || {}; const o = (v, l, cur) => `<option value="${v}"${cur===v?' selected':''}>${l}</option>`; return `<div class="pxc"><span aria-hidden="true">${window.NovaPixelHead('brain')}</span><div class="pxc-tx"><b>Nova Pixel · tu asistente</b><small>Vive en toda la app: anota ideas, crea proyectos y recordatorios, te dice qué tienes hoy y te enseña dónde está cada cosa. Funciona sin claves.</small></div><div class="pxc-bt"><button type="button" class="pxc-go" id="pxcGo">Hablar con Nova Pixel</button><button type="button" class="pxc-cfg" id="pxcCfg">Personalizar</button></div></div>
@@ -6652,41 +6862,21 @@ const appendMessage=(role,content,scroll=true)=>{
   msgs.appendChild(wrap); if(scroll) msgs.scrollTop=msgs.scrollHeight;
 };
 
-// ── Función genérica para llamar a la IA (reutilizable) ──────────────────
-const callAI = async (prompt, systemOverride) => {
-  const apiKey = state.settings.aiApiKey || '';
-  const provider = state.settings.aiProvider || 'claude';
-  if (!apiKey) throw new Error('no_key');
-  const sys = systemOverride || state.settings.systemPrompt || 'Eres un asistente personal útil y conciso.';
-  if (provider === 'claude') {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 800, system: sys, messages: [{ role: 'user', content: prompt }] })
-    });
-    const d = await res.json(); return d.content?.find(c => c.type === 'text')?.text || d.error?.message || 'Sin respuesta.';
-  } else if (provider === 'openai') {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 800, messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }] })
-    });
-    const d = await res.json(); return d.choices?.[0]?.message?.content || d.error?.message || 'Sin respuesta.';
-  } else if (provider === 'gemini') {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: sys + '\n\n' + prompt }] }] })
-    });
-    const d = await res.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text || d.error?.message || 'Sin respuesta.';
-  }
-  throw new Error('unknown_provider');
+// ── IA gratuita de modelos abiertos (worker/ai.mjs): la usa TODA la app, sin claves ──
+const loadAI = () => window.NovaAI ? Promise.resolve(window.NovaAI) : new Promise((res, rej) => {
+  const t = setTimeout(() => rej(new Error('No se pudo cargar la IA')), 10000);
+  window.addEventListener('novaai-ready', () => { clearTimeout(t); res(window.NovaAI); }, { once: true });
+});
+const callAI = async (prompt, systemOverride, opts = {}) => {
+  const AI = await loadAI();
+  const sys = systemOverride || state.settings.systemPrompt || 'Eres un asistente personal útil y conciso. Responde en español.';
+  return AI.ask(prompt, sys, { maxTokens: opts.maxTokens || 900, temperature: opts.temperature });
 };
 
 // ══════════════════════════════════════════════
 // BRIEFING DIARIO PERSONAL (sin cripto)
 // · Se genera solo a las 8:30 en el servidor de avisos (worker/briefing.mjs + worker/reminders.mjs)
-//   con tu API key de Claude, se guarda en tu cuenta (users/{uid}.briefings) y te llega el aviso.
+//   con la IA gratuita de modelos abiertos, se guarda en tu cuenta (users/{uid}.briefings) y te llega el aviso.
 // · Aquí se muestra en el Dashboard y en su vista. «Generar ahora» usa el MISMO prompt (worker/briefing.mjs).
 // ══════════════════════════════════════════════
 const BRIEF_KEEP = 7;
@@ -6710,24 +6900,13 @@ const loadBriefCore = () => window.NovaBriefing ? Promise.resolve(window.NovaBri
 
 const briefName = () => (state.settings.pixel && state.settings.pixel.nombre) || state.settings.username || 'Payi';
 
-// Generar ahora (desde el navegador, con tu API key)
+// Generar ahora (desde el navegador, con la IA gratuita). Los titulares reales los da el servidor de avisos.
+const BRIEF_FEEDS_URL = 'https://nova-hub-push.soobroon.workers.dev/briefing/feeds';
 const generateBriefing = async () => {
-  const B = await loadBriefCore();
-  const apiKey = state.settings.aiApiKey || '';
-  const provider = state.settings.aiProvider || 'claude';
-  if (!apiKey) throw new Error('no_key');
-  let entry;
-  if (provider === 'claude') {
-    entry = await B.generateBriefing({ apiKey, name: briefName(), browser: true, source: 'manual' });
-  } else {
-    // ChatGPT / Gemini: mismo formato, pero sin búsqueda en la web (puede no estar al día)
-    const now = Date.now(), { dateStr, dateLabel } = B.localDate(now);
-    const weather = await B.fetchWeather();
-    const raw = await callAI(B.buildPrompt({ name: briefName(), dateLabel, dateStr, weather }), B.SYSTEM);
-    const sections = B.parseBriefing(raw);
-    if (!sections) throw new Error('la IA no devolvió un briefing válido');
-    entry = { v: 2, id: now, date: dateStr, generatedAt: new Date(now).toISOString(), city: B.DEFAULT_PLACE.name, source: 'manual', weather, sections };
-  }
+  const [B] = await Promise.all([loadBriefCore(), loadAI()]);
+  let headlines = { mexico: [], ia: [], tech: [], orizaba: [] };
+  try { const c = new AbortController(), t = setTimeout(() => c.abort(), 12000); const r = await fetch(BRIEF_FEEDS_URL, { signal: c.signal }); clearTimeout(t); if (r.ok) headlines = await r.json(); } catch (e) { console.warn('[NOVA HUB] sin titulares del servidor', e); }
+  const entry = await B.generateBriefing({ name: briefName(), headlines, source: 'manual' });
   state.briefingHistory = mergeBriefings([entry], state.briefingHistory || []);
   save();
   // Lo sube a tu cuenta para verlo en todos tus dispositivos (solo el campo «briefings»)
@@ -6775,19 +6954,16 @@ const renderBriefingView = () => {
   const content = document.getElementById('content');
   if (!content) return;
   content.style.padding = '16px';
-  const apiKey = state.settings.aiApiKey || '';
+  const apiKey = true; // IA gratuita: ya no hace falta clave
   const history = mergeBriefings(state.briefingHistory || []);
   const auto = state.settings.briefingAuto !== false;
-  const isClaude = (state.settings.aiProvider || 'claude') === 'claude';
   content.innerHTML = `
     <div class="bf-top">
       <div class="bf-title">☀️ Briefing diario</div>
-      ${apiKey ? `<button id="genBriefingBtn" class="btn btn-primary btn-sm">✦ Generar ahora</button>` : `<button id="briefingGoSettings" class="btn btn-ghost btn-sm">⚙️ Configurar API key</button>`}
+      <button id="genBriefingBtn" class="btn btn-primary btn-sm">✦ Generar ahora</button>
     </div>
     <label class="bf-auto"><input type="checkbox" id="briefAuto"${auto ? ' checked' : ''}> <span>Prepararlo solo todos los días a las <b>8:30</b> y avisarme</span></label>
-    ${auto && apiKey && !isClaude ? `<div class="bf-note">El automático de las 8:30 usa Claude (busca en la web). Cambia el proveedor a Claude en Ajustes → IA Asistente.</div>` : ''}
     ${auto && !fb.uid ? `<div class="bf-note">Inicia sesión con Google para que el briefing de las 8:30 llegue a tu cuenta.</div>` : ''}
-    ${!apiKey ? `<div class="bf-empty-card"><div style="font-size:2.2rem">☀️</div><b>Activa tu briefing</b><p>Conecta tu API key de Claude y cada mañana tendrás: clima de Orizaba, eventos próximos, noticias clave, lo nuevo en IA, una idea de tatuaje y una reflexión.</p><button id="briefingGoSettings2" class="btn btn-primary">Ir a Ajustes →</button></div>` : ''}
     <div id="briefingLoadingArea" class="bf-loading" style="display:none"><div class="bf-spin">☀️</div><b>Preparando tu briefing…</b><small id="briefingLoadStep">Revisando el clima en Orizaba</small></div>
     <div id="briefingHistoryList">${apiKey && !history.length ? `<div class="bf-empty-card"><div style="font-size:2rem">🌅</div><b>Aún no hay briefings</b><p>${auto ? 'Mañana a las 8:30 te llega el primero. O genéralo ahora.' : 'Pulsa «Generar ahora».'}</p></div>` : ''}${history.map((e, i) => i === 0 ? briefingCardHTML(e, { open: true }) : `<details class="bf-old"><summary>${new Date(e.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</summary>${briefingCardHTML(e, { open: false })}</details>`).join('')}</div>`;
 
@@ -6808,7 +6984,7 @@ const renderBriefingView = () => {
     const steps = ['Revisando el clima en Orizaba', 'Buscando eventos en Orizaba', 'Leyendo las noticias clave', 'Resumiendo lo nuevo en IA', 'Pensando una idea de tatuaje', 'Escribiendo tu reflexión del día'];
     let si = 0; const timer = setInterval(() => { if (stepEl && si < steps.length - 1) stepEl.textContent = steps[++si]; }, 6000);
     try { await generateBriefing(); toast('☀️ Briefing listo'); renderBriefingView(); }
-    catch (e) { toast('❌ ' + (e.message === 'no_key' ? 'Configura tu API key en Ajustes.' : 'No se pudo generar: ' + e.message)); btn.disabled = false; btn.textContent = '✦ Generar ahora'; loading.style.display = 'none'; }
+    catch (e) { toast('❌ No se pudo generar: ' + e.message); btn.disabled = false; btn.textContent = '✦ Generar ahora'; loading.style.display = 'none'; }
     finally { clearInterval(timer); }
   });
 };
@@ -6849,7 +7025,7 @@ const renderDaySummary = async (container) => {
 };
 const renderDaySummaryCore = async (container) => {
   if (!container) return;
-  const apiKey = state.settings.aiApiKey || '';
+  const apiKey = true; // IA gratuita: siempre disponible
   const todayStr = new Date().toISOString().split('T')[0];
   const cache = state.settings.daySummaryCache;
 
@@ -6886,14 +7062,14 @@ const renderDaySummaryCore = async (container) => {
   container.querySelector('#daySummaryGenBtn')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Pensando…';
     try { await generateDaySummary(); renderDaySummary(container); }
-    catch(err) { toast('⚠️ No se pudo generar: ' + (err.message==='no_key' ? 'configura tu API key' : 'intenta de nuevo')); btn.disabled = false; btn.textContent = 'Generar ✨'; }
+    catch(err) { toast('⚠️ No se pudo generar: ' + (err.message || 'intenta de nuevo')); btn.disabled = false; btn.textContent = 'Generar ✨'; }
   });
 };
 
 // ── Briefing en el Dashboard ─────────────────
 const renderDailyBriefing = (container) => {
   if (!container) return;
-  const apiKey = state.settings.aiApiKey || '';
+  const apiKey = true; // IA gratuita
   const latest = mergeBriefings(state.briefingHistory || [])[0];
   const goToBriefingView = () => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -6903,8 +7079,7 @@ const renderDailyBriefing = (container) => {
   const isToday = latest && latest.date === todayBriefStr();
   if (!latest || !isToday) {
     const before830 = (new Date().getHours() * 60 + new Date().getMinutes()) < 510;
-    const msg = !apiKey ? 'Activa tu briefing diario: clima de Orizaba, noticias, IA y una idea de tatuaje cada mañana.'
-      : state.settings.briefingAuto === false ? 'Tu briefing automático está apagado.'
+    const msg = state.settings.briefingAuto === false ? 'Tu briefing automático está apagado.'
       : before830 ? 'Tu briefing llega hoy a las 8:30 ☀️' : 'Aún no llega tu briefing de hoy.';
     container.innerHTML = `<div class="bf-pending"><span class="bf-pending-ic">☀️</span><div class="bf-pending-tx">${msg}</div><button id="dashBriefingGo" class="btn ${apiKey ? 'btn-ghost' : 'btn-primary'} btn-sm">${apiKey ? 'Generar' : 'Activar'}</button></div>
       ${latest ? `<button id="dashBriefingPrev" class="bf-prev">Ver el del ${new Date(latest.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' })} →</button>` : ''}`;
@@ -6919,30 +7094,18 @@ const renderDailyBriefing = (container) => {
 const sendAIMessage=async()=>{
   const input=document.getElementById('aiInput'), sendBtn=document.getElementById('aiSendBtn'); if(!input||!sendBtn) return;
   const text=input.value.trim(); if(!text) return;
-  if(!(state.settings.aiApiKey||'')){ appendMessage('bot','⚠️ Configura tu API key en Ajustes → IA Asistente antes de chatear.'); return; }
   input.value=''; input.style.height='auto'; appendMessage('user',text); state.aiHistory.push({role:'user',content:text});
   const msgs=document.getElementById('aiMessages'), typingEl=document.createElement('div');
   typingEl.className='ai-msg bot'; typingEl.innerHTML=`<div class="ai-avatar bot">✦</div><div class="bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
   msgs.appendChild(typingEl); msgs.scrollTop=msgs.scrollHeight; sendBtn.disabled=true;
   try {
-    // Build full conversation prompt for multi-turn context
-    const provider=state.settings.aiProvider||'claude';
-    const apiKey=state.settings.aiApiKey||'';
-    const sys=state.settings.systemPrompt||'Eres un asistente personal útil y conciso.';
-    let reply='';
-    if(provider==='claude'){
-      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:sys,messages:state.aiHistory.map(m=>({role:m.role==='bot'?'assistant':'user',content:m.content}))})});
-      const data=await res.json(); reply=data.content?.find(c=>c.type==='text')?.text||data.error?.message||'Sin respuesta.';
-    } else if(provider==='openai'){
-      const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'system',content:sys},...state.aiHistory.map(m=>({role:m.role==='bot'?'assistant':'user',content:m.content}))]})});
-      const data=await res.json(); reply=data.choices?.[0]?.message?.content||data.error?.message||'Sin respuesta.';
-    } else if(provider==='gemini'){
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:state.aiHistory.map(m=>({role:m.role==='bot'?'model':'user',parts:[{text:m.content}]}))})});
-      const data=await res.json(); reply=data.candidates?.[0]?.content?.parts?.[0]?.text||data.error?.message||'Sin respuesta.';
-    }
+    const AI=await loadAI();
+    const sys=state.settings.systemPrompt||'Eres un asistente personal útil y conciso. Responde en español.';
+    const conv=[{role:'system',content:sys},...state.aiHistory.slice(-16).map(m=>({role:m.role==='bot'?'assistant':'user',content:m.content}))];
+    const {text:reply}=await AI.chat(conv,{maxTokens:1000});
     typingEl.remove();
     appendMessage('bot',reply); state.aiHistory.push({role:'bot',content:reply}); save();
-  } catch(e) { typingEl.remove(); appendMessage('bot','⚠️ Error IA: '+e.message); }
+  } catch(e) { typingEl.remove(); appendMessage('bot','⚠️ '+e.message); }
   sendBtn.disabled=false; document.getElementById('aiInput')?.focus();
 };
 
@@ -7083,19 +7246,10 @@ const renderSettingsView=()=>{
     <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div>${fb.enabled ? fbDiagHtml() : ''}</div>
     <div class="settings-section"><h3>📅 Google Calendar</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${gcal.status==='ok'?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${gcal.statusText()}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">Tus eventos de Google Calendar (solo lectura) aparecen en el Dashboard, el resumen del día y el Calendario. No se modifica nada en tu Google Calendar.</div></div></div><div style="display:flex;gap:10px;margin-top:14px">${fb.enabled ? `<button class="btn btn-primary btn-sm" id="gcalConnectBtn">${gcal.status==='off'?'Conectar calendario':'Reconectar'}</button>${gcal.status==='off'?'':'<button class="btn btn-ghost btn-sm" id="gcalSyncBtn">↻ Actualizar</button><button class="btn btn-ghost btn-sm" id="gcalOffBtn">Desconectar</button>'}` : '<button class="btn btn-primary btn-sm" id="fbLoginBtn2">🔑 Iniciar sesión con Google</button>'}</div></div>
     <div class="settings-section"><h3>🤖 IA Asistente</h3>
-      <div class="settings-row">
-        <div><div class="settings-label">Proveedor de IA</div><div class="settings-sub">Selecciona el servicio que quieres usar</div></div>
-        <select id="sAiProvider" class="settings-input" style="width:220px">
-          <option value="claude" ${(state.settings.aiProvider||'claude')==='claude'?'selected':''}>Claude (Anthropic)</option>
-          <option value="openai" ${(state.settings.aiProvider||'')==='openai'?'selected':''}>ChatGPT (OpenAI)</option>
-          <option value="gemini" ${(state.settings.aiProvider||'')==='gemini'?'selected':''}>Gemini (Google)</option>
-        </select>
+      <div class="settings-row" style="border-bottom:none">
+        <div><div class="settings-label">IA gratuita · modelos abiertos</div><div class="settings-sub">Toda la app (chat, Agregar con IA, Resumen del día, Briefing y Nova Pixel) usa modelos open source como DeepSeek, Mistral y Qwen. No necesitas claves ni cuentas.</div></div>
+        <span style="font-size:.78rem;color:var(--green);flex-shrink:0;margin-left:10px">✓ Activa</span>
       </div>
-      <div class="settings-row">
-        <div><div class="settings-label">API Key</div><div class="settings-sub">Se guarda solo en tu dispositivo</div></div>
-        <input id="sAiKey" class="settings-input" type="password" placeholder="Pega tu API key aquí…" value="${state.settings.aiApiKey||''}"/>
-      </div>
-      <div class="settings-row"><button class="btn btn-primary btn-sm" id="saveAiKey">Guardar</button>${state.settings.aiApiKey ? '<span style="font-size:.78rem;color:var(--green);margin-left:10px">✓ Configurada</span>' : '<span style="font-size:.78rem;color:var(--red);margin-left:10px">⚠️ Sin configurar</span>'}</div>
     </div>
     <div class="settings-section"><h3>📦 Datos</h3>
       <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
@@ -7131,11 +7285,6 @@ const renderSettingsView=()=>{
       </div>
     </div>
   </div>`;
-  document.getElementById('saveAiKey')?.addEventListener('click',()=>{
-    state.settings.aiProvider = document.getElementById('sAiProvider').value;
-    state.settings.aiApiKey = document.getElementById('sAiKey').value.trim();
-    save(); renderSettingsView(); toast('✅ Configuración de IA guardada');
-  });
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
@@ -7463,7 +7612,7 @@ const renderNoteDetail = () => {
       </div>
       <button class="pd-close" id="ndClose" aria-label="Cerrar">✕</button>
     </div>
-    <div class="nd-body${n.body ? '' : ' empty'}">${n.body ? _esc(n.body) : 'Esta nota no tiene contenido.'}</div>
+    <div class="nd-body nmd${n.body ? '' : ' empty'}">${n.body ? noteMd(n.body, { lines: true }) : 'Esta nota no tiene contenido.'}</div>
     ${n.tags?.length ? `<div class="nd-tags">${n.tags.map(t => `<span class="note-tag">${_esc(t)}</span>`).join('')}</div>` : ''}
     <div class="nd-actions">
       <button class="btn btn-ghost" id="ndPin">${n.pinned ? '📌 Desfijar' : '📌 Fijar'}</button>
@@ -7475,6 +7624,16 @@ const renderNoteDetail = () => {
   if (body) body.scrollTop = prevScroll;
 
   box.querySelector('#ndClose').addEventListener('click', () => closeModal('noteDetailModal'));
+
+  // Marcar pendientes directo desde la vista de la nota
+  box.querySelector('.nd-body')?.addEventListener('click', e => {
+    const li = e.target.closest('li[data-line]'); if (!li) return;
+    const lines = String(n.body || '').split('\n'), i = +li.dataset.line;
+    if (lines[i] == null) return;
+    lines[i] = lines[i].replace(/\[( |x|X)\]/, (m, c) => c.trim() ? '[ ]' : '[x]');
+    n.body = lines.join('\n'); n.updatedAt = new Date().toISOString(); save();
+    haptic('tap'); renderNoteDetail(); refreshNotesBehind();
+  });
 
   box.querySelector('#ndPin').addEventListener('click', () => {
     setNotePinned(n, !n.pinned);
@@ -7540,7 +7699,7 @@ const renderNotesView=()=>{
         <div class="note-title">${n.title||'Sin título'}</div>
         <button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button>
       </div>
-      <div class="note-body">${n.body||''}</div>
+      <div class="note-body nmd">${noteMd(n.body)}</div>
       ${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}
     `;
 
@@ -9184,7 +9343,7 @@ if ('serviceWorker' in navigator) {
     isTattoo: e => { try { return gcal.isTattoo(e); } catch (x) { return false; } },
     cfg: () => state.settings.pixel || {},
     setCfg(o) { state.settings.pixel = {...(state.settings.pixel || {}), ...o}; save(); dispatchEvent(new Event('nh-pixel-cfg')); },
-    ai: () => ({key: state.settings.aiApiKey || '', provider: state.settings.aiProvider || 'claude'}),
+    ai: () => ({key: '', provider: 'open'}), // IA gratuita de modelos abiertos (window.NovaAI)
     toast: m => toast(m),
     apply, undo
   };
@@ -9194,6 +9353,8 @@ if ('serviceWorker' in navigator) {
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';
+import * as AI from './worker/ai.mjs';
+window.NovaAI = AI; window.dispatchEvent(new Event('novaai-ready'));
 window.NovaBriefing = B; window.dispatchEvent(new Event('novabriefing-ready'));
 </script>
 <script>
