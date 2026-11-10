@@ -69,14 +69,20 @@
     for (const id of ['tabbar', 'novaFloatingDock']) { const t = document.getElementById(id); if (!t || t.classList.contains('tb-hide')) continue; const cs = getComputedStyle(t); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .2) continue; const r = t.getBoundingClientRect(); if (r.height && r.top < AH() - 10) return r; }
     return null; };
   const bottomGap = () => { const t = tabbar(); return t ? AH() - t.top + 8 : 0; };
+  const createBtn = () => { // el botón (+) de crear en la PC (junto a la barra inferior flotante)
+    const b = document.getElementById('novaCreateFab'); if (!b || mobile()) return null; const r = b.getBoundingClientRect(); return r.width && r.top < AH() ? r : null; };
   function home() {
-    const s = AV(), h = ls.home2; if (h && Number.isFinite(h.rx) && Number.isFinite(h.by)) return {x: clamp(AW() - h.rx - s.w, 0, AW() - s.w), y: clamp(AH() - h.by - s.h, 0, AH() - s.h)};
+    const s = AV(), c = createBtn();
+    // PC: descansa flotando abajo a la derecha, pegado al botón (+) de crear
+    if (c) return {x: clamp(c.right + 6, 0, AW() - s.w), y: clamp(c.bottom - s.h + 14, 0, AH() - s.h)};
+    const h = ls.home2; if (mobile() && h && Number.isFinite(h.rx) && Number.isFinite(h.by)) return {x: clamp(AW() - h.rx - s.w, 0, AW() - s.w), y: clamp(AH() - h.by - s.h, 0, AH() - s.h)};
     if (mobile()) return {x: 6, y: clamp(AH() - bottomGap() - s.h - 6, 0, AH() - s.h)}; // celular: a la izquierda, sobre la barra (el (+) queda libre a la derecha)
     return {x: AW() - s.w - 36, y: clamp(AH() - Math.max(bottomGap(), 24) - s.h - 4, 0, AH() - s.h)}; // PC: abajo a la derecha, arriba de la barra
   }
   function placePeek() { // escondido: sobre la barra inferior (celular) o abajo a la derecha, junto al menú (PC)
-    const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 40, t = tabbar();
-    if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt + 3) + 'px'; }
+    const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 40, t = tabbar(), c = createBtn();
+    if (c) { fab.style.left = (c.right + 10) + 'px'; fab.style.top = (c.top + (c.height - hgt) / 2) + 'px'; } // PC: junto al (+)
+    else if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt + 3) + 'px'; }
     else if (mobile()) { fab.style.left = '22px'; fab.style.top = (AH() - hgt) + 'px'; }
     else { fab.style.left = (AW() - 108 - w) + 'px'; fab.style.top = (AH() - hgt) + 'px'; }
   }
@@ -414,7 +420,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   const hd = bub.querySelector('.px-hd'); let mv = null;
   hd.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; e.stopPropagation(); mv = {x: e.clientX, y: e.clientY, px: pos.x, py: pos.y}; hd.setPointerCapture(e.pointerId); });
   hd.addEventListener('pointermove', e => { if (!mv) return; const s = AV(); place(clamp(mv.px + e.clientX - mv.x, 0, AW() - s.w), clamp(mv.py + e.clientY - mv.y, 0, AH() - s.h)); });
-  const endMv = () => { if (!mv) return; mv = null; const s = AV(); ls.home2 = {rx: AW() - pos.x - s.w, by: AH() - pos.y - s.h}; store(); };
+  const endMv = () => { if (!mv) return; mv = null; const s = AV(); if (mobile()) { ls.home2 = {rx: AW() - pos.x - s.w, by: AH() - pos.y - s.h}; store(); } };
   hd.addEventListener('pointerup', endMv); hd.addEventListener('pointercancel', endMv);
 
   /* ── descanso, visibilidad, tamaño y color ── */
