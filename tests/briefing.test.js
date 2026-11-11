@@ -156,3 +156,10 @@ test('ronda de las 8:30: genera, guarda solo el campo briefings y avisa', async 
   const r2 = await w.tick({FIREBASE_SERVICE_ACCOUNT: JSON.stringify(sa)}, Date.parse('2026-11-10T08:20:00-06:00'), fake);
   assert.ok(!r2.briefings); assert.strictEqual(commit, null); assert.strictEqual(sends.length, 0);
 });
+
+test('dictado: Whisper de Cloudflare cuando no hay Groq', async () => {
+  const AI = await import('../worker/ai.mjs'); const seen = [];
+  const env = {AI: {run: async (m, inp) => { seen.push(m); return {text: ' hola Cortex '}; }}};
+  const res = await AI.aiRoute(new Request('https://x/ai/transcribe', {method: 'POST', headers: {origin: 'https://soobroon-beep.github.io'}, body: JSON.stringify({audio: btoa('RIFFxxxx')})}), env);
+  assert.deepStrictEqual(await res.json(), {text: 'hola Cortex'}); assert.deepStrictEqual(seen, ['@cf/openai/whisper-large-v3-turbo']);
+});

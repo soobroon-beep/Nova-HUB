@@ -369,7 +369,12 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   async function transcribe(blob) {
     const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dec = await ac.decodeAudioData(await blob.arrayBuffer()); try { ac.close(); } catch {}
     const len = Math.ceil(dec.duration * 16000), off = new OfflineAudioContext(1, Math.max(1, len), 16000), src = off.createBufferSource(); src.buffer = dec; src.connect(off.destination); src.start(); const pcm = (await off.startRendering()).getChannelData(0);
-    const body = {model: 'openai-audio', temperature: 0, max_tokens: 300, messages: [{role: 'system', content: 'Eres un transcriptor. Escribe EXACTAMENTE lo que dice la persona en el audio, en español, sin responderle, sin comillas y sin agregar nada. Si no se entiende nada, responde solo: ""'}, {role: 'user', content: [{type: 'text', text: 'Transcribe este audio.'}, {type: 'input_audio', input_audio: {data: b64(toWav(pcm)), format: 'wav'}}]}]};
+    const wav = b64(toWav(pcm));
+    const body = {model: 'openai-audio', temperature: 0, max_tokens: 300, messages: [{role: 'system', content: 'Eres un transcriptor. Escribe EXACTAMENTE lo que dice la persona en el audio, en español, sin responderle, sin comillas y sin agregar nada. Si no se entiende nada, responde solo: ""'}, {role: 'user', content: [{type: 'text', text: 'Transcribe este audio.'}, {type: 'input_audio', input_audio: {data: wav, format: 'wav'}}]}]};
+    try { // 1) tu servidor NOVA HUB: Whisper open source gratis (Groq / Cloudflare)
+      const r = await fetchT('https://nova-hub-push.soobroon.workers.dev/ai/transcribe', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({audio: wav, language: 'es'})}, 30000);
+      if (r.ok) { const j = await r.json(); if (typeof j.text === 'string') return j.text.replace(/^["«“\s]+|["»”\s]+$/g, '').trim(); }
+    } catch (e) { console.warn('Cortex voz (NOVA HUB)', e); }
     const r = await fetchT(VX + '/ai', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)}, 30000); if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json(), m = j && j.choices && j.choices[0] && j.choices[0].message || {}; return String(m.content || (m.audio && m.audio.transcript) || '').replace(/^["«“\s]+|["»”\s]+$/g, '').trim();
   }

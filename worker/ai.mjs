@@ -137,6 +137,12 @@ export async function aiRoute(req, env, fetchFn = fetch) {
   if (path === '/ai/status') return json({ok: true, ready: !!(env.AI || env.GROQ_KEY), groq: !!env.GROQ_KEY, cloudflare: !!env.AI});
   if (req.method !== 'POST') return json({error: 'Usa POST'}, 405);
   if (!allowed(req.headers.get('cf-connecting-ip') || 'x')) return json({error: 'Demasiadas consultas seguidas; espera un minuto'}, 429);
+  if (path === '/ai/transcribe') { // dictado por voz (Cortex en la PC): Whisper open source, gratis
+    let b; try { b = JSON.parse(await req.text()); } catch { return json({error: 'JSON inválido'}, 400); }
+    const audio = String(b.audio || ''); if (!audio || audio.length > 6000000) return json({error: 'Audio vacío o muy largo'}, 400);
+    const text = await transcribe(env, audio, b.language || 'es', fetchFn).catch(() => null);
+    return text == null ? json({error: 'No se pudo transcribir'}, 503) : json({text});
+  }
   const raw = await req.text(); if (raw.length > 400000) return json({error: 'La consulta es demasiado grande'}, 413);
   let b; try { b = JSON.parse(raw); } catch { return json({error: 'JSON inválido'}, 400); }
   const msgs = (Array.isArray(b.messages) ? b.messages.slice(-16) : []).map(m => ({role: ['system', 'user', 'assistant'].includes(m && m.role) ? m.role : 'user', content: typeof (m && m.content) === 'string' ? m.content : Array.isArray(m && m.content) ? m.content.filter(p => p && p.type === 'text').map(p => p.text).join('\n') : ''}));
@@ -145,4 +151,25 @@ export async function aiRoute(req, env, fetchFn = fetch) {
   const r = await serverChain(env, msgs, {task, max_tokens: b.max_tokens, temperature: b.temperature, budget: 80000}, fetchFn).catch(() => null);
   if (!r) return json({error: 'Las IAs del servidor no respondieron'}, 503);
   return json({object: 'chat.completion', model: r.model, choices: [{index: 0, message: {role: 'assistant', content: r.text}, finish_reason: 'stop'}]});
+}
+
+// Whisper: Groq (si hay clave) → Cloudflare Workers AI. audio = WAV en base64. Devuelve el texto (o null)
+export async function transcribe(env, audioB64, language = 'es', fetchFn = fetch) {
+  if (env && env.GROQ_KEY) {
+    try {
+      const bin = Uint8Array.from(atob(audioB64), c => c.charCodeAt(0)), fd = new FormData();
+      fd.append('file', new Blob([bin], {type: 'audio/wav'}), 'voz.wav'); fd.append('model', 'whisper-large-v3-turbo'); fd.append('language', language); fd.append('response_format', 'json');
+      const r = await fetchFn('https://api.groq.com/openai/v1/audio/transcriptions', {method: 'POST', headers: {authorization: 'Bearer ' + env.GROQ_KEY}, body: fd, signal: AbortSignal.timeout(30000)});
+      if (r.ok) { const j = await r.json(); if (typeof j.text === 'string') return j.text.trim(); }
+    } catch {}
+  }
+  if (env && env.AI) {
+    for (const m of ['@cf/openai/whisper-large-v3-turbo', '@cf/openai/whisper']) {
+      try {
+        const inp = m.endsWith('turbo') ? {audio: audioB64, language, task: 'transcribe'} : {audio: [...Uint8Array.from(atob(audioB64), c => c.charCodeAt(0))]};
+        const r = await env.AI.run(m, inp); if (r && typeof r.text === 'string') return r.text.trim();
+      } catch {}
+    }
+  }
+  return null;
 }
