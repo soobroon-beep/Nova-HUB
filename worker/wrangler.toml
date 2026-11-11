@@ -7,3 +7,7 @@ workers_dev = true
 
 [triggers]
 crons = ["* * * * *"]
+
+# IA open source gratis de tu cuenta de Cloudflare (Workers AI, cupo diario sin costo): la usan NOVA HUB, Cortex, el briefing y Neural Brain
+[ai]
+binding = "AI"

@@ -42,16 +42,43 @@ test('titulares reales: RSS de Google Noticias, sin repetidos y sin cripto en el
   assert.match(p, /sin titulares disponibles/);
 });
 
-test('IA gratuita: prueba modelos abiertos primero y salta los que piden créditos', async () => {
+test('IA en la app: primero tu servidor NOVA HUB, luego VORTEX y salta lo que pide créditos', async () => {
   const AI = await import('../worker/ai.mjs'), tried = [];
-  const fake = async (url, init) => { const b = JSON.parse(init.body); tried.push(b.model + '@' + (url.includes('vortex') ? 'vx' : 'gen'));
-    if (b.model === 'deepseek') return new Response('{"error":{"message":"busy"}}', {status: 503});
-    if (b.model === 'mistral') return new Response(JSON.stringify({choices: [{message: {content: 'You do not have enough credits, top up'}}]}));
+  const fake = async (url, init) => { const b = JSON.parse(init.body); const who = url.includes('nova-hub') ? 'nh' : url.includes('vortex') ? 'vx' : url.includes('gen.') ? 'gen' : 'old'; tried.push(b.model + '@' + who);
+    if (who === 'nh') return new Response('{"error":"Las IAs del servidor no respondieron"}', {status: 503});
+    if (who === 'vx') return new Response(JSON.stringify({choices: [{message: {content: 'You do not have enough credits, top up'}}]}));
+    if (who === 'gen') return new Response('{"error":{"message":"Payment required"}}', {status: 402});
     return new Response(JSON.stringify({choices: [{message: {content: '<think>x</think>Hola Payi'}}]})); };
   const r = await AI.chat([{role: 'user', content: 'hola'}], {fetchFn: fake});
-  assert.deepStrictEqual(r, {text: 'Hola Payi', model: 'qwen-coder'});
-  assert.deepStrictEqual(tried, ['deepseek@gen', 'deepseek@vx', 'mistral@gen', 'qwen-coder@gen']);
-  assert.ok(AI.OPEN_MODELS.every(m => /deepseek|mistral|qwen|llama/.test(m)));
+  assert.deepStrictEqual(r, {text: 'Hola Payi', model: 'pollinations'});
+  assert.deepStrictEqual(tried, ['openai@nh', 'openai@vx', 'deepseek@gen', 'openai@old'], 'sin créditos en Pollinations no insiste con cada modelo');
+});
+
+test('IA en la app: si tu servidor contesta, no se prueba nada más', async () => {
+  const AI = await import('../worker/ai.mjs'), tried = [];
+  const fake = async (url, init) => { tried.push(url); assert.strictEqual(JSON.parse(init.body).task, 'json'); return new Response(JSON.stringify({model: 'llama-3.3 · Cloudflare', choices: [{message: {content: '{"ok":1}'}}]})); };
+  const r = await AI.chat([{role: 'system', content: 'Devuelve solo JSON'}, {role: 'user', content: 'x'}], {fetchFn: fake});
+  assert.strictEqual(r.text, '{"ok":1}'); assert.deepStrictEqual(tried, [AI.NH_URL]);
+});
+
+test('IA en el servidor: Groq primero, luego Cloudflare Workers AI, sin salir a internet', async () => {
+  const AI = await import('../worker/ai.mjs'), runs = [];
+  const env = {GROQ_KEY: 'gsk_x', AI: {run: async (m, inp) => { runs.push(m); if (m.includes('gpt-oss')) throw new Error('cupo'); return {response: 'Buenos días'}; }}};
+  const fake = async () => new Response('{"error":"rate"}', {status: 429});
+  const r = await AI.chat([{role: 'user', content: 'hola'}], {fetchFn: fake, env, server: true});
+  assert.strictEqual(r.text, 'Buenos días'); assert.match(r.model, /Cloudflare/);
+  assert.deepStrictEqual(runs, ['@cf/openai/gpt-oss-120b', '@cf/meta/llama-3.3-70b-instruct-fp8-fast']);
+});
+
+test('ruta /ai del servidor: contesta como OpenAI, bloquea orígenes ajenos y quita imágenes', async () => {
+  const AI = await import('../worker/ai.mjs'); let got;
+  const env = {AI: {run: async (m, inp) => { got = inp.messages; return {response: 'listo'}; }}};
+  const req = (origin, body) => new Request('https://nova-hub-push.soobroon.workers.dev/ai', {method: 'POST', headers: Object.assign({'content-type': 'application/json'}, origin ? {origin} : {}), body: JSON.stringify(body)});
+  const ok = await AI.aiRoute(req('https://soobroon-beep.github.io', {messages: [{role: 'user', content: [{type: 'text', text: 'hola'}, {type: 'image_url', image_url: {url: 'data:x'}}]}]}), env);
+  assert.strictEqual(ok.status, 200); assert.strictEqual((await ok.json()).choices[0].message.content, 'listo'); assert.deepStrictEqual(got, [{role: 'user', content: 'hola'}]);
+  assert.strictEqual((await AI.aiRoute(req('https://otra.com', {messages: [{role: 'user', content: 'x'}]}), env)).status, 403);
+  const st = await AI.aiRoute(new Request('https://x/ai/status', {headers: {origin: 'https://soobroon-beep.github.io'}}), env);
+  assert.deepStrictEqual(await st.json(), {ok: true, ready: true, groq: false, cloudflare: true});
 });
 
 test('la lista guarda 7, la más nueva primero, una por día y sin briefings viejos de cripto', async () => {

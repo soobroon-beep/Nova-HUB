@@ -12,6 +12,7 @@
 // Secreto del Worker: FIREBASE_SERVICE_ACCOUNT (lo sube solo .github/workflows/deploy-push-worker.yml).
 
 import * as B from './briefing.mjs';
+import * as AI from './ai.mjs';
 
 const TZ_DEFAULT = 'America/Mexico_City', WINDOW_MIN = 3, APP_URL = 'https://soobroon-beep.github.io/Nova-HUB/';
 const FIELDS = ['reminders', 'routines', 'fcmTokens', 'routineNotified', 'tz', 'settings', 'briefings', 'briefingLock'];
@@ -161,18 +162,18 @@ export async function tick(env, nowMs = Date.now(), fetchFn = fetch) {
   }
   // Briefings al final: tardan ~1 min (búsquedas en la web) y no deben retrasar los avisos
   for (const {d, user, bj} of briefJobs) {
-    try { if (await runBriefing(base, d.name, H, fetchFn, pid, user, bj, nowMs)) stats.briefings = (stats.briefings || 0) + 1; }
+    try { if (await runBriefing(base, d.name, H, fetchFn, pid, user, bj, nowMs, env)) stats.briefings = (stats.briefings || 0) + 1; }
     catch (e) { console.error('briefing', e.message); stats.briefingErrors = (stats.briefingErrors || 0) + 1; }
   }
   return stats;
 }
 
 // Genera el briefing, lo guarda en users/{uid}.briefings (solo ese campo) y avisa por push
-async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs) {
+async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs, env) {
   const patch = (fields) => fetchFn(`https://firestore.googleapis.com/v1/${name}?${Object.keys(fields).map(f => 'updateMask.fieldPaths=' + f).join('&')}&currentDocument.exists=true`, {method: 'PATCH', headers: H, body: JSON.stringify({fields})});
   // Candado: evita que la ronda del minuto siguiente lo genere otra vez mientras este sigue en curso
   await patch({briefingLock: encode({date: bj.dateStr, at: nowMs, tries: bj.tries})});
-  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, source: 'auto'});
+  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, source: 'auto'});
   const root = base.replace(/\/documents$/, '');
   let saved = false;
   for (let attempt = 0; attempt < 3 && !saved; attempt++) {
@@ -213,7 +214,9 @@ async function commit(base, name, H, fetchFn, {remKeys, rtKeys, dateStr, bad}) {
 }
 
 export default {
-  async fetch(req) {
+  async fetch(req, env) {
+    // IA gratuita (Groq / Cloudflare Workers AI) para NOVA HUB y Neural Brain
+    if (req) { const pth = new URL(req.url).pathname; if (pth === '/ai' || pth.startsWith('/ai/')) return AI.aiRoute(req, env || {}); }
     // Titulares reales para «Generar ahora» en la app (el navegador no puede leer Google Noticias directo)
     if (req && new URL(req.url).pathname === '/briefing/feeds') {
       const h = await B.fetchHeadlines();

@@ -133,15 +133,15 @@ export function localDate(ms, tz = DEFAULT_PLACE.tz) {
 
 /* ───────── Todo junto ───────── */
 // headlines: si no se pasan, se descargan (en el servidor). En la app se piden al servidor de avisos (/briefing/feeds).
-export async function generateBriefing({name, nowMs = Date.now(), tz, place = DEFAULT_PLACE, fetchFn = fetch, server = false, headlines, source = 'auto'} = {}) {
+export async function generateBriefing({name, nowMs = Date.now(), tz, place = DEFAULT_PLACE, fetchFn = fetch, server = false, env, headlines, source = 'auto'} = {}) {
   const zone = tz || place.tz;
   const {dateStr, dateLabel} = localDate(nowMs, zone);
   const [weather, heads] = await Promise.all([fetchWeather(fetchFn, place), headlines ? Promise.resolve(headlines) : fetchHeadlines(fetchFn)]);
   const msgs = [{role: 'system', content: SYSTEM}, {role: 'user', content: buildPrompt({name, dateLabel, dateStr, weather, place, headlines: heads})}];
-  let raw = (await AI.chat(msgs, {fetchFn, server, maxTokens: 2200, temperature: .6, budget: server ? 240000 : 120000, timeout: 90000})).text;
+  let raw = (await AI.chat(msgs, {fetchFn, server, env: env && (env.AI || env.GROQ_KEY) ? env : undefined, task: 'json', maxTokens: 2200, temperature: .6, budget: server ? 240000 : 120000, timeout: 90000})).text;
   if (!parseBriefing(raw)) { // a veces el modelo se sale del formato: un segundo intento pidiendo solo el JSON
     msgs.push({role: 'assistant', content: raw.slice(0, 4000)}, {role: 'user', content: 'Devuélvelo de nuevo SOLO como el objeto JSON pedido, sin nada más.'});
-    raw = (await AI.chat(msgs, {fetchFn, server, maxTokens: 2200, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
+    raw = (await AI.chat(msgs, {fetchFn, server, env: env && (env.AI || env.GROQ_KEY) ? env : undefined, task: 'json', maxTokens: 2200, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
   }
   const sections = parseBriefing(raw);
   if (!sections) throw new Error('La IA no devolvió un briefing válido');

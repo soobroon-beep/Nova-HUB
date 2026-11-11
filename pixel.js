@@ -241,8 +241,11 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   async function freeAI(messages, maxTokens) {
     const body = JSON.stringify({model: 'deepseek', messages, max_tokens: maxTokens, temperature: .4}); // modelo abierto
     const read = async r => { if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(), t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content; if (!t) throw new Error('vacía'); return t; };
-    try { return await read(await fetchT(VX + '/ai', {method: 'POST', headers: {'content-type': 'application/json'}, body}, 35000)); }
-    catch (e) { return await read(await fetchT(GEN_URL, {method: 'POST', headers: {'content-type': 'application/json', authorization: 'Bearer ' + POLLEN_KEY}, body}, 35000)); }
+    let last; // 1) tu servidor NOVA HUB (Groq / Cloudflare), 2) el de VORTEX, 3) Pollinations directo
+    for (const [url, key] of [['https://nova-hub-push.soobroon.workers.dev/ai', ''], [VX + '/ai', ''], [GEN_URL, POLLEN_KEY]]) {
+      try { const t = await read(await fetchT(url, {method: 'POST', headers: Object.assign({'content-type': 'application/json'}, key ? {authorization: 'Bearer ' + key} : {}), body}, 35000)); if (/enough credits|top up|insufficient (balance|credits)/i.test(t) && t.length < 800) throw new Error('sin créditos'); return t; } catch (e) { last = e; }
+    }
+    throw last;
   }
   async function chat(messages, maxTokens = 700) {
     status('pensando…');
