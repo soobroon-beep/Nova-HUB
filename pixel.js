@@ -74,17 +74,18 @@
   function home() {
     const s = AV(), c = createBtn();
     // PC: descansa flotando abajo a la derecha, pegado al botón (+) de crear
-    if (c) return {x: clamp(c.right + 6, 0, AW() - s.w), y: clamp(c.bottom - s.h + 14, 0, AH() - s.h)};
-    const h = ls.home2; if (mobile() && h && Number.isFinite(h.rx) && Number.isFinite(h.by)) return {x: clamp(AW() - h.rx - s.w, 0, AW() - s.w), y: clamp(AH() - h.by - s.h, 0, AH() - s.h)};
+    if (c) return {x: clamp(c.right + 6, 0, AW() - s.w), y: clamp(c.top - s.h + 18, 0, AH() - s.h - 24)}; // más arriba: los pies quedan a la altura del (+), sin cortarse
+    const h = ls.home2; if (mobile() && h && Number.isFinite(h.rx) && Number.isFinite(h.by)) return {x: clamp(AW() - h.rx - s.w, 0, AW() - s.w), y: clamp(AH() - h.by - s.h, 0, AH() - bottomGap() - s.h - 6)};
     if (mobile()) return {x: 6, y: clamp(AH() - bottomGap() - s.h - 6, 0, AH() - s.h)}; // celular: a la izquierda, sobre la barra (el (+) queda libre a la derecha)
     return {x: AW() - s.w - 36, y: clamp(AH() - Math.max(bottomGap(), 24) - s.h - 4, 0, AH() - s.h)}; // PC: abajo a la derecha, arriba de la barra
   }
   function placePeek() { // escondido: sobre la barra inferior (celular) o abajo a la derecha, junto al menú (PC)
-    const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 40, t = tabbar(), c = createBtn();
-    if (c) { fab.style.left = (c.right + 10) + 'px'; fab.style.top = (c.top + (c.height - hgt) / 2) + 'px'; } // PC: junto al (+)
-    else if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt + 3) + 'px'; }
-    else if (mobile()) { fab.style.left = '22px'; fab.style.top = (AH() - hgt) + 'px'; }
-    else { fab.style.left = (AW() - 108 - w) + 'px'; fab.style.top = (AH() - hgt) + 'px'; }
+    // Se ve la cabeza COMPLETA (ya no se recorta) y siempre por encima de la barra inferior
+    const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 56, t = tabbar(), c = createBtn();
+    if (c) { fab.style.left = (c.right + 12) + 'px'; fab.style.top = Math.max(6, c.top - hgt * .45) + 'px'; } // PC: junto al (+), un poco más arriba
+    else if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt - 8) + 'px'; }
+    else if (mobile()) { fab.style.left = '22px'; fab.style.top = (AH() - hgt - 16) + 'px'; }
+    else { fab.style.left = (AW() - 108 - w) + 'px'; fab.style.top = (AH() - hgt - 24) + 'px'; }
   }
   function peekSpot() { const r = fab.getBoundingClientRect(); return r.width ? {x: r.left + r.width / 2, y: r.top} : {x: 60, y: AH() - 40}; }
   function place(x, y) { const s = AV(); pos = {x, y}; av.style.width = s.w + 'px'; av.style.height = s.h + 'px'; av.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`; if (!bub.hidden) placeBubble(); }
@@ -342,7 +343,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     lastAct = Date.now();
   }
   async function hide() {
-    if (!open) return; stopMic(); open = false; ls.open = false; store(); bub.hidden = true; mood('wink', 'wave'); await sleep(REDUCED ? 0 : 450); mood('happy', 'fly');
+    if (!open) return; stopMic(true); open = false; ls.open = false; store(); bub.hidden = true; mood('wink', 'wave'); await sleep(REDUCED ? 0 : 450); mood('happy', 'fly');
     { const s = AV(), pk = peekSpot(); await flyTo(pk.x - s.w / 2, pk.y - s.h * .6, 600); await flyTo(pk.x - s.w / 2, pk.y + 20, 260); }
     av.hidden = true; fab.classList.remove('on', 'out'); fab.setAttribute('aria-label', 'Llamar a Cortex'); if (M) M.pause(true);
   }
@@ -354,9 +355,9 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   /* ── Micrófono: en el celular usa el dictado del navegador; en PC (o si el dictado falla) graba y transcribe tu servidor ── */
   const mic = bub.querySelector('.px-mic'), SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec = null, heard = '', srBroken = !!ls.srBroken;
   const useRecorder = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && (!SR || srBroken || !mobile());
-  let mr = null, mStream = null, mCtx = null, mTimer = 0;
-  function micUI(on, m) { mic.classList.toggle('on', on); bub.classList.toggle('listening', on); if (on) { input.placeholder = m || 'Te escucho… habla ahora (toca el micrófono para terminar)'; input.value = ''; mood('surprised', 'idle'); status('te escucho…'); } else setChips(); }
-  function stopMic() { if (rec) { try { rec.stop(); } catch {} } if (mr && mr.state === 'recording') { try { mr.stop(); } catch {} } }
+  let mr = null, mStream = null, mCtx = null, mTimer = 0, micOn = false, micCancel = false; // micOn: sigue escuchando hasta que vuelvas a tocar el micrófono
+  function micUI(on, m) { mic.classList.toggle('on', on); bub.classList.toggle('listening', on); if (on) { input.placeholder = m || 'Te escucho… toca el micrófono otra vez cuando termines'; input.value = ''; mood('surprised', 'idle'); status('te escucho…'); } else setChips(); }
+  function stopMic(cancel) { micOn = false; micCancel = !!cancel; if (rec) { try { rec.stop(); } catch {} } if (mr && mr.state === 'recording') { try { mr.stop(); } catch {} } }
   function relMic() { clearInterval(mTimer); mTimer = 0; try { mStream && mStream.getTracks().forEach(t => t.stop()); } catch {} mStream = null; try { mCtx && mCtx.close(); } catch {} mCtx = null; }
   function toWav(buf) { const n = buf.length, out = new DataView(new ArrayBuffer(44 + n * 2)), W = (o, t) => { for (let i = 0; i < t.length; i++) out.setUint8(o + i, t.charCodeAt(i)); };
     W(0, 'RIFF'); out.setUint32(4, 36 + n * 2, true); W(8, 'WAVE'); W(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true); out.setUint32(24, 16000, true); out.setUint32(28, 32000, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true); W(36, 'data'); out.setUint32(40, n * 2, true);
@@ -374,12 +375,11 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     catch (e) { relMic(); say(e && e.name === 'NotFoundError' ? 'No encontré ningún micrófono conectado.' : 'Necesito permiso para usar el micrófono: permítelo en el aviso del navegador y vuelve a tocarlo.'); return; }
     const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find(m => { try { return MediaRecorder.isTypeSupported(m); } catch { return false; } }) || '';
     const chunks = []; mr = new MediaRecorder(mStream, mime ? {mimeType: mime} : {}); mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-    let spoke = false, quietSince = 0; const t0 = Date.now();
-    try { const AC = window.AudioContext || window.webkitAudioContext; mCtx = new AC(); const an = mCtx.createAnalyser(); an.fftSize = 1024; mCtx.createMediaStreamSource(mStream).connect(an); const d = new Uint8Array(an.fftSize);
-      mTimer = setInterval(() => { an.getByteTimeDomainData(d); let e = 0; for (const v of d) e += (v - 128) * (v - 128); const rms = Math.sqrt(e / d.length) / 128, now = Date.now();
-        if (rms > .045) { spoke = true; quietSince = 0; } else if (spoke) { quietSince = quietSince || now; if (now - quietSince > 1500) stopMic(); }
-        if ((!spoke && now - t0 > 8000) || now - t0 > 25000) stopMic(); }, 100); } catch {}
+    const t0 = Date.now(); micOn = true; micCancel = false;
+    // Ya NO se corta por silencio: graba hasta que vuelvas a tocar el micrófono (tope de seguridad: 5 minutos)
+    mTimer = setInterval(() => { if (Date.now() - t0 > 300000) stopMic(); }, 1000);
     mr.onstop = async () => { const dur = Date.now() - t0, type = (mr && mr.mimeType) || mime || 'audio/webm'; relMic(); mr = null; micUI(false);
+      if (micCancel) { micCancel = false; return; }
       if (!chunks.length || dur < 600) { mood('neutral', 'idle'); say('No alcancé a escucharte. Toca el micrófono y habla.'); return; }
       busy = true; bub.classList.add('working'); mood('thinking', 'think'); say('Escuchando lo que dijiste…', {busy: true}); status('transcribiendo…');
       let t = ''; try { t = await transcribe(new Blob(chunks, {type})); } catch (e) { console.warn('Nova Pixel voz', e); }
@@ -389,17 +389,26 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     mr.start(250); micUI(true);
   }
   function dictate() {
-    rec = new SR(); rec.lang = 'es-MX'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1; heard = ''; let fail = '';
-    rec.onstart = () => micUI(true, 'Te escucho… habla ahora');
-    rec.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; heard = t.trim(); input.value = heard; };
-    rec.onerror = e => { fail = e.error; };
-    rec.onend = () => { micUI(false); status('IA de NOVA HUB'); rec = null; mood('neutral', 'idle'); const t = heard; heard = '';
+    // Dictado continuo: aunque hagas pausas no te corta; si el navegador lo detiene solo, lo reanuda. Termina al tocar el micrófono otra vez.
+    heard = ''; micOn = true; micCancel = false; let fail = '', done = '', t0 = Date.now();
+    const start = () => {
+      const r = rec = new SR(); r.lang = 'es-MX'; r.interimResults = true; r.continuous = true; r.maxAlternatives = 1; fail = ''; t0 = Date.now();
+      r.onstart = () => { if (done) { input.value = done; return; } micUI(true); }; // al reanudar no borra lo que ya dijiste
+      r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; heard = (done + ' ' + t).replace(/\s+/g, ' ').trim(); input.value = heard; };
+      r.onerror = e => { fail = e.error; };
+      r.onend = () => { if (rec !== r) return;
+        if (micOn && fail !== 'not-allowed' && fail !== 'service-not-allowed' && fail !== 'audio-capture' && !(fail === 'network' && Date.now() - t0 < 1500)) { done = heard; try { start(); return; } catch {} }
+        finish(); };
+      r.start();
+    };
+    const finish = () => { micOn = false; micUI(false); status('IA de NOVA HUB'); rec = null; mood('neutral', 'idle'); const t = heard; heard = '';
+      if (micCancel) { micCancel = false; return; }
       if (t) { ask(t); return; }
       if (fail === 'not-allowed') { say('Necesito permiso para usar el micrófono: actívalo en los permisos del navegador (o de Nova Hub) y vuelve a tocarlo.'); return; }
       if (fail === 'no-speech' || fail === 'aborted') { say('No te escuché. Toca el micrófono y vuelve a intentarlo.'); return; }
       if (window.MediaRecorder && navigator.mediaDevices) { srBroken = true; ls.srBroken = true; store(); recordVoice(); return; }
       say('El dictado por voz no está disponible aquí. Puedes escribirme o usar el micrófono del teclado.'); };
-    try { rec.start(); } catch { rec = null; if (window.MediaRecorder) recordVoice(); else say('No se pudo iniciar el micrófono. Inténtalo otra vez.'); }
+    try { start(); } catch { rec = null; if (window.MediaRecorder) recordVoice(); else say('No se pudo iniciar el micrófono. Inténtalo otra vez.'); }
   }
   mic.addEventListener('click', () => {
     if (rec || (mr && mr.state === 'recording')) { stopMic(); return; }
