@@ -566,6 +566,9 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
   .modal.note-editor-modal{width:calc(100vw - 20px);max-width:calc(100vw - 20px);height:calc(100dvh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:none;border-radius:26px}
   .ne-body{font-size:1.02rem}
   .ne-foot{padding-bottom:10px}
+  /* Editar desde la vista de la nota: mismo tamaño que esa ventana; si abre el teclado, se ajusta para que no se salga */
+  .modal.note-editor-modal.ne-compact{max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+  .modal.note-editor-modal.ne-compact .ne-title{font-size:1.2rem}
 }
 /* Ventana emergente con cristal y animación de entrada/salida */
 #noteModal.modal-overlay{background:rgba(4,4,12,.55);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%)}
@@ -5778,6 +5781,7 @@ document.getElementById('blockDelete')?.addEventListener('click',()=>{
   addToTrash('routine', b); state.routines=state.routines.filter(x=>x.id!=id); save(); closeModal('blockModal'); _afterCalDelete(); toast('🗑️ Movido a la papelera');
 });
 const closeModal=id=>{
+  if(id==='noteModal'){const nm=document.querySelector('#noteModal .note-editor-modal');if(nm)setTimeout(()=>{nm.classList.remove('ne-compact');nm.style.height='';},400);}
   const m=document.getElementById(id); if(!m) return;
   const modal=m.querySelector('.modal');
   // Editor de notas: se encoge y se desvanece con suavidad
@@ -8069,6 +8073,9 @@ const renderNoteDetail = () => {
   });
 
   box.querySelector('#ndEdit').addEventListener('click', () => {
+    // Celular: el editor abre del MISMO tamaño que la ventana de la nota (no a pantalla casi completa)
+    const nm = document.querySelector('#noteModal .note-editor-modal'), dm = box.closest('.modal');
+    if (nm && dm && innerWidth <= 640) { const h = Math.round(dm.getBoundingClientRect().height); nm.classList.add('ne-compact'); nm.style.height = Math.max(h, 420) + 'px'; }
     closeModal('noteDetailModal');
     document.getElementById('noteId').value = n.id;
     document.getElementById('noteTitle').value = n.title || '';
