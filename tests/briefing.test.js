@@ -163,3 +163,10 @@ test('dictado: Whisper de Cloudflare cuando no hay Groq', async () => {
   const res = await AI.aiRoute(new Request('https://x/ai/transcribe', {method: 'POST', headers: {origin: 'https://soobroon-beep.github.io'}, body: JSON.stringify({audio: btoa('RIFFxxxx')})}), env);
   assert.deepStrictEqual(await res.json(), {text: 'hola Cortex'}); assert.deepStrictEqual(seen, ['@cf/openai/whisper-large-v3-turbo']);
 });
+
+test('briefing: repara el JSON cuando la IA cierra llaves de más o deja comas', async () => {
+  const B = await import('../worker/briefing.mjs');
+  const bad = '{"saludo":"Hola","ia":{"resumen":"x","puntos":[{"titulo":"a","resumen":"b"}]}},"tech":[{"titulo":"Nvidia","resumen":"y"}],"dato":"z",}';
+  const p = B.parseBriefing(bad);
+  assert.strictEqual(p.saludo, 'Hola'); assert.strictEqual(p.tech[0].titulo, 'Nvidia'); assert.strictEqual(p.dato, 'z');
+});

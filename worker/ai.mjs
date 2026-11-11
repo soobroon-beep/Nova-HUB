@@ -50,12 +50,12 @@ const wantsJson = msgs => (msgs || []).some(m => m && m.role === 'system' && /js
 
 /* ───────── En el servidor: Groq y Cloudflare Workers AI directo (sin pasar por internet) ───────── */
 export async function serverChain(env, messages, o = {}, fetchFn = fetch) {
-  const T = OPEN_AI[o.task === 'json' || (!o.task && wantsJson(messages)) ? 'json' : 'chat'];
+  const json = o.task === 'json' || (!o.task && wantsJson(messages)), T = OPEN_AI[json ? 'json' : 'chat']; // json: Groq valida que la respuesta sea JSON correcto
   const max_tokens = Math.min(+o.maxTokens || +o.max_tokens || 1200, 4000), temperature = Number.isFinite(+o.temperature) ? +o.temperature : .5;
   const end = Date.now() + (o.budget || 90000), left = () => end - Date.now(), tried = [];
   const routes = [];
   if (env && env.GROQ_KEY) for (const m of T.groq) routes.push(['Groq', m, async (msgs, ms) => {
-    const r = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {method: 'POST', headers: {'content-type': 'application/json', authorization: 'Bearer ' + env.GROQ_KEY}, body: JSON.stringify({model: m, messages: msgs, max_tokens, temperature}), signal: AbortSignal.timeout(ms)});
+    const r = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {method: 'POST', headers: {'content-type': 'application/json', authorization: 'Bearer ' + env.GROQ_KEY}, body: JSON.stringify(Object.assign({model: m, messages: msgs, max_tokens, temperature}, json ? {response_format: {type: 'json_object'}} : {})), signal: AbortSignal.timeout(ms)});
     if (!r.ok) throw new AIError('groq ' + r.status, kindOf(r.status), r.status); return textOf(await r.json());
   }]);
   if (env && env.AI) for (const m of T.wai) routes.push(['Cloudflare', m, (msgs, ms) => { let t; return Promise.race([env.AI.run(m, {messages: msgs, max_tokens, temperature}), new Promise((_, no) => { t = setTimeout(() => no(new AIError('tiempo', 'abort')), ms); })]).finally(() => clearTimeout(t)).then(textOf); }]);

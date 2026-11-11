@@ -103,11 +103,38 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
 const str = v => (typeof v === 'string' ? v.replace(/<\/?cite[^>]*>/g, '').replace(/\*\*/g, '').trim() : '');
 const items = (v, n, keys) => (Array.isArray(v) ? v : []).filter(x => x && typeof x === 'object')
   .map(x => Object.fromEntries(keys.map(k => [k, str(x[k])]))).filter(x => x[keys[0]]).slice(0, n);
+// Arregla los errores típicos de las IAs al escribir JSON: llaves/corchetes de más o de menos, comas sobrantes
+// y saltos de línea sin escapar dentro de los textos.
+export function repairJson(t) {
+  let out = '', inStr = false, esc = false; const stack = [];
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inStr) {
+      if (esc) { esc = false; out += c; continue; }
+      if (c === '\\') { esc = true; out += c; continue; }
+      if (c === '"') { inStr = false; out += c; continue; }
+      out += c === '\n' ? '\\n' : c === '\r' ? '' : c === '\t' ? ' ' : c; continue;
+    }
+    if (c === '"') { inStr = true; out += c; continue; }
+    if (c === '{' || c === '[') { stack.push(c === '{' ? '}' : ']'); out += c; continue; }
+    if (c === '}' || c === ']') {
+      if (stack[stack.length - 1] !== c) continue;                    // cierre que no corresponde: sobra
+      if (stack.length === 1 && /[^\s}\]]/.test(t.slice(i + 1))) continue; // cerraría todo antes de tiempo: sobra
+      out = out.replace(/,\s*$/, ''); stack.pop(); out += c; continue;
+    }
+    out += c;
+  }
+  if (inStr) out += '"';
+  out = out.replace(/,\s*$/, '');
+  while (stack.length) out += stack.pop();
+  return out;
+}
+
 export function parseBriefing(raw) {
   const txt = String(raw || '');
   let o = null;
   const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
-  if (a >= 0 && b > a) { try { o = JSON.parse(txt.slice(a, b + 1)); } catch { o = null; } }
+  if (a >= 0 && b > a) { const body = txt.slice(a, b + 1); try { o = JSON.parse(body); } catch { try { o = JSON.parse(repairJson(body)); } catch { o = null; } } }
   if (!o || typeof o !== 'object') return null;
   const ia = o.ia && typeof o.ia === 'object' ? o.ia : {};
   const t = o.tatuaje && typeof o.tatuaje === 'object' ? o.tatuaje : {};
