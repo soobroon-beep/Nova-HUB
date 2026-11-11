@@ -6,14 +6,16 @@
    · Lo que hace con cada cuenta se decide en Neural Brain (Ajustes → Conexiones), no en la app.
    · En VORTEX además devuelve lo aprendido por tus cerebros de trading a users/<uid>/data/brain,
      para que la IA de VORTEX (Analizar gráfico y Briefing) lo aplique.
-   · Variables: BRAIN_APP=novahub|vortex, FIREBASE_SERVICE_ACCOUNT (esta app), NEURAL_BRAIN_SERVICE_ACCOUNT (el cerebro).
-     Sin la llave del cerebro termina sin hacer nada. Nunca imprime datos de usuarios (el repo es público). */
+   · Variables: BRAIN_APP=novahub|vortex y FIREBASE_SERVICE_ACCOUNT (la cuenta de servicio de esta app, que ya tiene permiso
+     «Usuario de Cloud Datastore» en el proyecto del cerebro: no hace falta otra llave). NEURAL_BRAIN_SERVICE_ACCOUNT es opcional.
+     Nunca imprime datos de usuarios (el repo es público). */
 'use strict';
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { execSync } = require('child_process');
 
 const TZ = 'America/Mexico_City';
+const NB_PROJECT = process.env.NB_PROJECT || 'neural-brain-148a4';
 const TEXT_MAX = 1500, MAX_EVENTS = 3000, FIRST_COMMITS = 40;
 
 /* ───────── utilidades puras (probadas en tests/brain-sync.test.js) ───────── */
@@ -184,22 +186,22 @@ function vortexContext(brains) {
 async function run() {
   const APP = process.env.BRAIN_APP;
   if (!['novahub', 'vortex'].includes(APP)) { console.error('BRAIN_APP debe ser novahub o vortex'); process.exit(1); }
-  if (!process.env.NEURAL_BRAIN_SERVICE_ACCOUNT) { console.log('Sin el secreto NEURAL_BRAIN_SERVICE_ACCOUNT: el conector no hace nada (ver README del cerebro).'); return; }
   if (!process.env.FIREBASE_SERVICE_ACCOUNT) { console.log('Sin FIREBASE_SERVICE_ACCOUNT: el conector no hace nada.'); return; }
   const admin = require('firebase-admin');
-  const src = admin.initializeApp({ credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) }, 'src');
-  const nb = admin.initializeApp({ credential: admin.credential.cert(JSON.parse(process.env.NEURAL_BRAIN_SERVICE_ACCOUNT)) }, 'nb');
+  const srcCred = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  const src = admin.initializeApp({ credential: admin.credential.cert(srcCred) }, 'src');
+  const nbCred = process.env.NEURAL_BRAIN_SERVICE_ACCOUNT ? JSON.parse(process.env.NEURAL_BRAIN_SERVICE_ACCOUNT) : srcCred;
+  const nb = admin.initializeApp({ credential: admin.credential.cert(nbCred), projectId: NB_PROJECT }, 'nb');
   const sdb = src.firestore(), ndb = nb.firestore();
   const appName = APP === 'novahub' ? 'Nova Hub' : 'VORTEX';
 
-  let token, n = 0;
-  do {
-    const page = await nb.auth().listUsers(1000, token); token = page.pageToken;
-    for (const u of page.users) {
-      if (!u.email) continue;
-      try { const r = await syncUser(u); if (r) n++; } catch (e) { console.warn('Una cuenta falló:', String(e.message || e).slice(0, 200)); }
-    }
-  } while (token);
+  // Las cuentas del cerebro: Neural Brain guarda tu correo en users/{uid} al iniciar sesión.
+  let n = 0;
+  const people = await ndb.collection('users').get();
+  for (const d of people.docs) {
+    const email = d.data() && d.data().email; if (!email) continue;
+    try { const r = await syncUser({ uid: d.id, email }); if (r) n++; } catch (e) { console.warn('Una cuenta falló:', String(e.message || e).slice(0, 200)); }
+  }
   console.log(`${appName}: ${n} cerebro(s) actualizados.`);
 
   async function syncUser(nbUser) {

@@ -1,8 +1,8 @@
 name: Cerebro · conector de Nova Hub
 
 # Manda a tu cerebro (Neural Brain) lo que creas, editas o borras en Nova Hub, cada 30 minutos.
-# No cambia nada en la app. Necesita el secreto NEURAL_BRAIN_SERVICE_ACCOUNT (la llave del proyecto
-# de Firebase de Neural Brain); sin él termina sin hacer nada. Usa el mismo FIREBASE_SERVICE_ACCOUNT del resto de los jobs.
+# No cambia nada en la app. Usa el mismo FIREBASE_SERVICE_ACCOUNT del resto de los jobs (esa cuenta de servicio
+# tiene permiso «Usuario de Cloud Datastore» en el proyecto neural-brain-148a4).
 
 on:
   schedule:
@@ -39,4 +39,3 @@ jobs:
         env:
           BRAIN_APP: novahub
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          NEURAL_BRAIN_SERVICE_ACCOUNT: ${{ secrets.NEURAL_BRAIN_SERVICE_ACCOUNT }}
