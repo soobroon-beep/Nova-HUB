@@ -24,3 +24,11 @@ assert.deepStrictEqual(v2, ['activó:indicador', 'quitó de:seguimiento'], v2.jo
 const ctx = B.vortexContext([{name: 'Trading', instructions: 'Sé directo', notes: [{text: 'Nunca sin stop', master: true}, {text: 'Entrar en retroceso a la nube', kind: 'estrategia', author: 'X'}], learned: {text: 'Pierde más en 15m'}}]);
 assert(/REGLAS MAESTRAS[\s\S]*Nunca sin stop/.test(ctx) && /estrategia · X/.test(ctx) && /Pierde más en 15m/.test(ctx));
 console.log('brain-sync: OK');
+// cerebros de bots
+const bots = [{id: 'x1', name: 'Lucas 1H', mainV: 1, versions: [{v: 1, spec: {interval: '1h'}}]}, {id: 'x2', name: 'Nova Nexus Señales v2.7 4H', mainV: 1, versions: [{v: 1, spec: {interval: '4h'}}]}, {id: 'x3', name: 'Señales IA 2.7 bot', mainV: 2, versions: [{v: 1, spec: {interval: '4h'}}, {v: 2, spec: {interval: '1h'}, state: 'principal'}], paper: [{id: 'p1', v: 2, status: 'running', ledger: [{net: 10}, {net: -4}]}]}];
+const L = {name: ['senal|signal', '2\\W?7'], interval: '1h'};
+assert.strictEqual(B.matchBot(L, bots).id, 'x3', 'encuentra el bot de Señales 2.7 en 1h');
+assert.strictEqual(B.matchBot(L, bots.slice(0, 2)), null);
+const bits = B.botBits(bots[2]); assert(bits.some(x => x.type === 'versión del bot') && bits.some(x => x.type === 'paper trading' && /2 operaciones.*aciertos 50/.test(x.text)));
+assert(/GANA: Objetivo 3R/.test(B.experimentText('Bot', {brain: {base: {oos: -10, n: 20}, tried: [{ok: true, title: 'Objetivo 3R', from: 'cerebro (IA)', oos: 30, base: -10, verdict: 'ok'}], best: {title: 'Objetivo 3R'}}})));
+console.log('cerebros de bots: OK');
