@@ -1,0 +1,42 @@
+name: Cerebro · conector de Nova Hub
+
+# Manda a tu cerebro (Neural Brain) lo que creas, editas o borras en Nova Hub, cada 30 minutos.
+# No cambia nada en la app. Necesita el secreto NEURAL_BRAIN_SERVICE_ACCOUNT (la llave del proyecto
+# de Firebase de Neural Brain); sin él termina sin hacer nada. Usa el mismo FIREBASE_SERVICE_ACCOUNT del resto de los jobs.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brain-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 400
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm install --omit=dev
+
+      - name: Mandar actividad al cerebro
+        run: node scripts/brain-sync.js
+        env:
+          BRAIN_APP: novahub
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          NEURAL_BRAIN_SERVICE_ACCOUNT: ${{ secrets.NEURAL_BRAIN_SERVICE_ACCOUNT }}
