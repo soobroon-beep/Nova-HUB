@@ -489,6 +489,11 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .bf-wx-t{font-size:1.25rem;font-weight:800;color:var(--text)}.bf-wx-t small{font-size:.78rem;font-weight:600;color:var(--text2)}
 .bf-wx-s{font-size:.74rem;color:var(--text2);margin-top:2px}
 .bf-tip{font-size:.82rem;color:var(--text2);margin-top:10px;line-height:1.5}
+.bf-agenda{color:var(--text);background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.22);border-radius:12px;padding:8px 12px}
+.bf-days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.bf-day{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:.72rem;color:var(--text2)}
+.bf-day span{font-weight:700;color:var(--text);text-transform:capitalize}.bf-day b{font-size:1.15rem;line-height:1.3}.bf-day small{font-size:.66rem;color:var(--text3)}
+.bf-plan{border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
 .bf-quote{margin:0;padding:14px 20px;font-size:.88rem;line-height:1.6;color:var(--text);font-style:italic;border-bottom:1px solid var(--border);background:rgba(124,106,247,.05)}
 .bf-quote::before{content:'🧘 ';font-style:normal}
 .bf-secs{padding:4px 0}
@@ -4597,6 +4602,7 @@ const gcal = {
       }
       const hid = this._hidden(); this.events = all.filter(e => !hid.has(e.id)); this.lastSync = Date.now(); this.status = 'ok';
       this._write(this.CACHE_KEY, { uid: fb.uid, at: this.lastSync, events: this.events });
+      this._share();
     } catch (e) {
       console.warn('[NOVA HUB] Google Calendar:', e.http, e.reason, e.detail);
       if (e.http === 401) { try { localStorage.removeItem(this.TOKEN_KEY); } catch (_) {} this.status = 'expired'; }
@@ -4645,6 +4651,21 @@ const gcal = {
       else if (m <= 15 && m >= 0) fire('q_' + e.id, '🖋 Cita en ' + m + ' min:', e.start + ' ' + e.title);
     });
     if (dirty) { try { localStorage.setItem('nh_tt_sent', JSON.stringify(sent)); } catch (e) {} }
+  },
+  // Comparte con tu cuenta SOLO lo de hoy y los próximos 3 días (título, fecha, hora y calendario) para que el
+  // briefing de las 8:30, que se arma en el servidor con la app cerrada, sepa de tus citas de tatuaje.
+  // Solo escribe el campo gcalAgenda y solo cuando cambia.
+  async _share() {
+    try {
+      if (!fb.enabled || !fb.uid || !window.fbSDK) return;
+      const days = [0, 1, 2, 3].map(i => { const d = new Date(); d.setDate(d.getDate() + i); return localDateStr(d); });
+      const events = this.events.filter(e => days.includes(e.date)).slice(0, 60)
+        .map(e => ({ date: e.date, start: e.start || '', end: e.end || '', title: String(e.title || '').slice(0, 120), calName: String(e.calName || '').slice(0, 60) }));
+      const sig = JSON.stringify(events), key = 'nh_gcal_shared_' + fb.uid;
+      if (localStorage.getItem(key) === sig) return;
+      await window.fbSDK.setDoc(window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid), { gcalAgenda: { at: Date.now(), events } }, { merge: true });
+      localStorage.setItem(key, sig);
+    } catch (e) { console.warn('[NOVA HUB] agenda no compartida', e); }
   },
   // Todos los eventos de un día (propios + Google), ordenados por hora
   forDate(ds) {
@@ -7006,9 +7027,11 @@ const briefName = () => (state.settings.pixel && state.settings.pixel.nombre) ||
 const BRIEF_FEEDS_URL = 'https://nova-hub-push.soobroon.workers.dev/briefing/feeds';
 const generateBriefing = async () => {
   const [B] = await Promise.all([loadBriefCore(), loadAI()]);
-  let headlines = { mexico: [], ia: [], tech: [], orizaba: [] };
+  let headlines = { mexico: [], ia: [], tech: [], orizaba: [], veracruz: [], eventos: [], region: [] };
   try { const c = new AbortController(), t = setTimeout(() => c.abort(), 12000); const r = await fetch(BRIEF_FEEDS_URL, { signal: c.signal }); clearTimeout(t); if (r.ok) headlines = await r.json(); } catch (e) { console.warn('[NOVA HUB] sin titulares del servidor', e); }
-  const entry = await B.generateBriefing({ name: briefName(), headlines, source: 'manual' });
+  const now = new Date();
+  const agenda = B.agendaLines({ dateStr: localDateStr(now), dow: now.getDay(), reminders: state.reminders, routines: state.routines, events: state.events, gcal: gcal.events });
+  const entry = await B.generateBriefing({ name: briefName(), headlines, agenda, source: 'manual' });
   state.briefingHistory = mergeBriefings([entry], state.briefingHistory || []);
   save();
   // Lo sube a tu cuenta para verlo en todos tus dispositivos (solo el campo «briefings»)
@@ -7028,22 +7051,30 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
   const dateLabel = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   const isToday = entry.date === todayBriefStr();
   const time = entry.generatedAt ? new Date(entry.generatedAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '';
-  const wx = w.ok ? `<div class="bf-wx"><span class="bf-wx-ic">${w.icon}</span><div><div class="bf-wx-t">${w.tempC}°<small> ${_esc(w.desc)}</small></div><div class="bf-wx-s">${_esc(entry.city || 'Orizaba')} · ↑${w.maxC}° ↓${w.minC}° · 💧${w.rainPct}%</div></div></div>` : '';
+  const extra = [w.rainWindow ? `☔ ${_esc(w.rainWindow)}` : '', w.sunset ? `🌅 ${_esc(w.sunrise)} · 🌇 ${_esc(w.sunset)}` : '', w.uvMax !== undefined && w.uvMax !== '?' ? `UV ${_esc(w.uvMax)}` : ''].filter(Boolean).join(' · ');
+  const daysStrip = Array.isArray(w.days) && w.days.length ? `<div class="bf-days">${w.days.map(x => `<div class="bf-day"><span>${_esc(x.label)}</span><b>${x.icon || ''}</b><small>${_esc(x.maxC)}° / ${_esc(x.minC)}°</small><small>💧${_esc(x.rainPct)}%</small></div>`).join('')}</div>` : '';
+  const wx = w.ok ? `<div class="bf-wx"><span class="bf-wx-ic">${w.icon}</span><div><div class="bf-wx-t">${w.tempC}°<small> ${_esc(w.desc)}</small></div><div class="bf-wx-s">${_esc(entry.city || 'Orizaba')} · ↑${w.maxC}° ↓${w.minC}° · 💧${w.rainPct}%</div>${extra ? `<div class="bf-wx-s">${extra}</div>` : ''}</div></div>${daysStrip}` : '';
   const ia = s.ia || {}, t = s.tatuaje || {};
   const iaInner = (ia.resumen ? `<p class="bf-lead">${_esc(ia.resumen)}</p>` : '') + briefItems(ia.puntos);
   const tatInner = t.idea ? `<div class="bf-tat"><b>${_esc(t.titulo)}</b><p>${_esc(t.idea)}</p>${t.elementos ? `<div class="bf-row"><span>Elementos</span>${_esc(t.elementos)}</div>` : ''}${t.paleta ? `<div class="bf-row"><span>Paleta</span>${_esc(t.paleta)}</div>` : ''}${t.zona ? `<div class="bf-row"><span>Zona</span>${_esc(t.zona)}</div>` : ''}</div>` : '';
+  const evs = (s.orizaba || []).map(x => ({ ...x, detalle: [x.donde ? '📍 ' + x.donde : '', x.detalle].filter(Boolean).join(' · ') }));
+  const evInner = evs.length ? (s.eventosCrudos ? '<p class="bf-lead">Esto se anuncia por la región estos días:</p>' : '') + briefItems(evs, 'titulo', 'detalle', 'cuando')
+    : '<p class="bf-empty">No encontré eventos anunciados para los próximos días.</p>';
   return `<article class="bf-card${dash ? ' bf-dash' : ''}">
     <header class="bf-hero">
       <div class="bf-kicker">☀️ ${isToday ? 'Tu briefing de hoy' : 'Briefing'} · ${_esc(dateLabel)}${time ? ' · ' + time : ''}</div>
       <div class="bf-hello">${_esc(s.saludo || 'Buenos días')}</div>
       ${wx}
       ${s.climaTip ? `<div class="bf-tip">${_esc(s.climaTip)}</div>` : ''}
+      ${s.tuDia ? `<div class="bf-tip bf-agenda">🗓️ ${_esc(s.tuDia)}</div>` : ''}
     </header>
     ${s.reflexion ? `<blockquote class="bf-quote">${_esc(s.reflexion)}</blockquote>` : ''}
     <div class="bf-secs">
-      ${briefSection('🤖', 'IA esta semana', iaInner, open)}
+      ${briefSection('🎉', 'Eventos en Orizaba y alrededores', evInner, true)}
+      ${briefSection('📍', 'Orizaba y Veracruz', briefItems(s.local), open)}
+      ${s.plan ? `<div class="bf-fact bf-plan"><span>🧭 Plan sugerido</span>${_esc(s.plan)}</div>` : ''}
       ${briefSection('🌎', 'Noticias clave', briefItems(s.noticias), open)}
-      ${briefSection('📍', 'Próximo en Orizaba', (s.orizaba || []).length ? briefItems(s.orizaba, 'titulo', 'detalle', 'cuando') : '<p class="bf-empty">Sin eventos destacados en los próximos días.</p>', open)}
+      ${briefSection('🤖', 'IA esta semana', iaInner, open)}
       ${briefSection('🎨', 'Idea para tatuaje', tatInner, open)}
       ${briefSection('💡', 'Tecnología', briefItems(s.tech), open)}
       ${s.dato ? `<div class="bf-fact"><span>✨ Dato curioso</span>${_esc(s.dato)}</div>` : ''}
@@ -7412,7 +7443,7 @@ const renderBriefingView = () => {
   document.getElementById('genBriefingBtn')?.addEventListener('click', async () => {
     const btn = document.getElementById('genBriefingBtn'), loading = document.getElementById('briefingLoadingArea'), stepEl = document.getElementById('briefingLoadStep');
     btn.disabled = true; btn.textContent = '⏳ Generando…'; loading.style.display = 'flex';
-    const steps = ['Revisando el clima en Orizaba', 'Buscando eventos en Orizaba', 'Leyendo las noticias clave', 'Resumiendo lo nuevo en IA', 'Pensando una idea de tatuaje', 'Escribiendo tu reflexión del día'];
+    const steps = ['Revisando el clima en Orizaba', 'Buscando eventos en Orizaba y alrededores', 'Leyendo las noticias de Orizaba y Veracruz', 'Revisando tu agenda', 'Leyendo las noticias clave', 'Resumiendo lo nuevo en IA', 'Pensando una idea de tatuaje', 'Escribiendo tu reflexión del día'];
     let si = 0; const timer = setInterval(() => { if (stepEl && si < steps.length - 1) stepEl.textContent = steps[++si]; }, 6000);
     try { await generateBriefing(); toast('☀️ Briefing listo'); renderBriefingView(); }
     catch (e) { toast('❌ No se pudo generar: ' + e.message); btn.disabled = false; btn.textContent = '✦ Generar ahora'; loading.style.display = 'none'; }
@@ -8863,30 +8894,43 @@ autoConnectFirebase();
 initNotifications();
 
 // ══════════════════════════════════════════════
-// ENTRADA RÁPIDA "Agregar con IA" — abre directo desde:
-// 1) Accesos directos de la PWA instalada (mantener presionado el ícono)
-// 2) Compartir texto desde otra app hacia NOVA HUB (Web Share Target)
+// ACCESOS DIRECTOS (mantener presionado el ícono de la app instalada):
+// · «Dictar»   → ?action=cortex&mode=voice : abre a Cortex con el micrófono ya escuchando
+// · «Escribir» → ?action=cortex&mode=text  : abre a Cortex con el teclado listo
+// Cortex decide si lo que dices es nota, idea, tarea, proyecto o recordatorio y lo guarda en tu cuenta.
+// Los accesos viejos (?action=quickadd[&voice=1]) también abren a Cortex. Compartir texto desde otra app
+// (Web Share Target) sigue abriendo «Agregar con IA» con el texto ya puesto.
 // ══════════════════════════════════════════════
-(function handleQuickAddEntry(){
+(function handleQuickEntry(){
   const params = new URLSearchParams(location.search);
   const action = params.get('action');
   const sharedParts = [params.get('share_title'), params.get('share_text'), params.get('share_url')].filter(Boolean);
   const sharedText = sharedParts.join(' — ');
-  if(action !== 'quickadd' && !sharedText) return;
+  if(action !== 'quickadd' && action !== 'cortex' && !sharedText) return;
+  const mode = action === 'cortex' ? (params.get('mode') === 'voice' ? 'voice' : 'text') : (params.get('voice') === '1' ? 'voice' : 'text');
 
-  setTimeout(() => {
+  const openQuickAdd = (voice) => {
     const trigger = document.getElementById('quickAddTrigger');
     const card = document.getElementById('quickAddCard');
     const input = document.getElementById('quickAddInput');
     if(!trigger || !card || !input) return;
     if(card.style.display === 'none') trigger.click(); // abre la barra (idempotente)
-    if(sharedText){
-      input.value = sharedText;
-      input.dispatchEvent(new Event('input'));
-    }
+    if(sharedText){ input.value = sharedText; input.dispatchEvent(new Event('input')); }
     input.focus();
-    if(params.get('voice') === '1') document.getElementById('quickAddMicBtn')?.click();
-  }, 250);
+    if(voice) document.getElementById('quickAddMicBtn')?.click();
+  };
+
+  if(sharedText) setTimeout(() => openQuickAdd(false), 250);
+  else {
+    // Espera a que Cortex (pixel.js) esté listo; si no carga en 8 s, usa la barra «Agregar con IA» de antes
+    const t0 = Date.now();
+    const go = () => {
+      if(window.NovaPixel && window.NovaPixel.quick) { window.NovaPixel.quick(mode).then(ok => { if(!ok) openQuickAdd(mode === 'voice'); }).catch(() => openQuickAdd(mode === 'voice')); return; }
+      if(Date.now() - t0 > 8000) { openQuickAdd(mode === 'voice'); return; }
+      setTimeout(go, 150);
+    };
+    setTimeout(go, 200);
+  }
 
   // Limpia la URL para que recargar la página no vuelva a disparar el atajo
   history.replaceState(null, '', location.pathname);

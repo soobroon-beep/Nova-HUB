@@ -8,7 +8,7 @@
 //      (conservando el valor exacto de todo lo demás), actualiza routineNotified y quita tokens vencidos.
 // Las fechas «YYYY-MM-DDTHH:MM» (sin zona) se leen en TU zona horaria (campo tz, por defecto America/Mexico_City).
 //   5) A las 8:30 (zona del usuario) genera el briefing del día con la IA gratuita de modelos abiertos (worker/briefing.mjs),
-//      lo guarda en users/{uid}.briefings y avisa «Tu briefing de hoy está listo».
+//      con tu agenda del día (gcalAgenda + events + reminders + routines), lo guarda en users/{uid}.briefings y avisa «Tu briefing de hoy está listo».
 // Secreto del Worker: FIREBASE_SERVICE_ACCOUNT (lo sube solo .github/workflows/deploy-push-worker.yml).
 
 import * as B from './briefing.mjs';
@@ -173,7 +173,15 @@ async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs, env) {
   const patch = (fields) => fetchFn(`https://firestore.googleapis.com/v1/${name}?${Object.keys(fields).map(f => 'updateMask.fieldPaths=' + f).join('&')}&currentDocument.exists=true`, {method: 'PATCH', headers: H, body: JSON.stringify({fields})});
   // Candado: evita que la ronda del minuto siguiente lo genere otra vez mientras este sigue en curso
   await patch({briefingLock: encode({date: bj.dateStr, at: nowMs, tries: bj.tries})});
-  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, source: 'auto'});
+  // Tu agenda de hoy: citas de Google Calendar (las sube la app en gcalAgenda), eventos, recordatorios y bloques de horario
+  let agenda = [];
+  try {
+    const g = await fetchFn(`https://firestore.googleapis.com/v1/${name}?mask.fieldPaths=events&mask.fieldPaths=gcalAgenda`, {headers: H});
+    const f = g.ok ? ((await g.json()).fields || {}) : {}, ga = decode(f.gcalAgenda);
+    agenda = B.agendaLines({dateStr: bj.dateStr, dow: nowInTZ(nowMs, bj.zone).dow, reminders: user.reminders, routines: user.routines,
+      events: decode(f.events) || [], gcal: ga && Array.isArray(ga.events) ? ga.events : []});
+  } catch (e) { console.warn('agenda del briefing', e.message); }
+  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, agenda, source: 'auto'});
   const root = base.replace(/\/documents$/, '');
   let saved = false;
   for (let attempt = 0; attempt < 3 && !saved; attempt++) {

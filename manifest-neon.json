@@ -86,10 +86,10 @@
   "scope": "./",
   "shortcuts": [
     {
-      "name": "Agregar con IA",
-      "short_name": "Agregar",
-      "description": "Escribe algo y la IA decide si es nota, tarea, recordatorio o evento",
-      "url": "./index.html?action=quickadd",
+      "name": "Dictar a Cortex",
+      "short_name": "Dictar",
+      "description": "Abre a Cortex con el micrófono listo: dile qué guardar (nota, idea, tarea, proyecto o recordatorio)",
+      "url": "./index.html?action=cortex&mode=voice",
       "icons": [
         {
           "src": "icon-neon-192.png",
@@ -99,10 +99,10 @@
       ]
     },
     {
-      "name": "Dictar con voz",
-      "short_name": "Dictar",
-      "description": "Abre Agregar con IA y empieza a escuchar de inmediato",
-      "url": "./index.html?action=quickadd&voice=1",
+      "name": "Escribir a Cortex",
+      "short_name": "Escribir",
+      "description": "Abre a Cortex con el teclado listo para guardar algo rápido",
+      "url": "./index.html?action=cortex&mode=text",
       "icons": [
         {
           "src": "icon-neon-192.png",

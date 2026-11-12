@@ -92,3 +92,8 @@
 @keyframes pkBlink{0%,92%,100%{scale:1 1}95%{scale:1 .1}}
 @keyframes pkLook{0%,30%,100%{translate:0 0}38%,52%{translate:-7px 0}60%,75%{translate:7px 0}}
 @media(prefers-reduced-motion:reduce){.px-peek-in,.nph-halo,.nph-star,.nph-eyes,.nph-node,.nph-node circle,.pxc .nph{animation:none!important}}
+
+/* Acceso directo «Dictar»: si Android no dejó abrir el micrófono solo, late para que lo toques */
+.px-mic.px-pulse{animation:pxPulse 1.1s ease-in-out infinite;box-shadow:0 0 0 0 var(--px-acc,#38d9ff)}
+@keyframes pxPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--px-acc,#38d9ff) 70%,transparent)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.px-mic.px-pulse{animation:none;outline:2px solid var(--px-acc,#38d9ff)}}

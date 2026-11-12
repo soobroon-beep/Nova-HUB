@@ -10,6 +10,7 @@
 (function () {
   'use strict';
   const H = () => window.NovaHubBridge; if (!H()) return;
+  let quickMode = false; // modo guardado rápido (accesos directos «Dictar» y «Escribir»)
   const CFG = () => { try { return H().cfg() || {}; } catch { return {}; } };
   const KEY = 'nh_pixel_v1', ls = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { return {}; } })(), store = () => { try { localStorage.setItem(KEY, JSON.stringify(ls)); } catch {} };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -157,7 +158,8 @@
   };
   const section = () => { try { return H().view() || 'dashboard'; } catch { return 'dashboard'; } };
   const chipsHTML = list => list.map(([t, q]) => `<button type="button" data-q="${esc(q)}">${esc(t)}</button>`).join('');
-  function setChips() { const sec = section(); bub.querySelector('.px-chips').innerHTML = chipsHTML(CHIPS[sec] || CHIPS.dashboard); input.placeholder = sec === 'reminders' ? 'Ej.: recuérdame mañana a las 5 llamar a…' : sec === 'projects' ? 'Ej.: agrega «comprar tintas» a Estudio…' : sec === 'notes' ? 'Ej.: anota una idea para un tatuaje…' : 'Pídeme o pregúntame algo…'; }
+  const QUICK_CHIPS = [['📝 Nota', 'Nota: '], ['💡 Idea', 'Idea: '], ['⏰ Recordatorio', 'Recuérdame '], ['🚀 Proyecto', 'Crea el proyecto ']];
+  function setChips() { if (quickMode) { bub.querySelector('.px-chips').innerHTML = chipsHTML(QUICK_CHIPS); input.placeholder = 'Escribe o dicta lo que quieres guardar…'; return; } const sec = section(); bub.querySelector('.px-chips').innerHTML = chipsHTML(CHIPS[sec] || CHIPS.dashboard); input.placeholder = sec === 'reminders' ? 'Ej.: recuérdame mañana a las 5 llamar a…' : sec === 'projects' ? 'Ej.: agrega «comprar tintas» a Estudio…' : sec === 'notes' ? 'Ej.: anota una idea para un tatuaje…' : 'Pídeme o pregúntame algo…'; }
   const setChipsCustom = list => { bub.querySelector('.px-chips').innerHTML = chipsHTML(list); };
 
   const SET = t => `h3:${t}`; // en Ajustes busco la sección por su título
@@ -253,8 +255,14 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     if (window.NovaAI) return (await window.NovaAI.chat(messages, {maxTokens, temperature: .4})).text;
     return await freeAI(messages, maxTokens);
   }
+  // Modo guardado rápido: lo activan los accesos directos «Dictar» y «Escribir» (mantener presionado el ícono de la app)
+  const QUICK = 'MODO GUARDADO RÁPIDO: abrí Cortex desde el acceso directo para GUARDAR algo rápido. Guarda lo que digo con la acción que mejor encaje ' +
+    '(idea u ocurrencia → note con la etiqueta «idea»; algo por hacer → task en el proyecto que mencione o «Tareas Generales»; varias tareas de algo nuevo → project; ' +
+    '«recuérdame…» → reminder; una cita o evento con fecha → event; cómo me siento → diary). Si no está claro qué es, guárdalo como note. ' +
+    'Corrige la puntuación y ponle un título corto, pero no cambies lo que dije. No preguntes nada salvo la hora de un recordatorio que la necesite.\n\nLo que quiero guardar: ';
   async function llmAsk(text) {
-    const msgs = [{role: 'system', content: SYS + profile()}, ...hist.slice(-6), {role: 'user', content: `${text}\n\nMIS DATOS (JSON): ${JSON.stringify(context(text)).slice(0, 14000)}`}];
+    const q = quickMode ? QUICK + text : text;
+    const msgs = [{role: 'system', content: SYS + profile()}, ...hist.slice(-6), {role: 'user', content: `${q}\n\nMIS DATOS (JSON): ${JSON.stringify(context(text)).slice(0, 14000)}`}];
     const raw = String(await chat(msgs, 800) || ''), m = raw.match(/\{[\s\S]*\}/); let j = null; try { j = m ? JSON.parse(m[0]) : null; } catch {}
     const reply = j && typeof j.reply === 'string' ? j.reply : raw.replace(/```[\s\S]*?```/g, '').replace(/^\s*\{[\s\S]*\}\s*$/, '').trim();
     const OK = ['note', 'project', 'task', 'reminder', 'event', 'habit', 'checkHabit', 'doneTask', 'diary', 'go'];
@@ -296,8 +304,10 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     try {
       if (await routeLocal(text)) return;
       mood('thinking', 'think'); say('Déjame pensarlo…', {busy: true});
-      try { const r = await llmAsk(text); status('IA de NOVA HUB'); if (r.actions.length) await perform(r.actions, r.reply); else { mood('happy', 'idle'); big(r.reply.length > 220); say(r.reply || 'Mmm, no tengo una respuesta clara. ¿Me lo dices de otra forma?'); setChips(); } }
-      catch (e) { console.warn('Nova Pixel IA', e); status('sin conexión a la IA'); const l = localParse(text);
+      const wasQuick = quickMode;
+      try { const r = await llmAsk(text); quickMode = false; status('IA de NOVA HUB'); if (r.actions.length) await perform(r.actions, r.reply); else { mood('happy', 'idle'); big(r.reply.length > 220); say(r.reply || 'Mmm, no tengo una respuesta clara. ¿Me lo dices de otra forma?'); setChips(); } }
+      catch (e) { console.warn('Nova Pixel IA', e); quickMode = false; status('sin conexión a la IA'); let l = localParse(text);
+        if (!l.length && wasQuick) { const title = text.split(/[.\n]/)[0].slice(0, 70); l = [{do: 'note', title, body: text.length > title.length ? text : '', tags: []}]; } // sin IA: lo guarda como nota
         if (l.length) await perform(l, null); else { mood('surprised', 'idle'); say('No pude hablar con la IA ahorita. Aun así puedo anotar por ti: escríbeme «nota: …» o «tarea: …», o pregúntame «¿dónde está…?».'); } }
     } catch (e) { console.warn('Nova Pixel', e); mood('surprised', 'idle'); const h = home(); place(h.x, h.y); say('Uy, algo falló. Inténtalo otra vez.'); }
     finally { busy = false; bub.classList.remove('working'); lastAct = Date.now(); }
@@ -335,7 +345,9 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     return loading;
   }
   const GREET = {dashboard: 'Te digo qué tienes hoy, te ayudo a priorizar o anoto lo que se te ocurra.', notes: 'Puedo anotar ideas, resumir tus notas o buscar algo en ellas.', projects: 'Te digo qué sigue, divido un proyecto en tareas o agrego pendientes.', reminders: 'Dime «recuérdame…» y yo lo agendo.', calendar: 'Reviso tus eventos y citas de tatuaje, o agendo algo nuevo.', diary: 'Puedo escribir en tu diario o contarte cómo ha ido tu semana.', habits: 'Te digo cómo vas con tus rachas o marco un hábito.', settings: 'Pregúntame dónde se configura cualquier cosa.'};
-  async function show(greet) {
+  let showP = null; // si ya va saliendo, quien lo llame espera a que termine (evita dos salidas a la vez)
+  function show(greet) { return showP || (showP = showNow(greet).finally(() => { showP = null; })); }
+  async function showNow(greet) {
     if (open) return; open = true; ls.open = true; store(); fab.classList.add('on'); fab.setAttribute('aria-label', 'Cortex está activo');
     const s = AV(), pk = peekSpot(); place(pk.x - s.w / 2, pk.y + 30); av.hidden = false; fab.classList.add('out');
     try { await ensureModel(); M.pause(false); } catch { av.hidden = true; open = false; fab.classList.remove('on', 'out'); try { H().toast('⚠️ No se pudo cargar a Cortex. Revisa tu conexión.'); } catch {} return; }
@@ -380,7 +392,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   }
   async function recordVoice() {
     try { mStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}}); }
-    catch (e) { relMic(); say(e && e.name === 'NotFoundError' ? 'No encontré ningún micrófono conectado.' : 'Necesito permiso para usar el micrófono: permítelo en el aviso del navegador y vuelve a tocarlo.'); return; }
+    catch (e) { relMic(); if (autoMic && !(e && e.name === 'NotFoundError')) { autoMic = false; mic.classList.add('px-pulse'); say('Toca el micrófono 🎙️ para empezar a dictar.'); return; } say(e && e.name === 'NotFoundError' ? 'No encontré ningún micrófono conectado.' : 'Necesito permiso para usar el micrófono: permítelo en el aviso del navegador y vuelve a tocarlo.'); return; }
     const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find(m => { try { return MediaRecorder.isTypeSupported(m); } catch { return false; } }) || '';
     const chunks = []; mr = new MediaRecorder(mStream, mime ? {mimeType: mime} : {}); mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     const t0 = Date.now(); micOn = true; micCancel = false;
@@ -412,19 +424,41 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     const finish = () => { micOn = false; micUI(false); status('IA de NOVA HUB'); rec = null; mood('neutral', 'idle'); const t = heard; heard = '';
       if (micCancel) { micCancel = false; return; }
       if (t) { ask(t); return; }
+      if (fail === 'not-allowed' && autoMic) { autoMic = false; mic.classList.add('px-pulse'); say('Toca el micrófono 🎙️ para empezar a dictar (la primera vez Android pide permiso).'); return; }
       if (fail === 'not-allowed') { say('Necesito permiso para usar el micrófono: actívalo en los permisos del navegador (o de Nova Hub) y vuelve a tocarlo.'); return; }
       if (fail === 'no-speech' || fail === 'aborted') { say('No te escuché. Toca el micrófono y vuelve a intentarlo.'); return; }
       if (window.MediaRecorder && navigator.mediaDevices) { srBroken = true; ls.srBroken = true; store(); recordVoice(); return; }
       say('El dictado por voz no está disponible aquí. Puedes escribirme o usar el micrófono del teclado.'); };
     try { start(); } catch { rec = null; if (window.MediaRecorder) recordVoice(); else say('No se pudo iniciar el micrófono. Inténtalo otra vez.'); }
   }
-  mic.addEventListener('click', () => {
-    if (rec || (mr && mr.state === 'recording')) { stopMic(); return; }
-    if (busy) return; wake();
+  let autoMic = false; // true cuando el micrófono lo abrió el acceso directo «Dictar» (sin que lo tocaras)
+  function startMic() {
+    mic.classList.remove('px-pulse');
     if (useRecorder()) { recordVoice(); return; }
     if (SR) { dictate(); return; }
-    say('Tu navegador no permite usar el micrófono. Puedes escribirme o usar el micrófono del teclado.');
+    autoMic = false; say('Tu navegador no permite usar el micrófono. Puedes escribirme o usar el micrófono del teclado.');
+  }
+  mic.addEventListener('click', () => {
+    if (rec || (mr && mr.state === 'recording')) { stopMic(); return; }
+    if (busy) return; wake(); autoMic = false; startMic();
   });
+
+  /* ── Accesos directos de la app (mantener presionado el ícono): «Dictar» y «Escribir» ──
+     Abren a Cortex listo para guardar: con el micrófono ya escuchando o con el teclado listo. */
+  async function quick(mode) {
+    if (!open) await show(false); if (!open) return false;
+    if (busy) return true;
+    stopMic(true); quickMode = true; bub.hidden = false; placeBubble(); big(false); mood('excited', 'idle'); status('guardado rápido');
+    setChips();
+    if (mode === 'voice') {
+      say('Te escucho 🎙️ Dime qué guardo: una nota, idea, tarea, proyecto o recordatorio. Toca el micrófono cuando termines.', {instant: true});
+      autoMic = true; try { startMic(); } catch { autoMic = false; mic.classList.add('px-pulse'); }
+    } else {
+      say('¿Qué guardo? Escríbelo y yo lo acomodo donde va (nota, idea, tarea, proyecto o recordatorio).', {instant: true});
+      setTimeout(() => { try { input.focus(); input.click(); } catch {} }, 60);
+    }
+    return true;
+  }
 
   /* ── tocar, girar 360° y mover ── */
   let drag = null, taps = 0, tapT = 0;
@@ -449,5 +483,6 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   new MutationObserver(() => setTimeout(recolor, 50)).observe(document.documentElement, {attributes: true, attributeFilter: ['style', 'data-theme', 'class']});
   addEventListener('nh-pixel-cfg', recolor);
   if (ls.open) setTimeout(() => show(false), 1800);
-  window.NovaPixel = {show, hide, ask, headSVG, get open() { return open; }};
+  window.NovaPixel = {show, hide, ask, quick, headSVG, get open() { return open; }};
+  window.dispatchEvent(new Event('novapixel-ready'));
 })();

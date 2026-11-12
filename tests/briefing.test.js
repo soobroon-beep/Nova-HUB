@@ -170,3 +170,45 @@ test('briefing: repara el JSON cuando la IA cierra llaves de más o deja comas',
   const p = B.parseBriefing(bad);
   assert.strictEqual(p.saludo, 'Hola'); assert.strictEqual(p.tech[0].titulo, 'Nvidia'); assert.strictEqual(p.dato, 'z');
 });
+
+test('eventos: búsquedas aparte en Orizaba y la región, sin nota roja y con fecha de publicación', async () => {
+  const B = await Bm(), urls = [];
+  const rss = items => '<rss><channel>' + items.map(([t, d]) => `<item><title>${t}</title><pubDate>${d}</pubDate></item>`).join('') + '</channel></rss>';
+  const fake = async url => { urls.push(url);
+    if (url.includes(encodeURIComponent('festival OR feria'))) return new Response(rss([['Festival Máscaras Danzantes llega a Orizaba del 13 al 15 de noviembre - El Sol de Orizaba', 'Mon, 09 Nov 2026 18:00:00 GMT'], ['Balacera en la feria de Orizaba - Medio', 'Tue, 10 Nov 2026 18:00:00 GMT']]));
+    if (url.includes('Orizaba%20Veracruz')) return new Response(rss([['Detienen a sujeto en Orizaba - X', ''], ['Cortes de agua en Orizaba este jueves - Y', '']]));
+    return new Response('<rss></rss>'); };
+  const h = await B.fetchHeadlines(fake);
+  assert.ok(Object.keys(B.FEEDS).every(k => k in h), 'todas las secciones');
+  assert.ok(['eventos', 'region', 'veracruz'].every(k => B.FEEDS[k]));
+  assert.strictEqual(h.eventos.length, 1, 'sin nota roja en eventos');
+  assert.match(h.eventos[0], /Máscaras Danzantes.*\(publicado 9 nov\)$/);
+  assert.deepStrictEqual(h.orizaba, ['Cortes de agua en Orizaba este jueves - Y', 'Detienen a sujeto en Orizaba - X'], 'lo útil primero, la nota roja al final');
+  const leads = B.eventLeads(h);
+  assert.deepStrictEqual(leads[0], {titulo: 'Festival Máscaras Danzantes llega a Orizaba del 13 al 15 de noviembre', cuando: '', donde: 'Orizaba', detalle: 'Anuncio del 9 nov'});
+  const p = B.buildPrompt({dateLabel: 'miércoles', dateStr: '2026-11-11', headlines: h, agenda: ['12:00 🖋 Cita de tatuaje: Juan']});
+  assert.ok(p.includes('EVENTOS anunciados en Orizaba') && p.includes('Máscaras Danzantes') && p.includes('Cita de tatuaje: Juan') && p.includes('Noticias de Veracruz'));
+});
+
+test('si la IA deja vacíos los eventos, se muestran los anuncios encontrados', async () => {
+  const B = await Bm();
+  const fake = async (url) => {
+    url = String(url);
+    if (url.startsWith('https://api.open-meteo.com/')) return new Response(JSON.stringify({current: {temperature_2m: 18, weather_code: 61}, daily: {time: ['2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14'], temperature_2m_max: [22, 21, 23, 24], temperature_2m_min: [12, 11, 13, 14], precipitation_probability_max: [70, 20, 10, 5], weather_code: [61, 3, 1, 0], sunrise: ['2026-11-11T06:32'], sunset: ['2026-11-11T17:41'], uv_index_max: [6.2]},
+      hourly: {time: Array.from({length: 24}, (_, i) => `2026-11-11T${String(i).padStart(2, '0')}:00`), precipitation_probability: Array.from({length: 24}, (_, i) => i >= 15 && i <= 18 ? 70 : 5)}}));
+    return new Response(JSON.stringify({choices: [{message: {content: JSON.stringify({...SAMPLE, orizaba: []})}}]}));
+  };
+  const e = await B.generateBriefing({name: 'Payi', nowMs: Date.parse('2026-11-11T08:30:00-06:00'), fetchFn: fake, headlines: {eventos: ['Bierfest Orizaba en Casavegas - Medio (publicado 8 nov)'], region: []}, agenda: []});
+  assert.strictEqual(e.sections.orizaba[0].titulo, 'Bierfest Orizaba en Casavegas'); assert.strictEqual(e.sections.eventosCrudos, true);
+  assert.strictEqual(e.weather.rainWindow, '15:00–19:00'); assert.strictEqual(e.weather.sunset, '17:41'); assert.strictEqual(e.weather.uvMax, 6);
+  assert.deepStrictEqual(e.weather.days.map(d => d.label), ['Jue', 'Vie', 'Sáb']);
+});
+
+test('agenda del día: citas de tatuaje, recordatorios y horario en orden', async () => {
+  const B = await Bm();
+  const l = B.agendaLines({dateStr: '2026-11-11', dow: 3,
+    gcal: [{date: '2026-11-11', start: '12:00', end: '15:00', title: 'Juan brazo', calName: '🔥Tatuajes🔥'}, {date: '2026-11-12', start: '10:00', title: 'mañana'}],
+    reminders: [{datetime: '2026-11-11T18:00', title: 'Comprar tintas'}, {datetime: '2026-11-11T09:00', title: 'ya avisado', notified: true}],
+    routines: [{title: 'Gym', start: '07:00', repeatDays: [3]}, {title: 'Domingo', start: '08:00', repeatDays: [0]}]});
+  assert.deepStrictEqual(l, ['07:00 Bloque: Gym', '12:00 🖋 Cita de tatuaje: Juan brazo (hasta 15:00)', '18:00 ⏰ Comprar tintas']);
+});
