@@ -168,6 +168,22 @@ export async function tick(env, nowMs = Date.now(), fetchFn = fetch) {
   return stats;
 }
 
+// Titulares guardados por GitHub Actions en briefing/feeds (Google Noticias bloquea a Cloudflare).
+// Si no hay o tienen más de 8 h, se intenta descargarlos aquí mismo (algunas fuentes sí contestan).
+export async function cachedHeadlines(base, H, fetchFn = fetch, nowMs = Date.now()) {
+  try {
+    const r = await fetchFn(`${base}/briefing/feeds`, {headers: H});
+    if (r.ok) { const f = (await r.json()).fields || {}, at = decode(f.at) || 0, h = decode(f.headlines);
+      if (h && B.countHeadlines(h) >= 8 && nowMs - at < 8 * 3600000) return h; }
+  } catch (e) { console.warn('titulares guardados', e.message); }
+  return null;
+}
+async function serviceHeaders(env, fetchFn = fetch) {
+  const sa = typeof env.FIREBASE_SERVICE_ACCOUNT === 'string' ? JSON.parse(env.FIREBASE_SERVICE_ACCOUNT) : env.FIREBASE_SERVICE_ACCOUNT;
+  if (!sa || !sa.private_key) return null;
+  return {base: `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents`, H: {authorization: 'Bearer ' + await accessToken(sa, fetchFn), 'content-type': 'application/json'}};
+}
+
 // Genera el briefing, lo guarda en users/{uid}.briefings (solo ese campo) y avisa por push
 async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs, env) {
   const patch = (fields) => fetchFn(`https://firestore.googleapis.com/v1/${name}?${Object.keys(fields).map(f => 'updateMask.fieldPaths=' + f).join('&')}&currentDocument.exists=true`, {method: 'PATCH', headers: H, body: JSON.stringify({fields})});
@@ -182,7 +198,8 @@ async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs, env) {
       events: decode(f.events) || [], gcal: ga && Array.isArray(ga.events) ? ga.events : []});
     projects = (decode(f.projects) || []).filter(p => p && p.name && p.status !== 'done' && p.status !== 'archived').map(p => String(p.name).slice(0, 60));
   } catch (e) { console.warn('agenda del briefing', e.message); }
-  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, agenda, projects, source: 'auto'});
+  const headlines = (await cachedHeadlines(base, H, fetchFn, nowMs)) || undefined;
+  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, agenda, projects, headlines, source: 'auto'});
   const root = base.replace(/\/documents$/, '');
   let saved = false;
   for (let attempt = 0; attempt < 3 && !saved; attempt++) {
@@ -228,8 +245,10 @@ export default {
     if (req) { const pth = new URL(req.url).pathname; if (pth === '/ai' || pth.startsWith('/ai/')) return AI.aiRoute(req, env || {}); }
     // Titulares reales para «Generar ahora» en la app (el navegador no puede leer Google Noticias directo)
     if (req && new URL(req.url).pathname === '/briefing/feeds') {
-      const h = await B.fetchHeadlines();
-      return new Response(JSON.stringify(h), {headers: {'content-type': 'application/json', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=900'}});
+      let h = null;
+      try { const sh = await serviceHeaders(env || {}); if (sh) h = await cachedHeadlines(sh.base, sh.H); } catch (e) { console.warn('feeds', e.message); }
+      if (!h) h = await B.fetchHeadlines();
+      return new Response(JSON.stringify(h), {headers: {'content-type': 'application/json', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=300'}});
     }
     return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios, horario y briefing de las 8:30 con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },
   async scheduled(event, env, ctx) { ctx.waitUntil(tick(env, event.scheduledTime || Date.now()).then(r => console.log('ronda', JSON.stringify(r))).catch(e => console.error('ronda', e.message))); }

@@ -1,0 +1,31 @@
+name: Briefing · titulares reales
+
+# Junta cada 30 min los titulares del briefing (noticias del mundo, IA, tecnología, Orizaba, Veracruz y eventos)
+# y los guarda en Firestore (briefing/feeds). Google Noticias bloquea a Cloudflare, por eso lo hace GitHub.
+on:
+  schedule:
+    - cron: '11,41 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: briefing-feeds
+  cancel-in-progress: true
+
+jobs:
+  feeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm install --omit=dev
+      - name: Juntar y guardar titulares
+        run: node scripts/briefing-feeds.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

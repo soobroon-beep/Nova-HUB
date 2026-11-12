@@ -53,26 +53,38 @@ export async function fetchWeather(fetchFn = fetch, place = DEFAULT_PLACE) {
 /* ───────── Titulares reales (Google Noticias RSS) ───────── */
 const GN = q => `https://news.google.com/rss${q}${q.includes('?') ? '&' : '?'}hl=es-419&gl=MX&ceid=MX:es-419`;
 const Q = q => GN('/search?q=' + encodeURIComponent(q));
+const BING = q => 'https://www.bing.com/news/search?format=rss&mkt=es-MX&q=' + encodeURIComponent(q);
 const EV_WORDS = '(festival OR feria OR concierto OR expo OR exposición OR teatro OR evento OR "fin de semana" OR carrera OR muestra OR cartelera OR presentación OR tianguis OR desfile OR fiesta)';
-export const FEEDS = {
-  mexico: GN(''),
-  ia: Q('inteligencia artificial when:3d'),
-  tech: GN('/headlines/section/topic/TECHNOLOGY'),
-  orizaba: Q('Orizaba Veracruz when:4d'),                                                    // noticias locales
-  veracruz: Q('Veracruz estado when:2d'),                                                   // noticias del estado
-  eventos: Q(`Orizaba ${EV_WORDS} when:21d`),                                               // eventos en Orizaba
-  region: Q(`(Córdoba OR Fortín OR "Río Blanco" OR Ixtaczoquitlán OR "Ciudad Mendoza" OR Nogales OR "Altas Montañas") Veracruz ${EV_WORDS} when:21d`)
+const AI_NAMES = '(OpenAI OR ChatGPT OR GPT OR Gemini OR Claude OR Anthropic OR Llama OR Meta OR DeepSeek OR Qwen OR Mistral OR Grok OR "Stable Diffusion" OR Midjourney OR Sora OR Veo OR Copilot)';
+// Varias fuentes por sección (se juntan y se quitan repetidos). OJO: Google Noticias bloquea a Cloudflare, por eso
+// los titulares los junta GitHub Actions cada 30 min (scripts/briefing-feeds.js) y el servidor los lee de Firestore.
+export const SOURCES = {
+  mundo: [GN('/headlines/section/topic/WORLD'), 'https://feeds.bbci.co.uk/mundo/rss.xml', 'https://rss.dw.com/xml/rss-sp-all'],
+  mexico: [GN('')],
+  ia: [Q(`${AI_NAMES} (modelo OR lanza OR actualización OR presenta OR nueva versión) when:4d`), Q('inteligencia artificial when:3d'),
+    'https://techcrunch.com/category/artificial-intelligence/feed/', 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml'],
+  tech: [GN('/headlines/section/topic/TECHNOLOGY'), 'https://www.xataka.com.mx/feedburner.xml', 'https://es.wired.com/feed/rss'],
+  orizaba: [Q('Orizaba Veracruz when:4d'), BING('Orizaba Veracruz')],
+  veracruz: [Q('Veracruz estado when:2d'), BING('Veracruz noticias')],
+  eventos: [Q(`Orizaba ${EV_WORDS} when:21d`), BING('Orizaba festival OR feria OR concierto OR evento OR expo')],
+  region: [Q(`(Córdoba OR Fortín OR "Río Blanco" OR Ixtaczoquitlán OR "Ciudad Mendoza" OR Nogales OR "Altas Montañas") Veracruz ${EV_WORDS} when:21d`),
+    BING('Córdoba Veracruz festival OR feria OR concierto OR evento'), BING('Fortín Veracruz feria OR festival OR evento')]
 };
+export const FEEDS = Object.fromEntries(Object.entries(SOURCES).map(([k, v]) => [k, v[0]])); // compatibilidad
 export const EVENT_FEEDS = ['eventos', 'region'];
-const unent = t => t.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+const WITH_DESC = ['ia', 'mundo', 'tech'];   // aquí se pasa un resumen corto de la nota para que la IA dé detalle
+const unent = t => String(t || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;|&#8217;/g, "'").replace(/&#8220;|&#8221;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;|&#160;/g, ' ').replace(/&#\d+;/g, '').trim();
+const plain = t => unent(unent(t).replace(/<[^>]+>/g, ' ')).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 export function parseRssItems(xml, n = 10) {
-  const out = [], seen = new Set(), re = /<item>([\s\S]*?)<\/item>/g; let m;
-  const src = String(xml || '').slice(0, 160000);
+  const out = [], seen = new Set(), re = /<(item|entry)\b[^>]*>([\s\S]*?)<\/\1>/g; let m;
+  const src = String(xml || '').slice(0, 400000);
   while ((m = re.exec(src)) && out.length < n) {
-    const tt = /<title>([\s\S]*?)<\/title>/.exec(m[1]); if (!tt) continue;
-    const t = unent(tt[1]); if (!t || seen.has(t)) continue; seen.add(t);
-    const pd = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(m[1]), ms = pd ? Date.parse(unent(pd[1])) : NaN;
-    out.push({t, ms: Number.isFinite(ms) ? ms : 0});
+    const body = m[2], tt = /<title[^>]*>([\s\S]*?)<\/title>/.exec(body); if (!tt) continue;
+    const t = plain(tt[1]); if (!t || seen.has(t.toLowerCase())) continue; seen.add(t.toLowerCase());
+    const pd = /<(pubDate|published|updated|dc:date)>([\s\S]*?)<\/\1>/.exec(body), ms = pd ? Date.parse(unent(pd[2])) : NaN;
+    const ds = /<(description|summary|content:encoded|content)[^>]*>([\s\S]*?)<\/\1>/.exec(body);
+    let d = ds ? plain(ds[2]) : ''; if (d && (d.toLowerCase().startsWith(t.toLowerCase().slice(0, 30)) || d.length < 25)) d = ''; // Google Noticias repite el título
+    out.push({t, ms: Number.isFinite(ms) ? ms : 0, d: d.slice(0, 220)});
   }
   return out;
 }
@@ -80,24 +92,28 @@ export const parseRss = (xml, n = 10) => parseRssItems(xml, n).map(x => x.t);
 // Nota roja: fuera de los eventos (y al final de las noticias locales)
 export const CRIME = /asesin|balace|baleado|ejecutad|homicid|feminicid|cad[aá]ver|sin vida|muere|muri[oó]|muerto|fallec|detenid|detien|arrest|captura|robo|asalt|secuestr|desaparec|levant|violencia|ataque armado|disparo|choque|volcadura|vuelca|atropell|accidente|incendio|riña|fiscal[ií]a|polic[ií]a|delincuen/i;
 const shortDate = ms => ms ? new Intl.DateTimeFormat('es-MX', {timeZone: DEFAULT_PLACE.tz, day: 'numeric', month: 'short'}).format(new Date(ms)).replace('.', '') : '';
+const key50 = t => String(t).toLowerCase().replace(/\s+-\s+[^-]{2,60}$/, '').replace(/[^a-z0-9áéíóúñ ]/g, '').slice(0, 50);
 export async function fetchHeadlines(fetchFn = fetch) {
   const out = {};
-  await Promise.all(Object.entries(FEEDS).map(async ([k, url]) => {
-    try {
-      const r = await fetchFn(url, {headers: {'user-agent': 'Mozilla/5.0 NovaHub'}});
-      let items = r.ok ? parseRssItems(await r.text(), 30) : [];
-      if (EVENT_FEEDS.includes(k)) items = items.filter(x => !CRIME.test(x.t));
-      if (k === 'orizaba' || k === 'veracruz') items = [...items.filter(x => !CRIME.test(x.t)), ...items.filter(x => CRIME.test(x.t)).slice(0, 2)];
-      items.sort((a, b) => EVENT_FEEDS.includes(k) ? b.ms - a.ms : 0);
-      // los eventos llevan la fecha de publicación para que la IA sepa qué tan reciente es el anuncio
-      out[k] = items.slice(0, EVENT_FEEDS.includes(k) ? 12 : 10).map(x => EVENT_FEEDS.includes(k) && x.ms ? `${x.t} (publicado ${shortDate(x.ms)})` : x.t);
-    } catch { out[k] = []; }
+  await Promise.all(Object.entries(SOURCES).map(async ([k, urls]) => {
+    const lists = await Promise.all(urls.map(async url => {
+      try { const r = await fetchFn(url, {headers: {'user-agent': 'Mozilla/5.0 (compatible; NovaHub/1.0)', accept: 'application/rss+xml, application/xml, text/xml'}}); return r.ok ? parseRssItems(await r.text(), 30) : []; } catch { return []; }
+    }));
+    const now = Date.now(), maxAge = EVENT_FEEDS.includes(k) ? 25 * 864e5 : 5 * 864e5, seen = new Set(); let items = [];
+    // intercala las fuentes para que todas aporten
+    for (let i = 0; i < 30; i++) for (const l of lists) { const x = l[i]; if (!x) continue; const kk = key50(x.t); if (seen.has(kk) || (x.ms && now - x.ms > maxAge)) continue; seen.add(kk); items.push(x); }
+    if (EVENT_FEEDS.includes(k)) items = items.filter(x => !CRIME.test(x.t));
+    if (k === 'orizaba' || k === 'veracruz') items = [...items.filter(x => !CRIME.test(x.t)), ...items.filter(x => CRIME.test(x.t)).slice(0, 2)];
+    if (EVENT_FEEDS.includes(k)) items.sort((a, b) => b.ms - a.ms);
+    out[k] = items.slice(0, EVENT_FEEDS.includes(k) ? 12 : WITH_DESC.includes(k) ? 10 : 10).map(x =>
+      x.t + (WITH_DESC.includes(k) && x.d ? ' — ' + x.d : '') + (EVENT_FEEDS.includes(k) && x.ms ? ` (publicado ${shortDate(x.ms)})` : ''));
   }));
   return out;
 }
+export const countHeadlines = h => Object.values(h || {}).reduce((n, l) => n + (Array.isArray(l) ? l.length : 0), 0);
 const TOPIC = /cripto|bitcoin|ethereum|blockchain|bolsa|acciones|wall street|nasdaq|dow jones|peso.*d[oó]lar|tipo de cambio/i;
-const cleanList = l => (Array.isArray(l) ? l : []).filter(t => typeof t === 'string' && !TOPIC.test(t)).slice(0, 12);
-const dropSource = t => String(t).replace(/\s*\(publicado [^)]*\)\s*$/, '').replace(/\s+-\s+[^-]{2,60}$/, '').trim();
+const cleanList = l => (Array.isArray(l) ? l : []).filter(t => typeof t === 'string' && !TOPIC.test(t.split(' — ')[0])).slice(0, 12);
+const dropSource = t => String(t).replace(/\s*\(publicado [^)]*\)\s*$/, '').split(' — ')[0].replace(/\s+-\s+[^-]{2,60}$/, '').trim();
 // Anuncios de eventos encontrados (para mostrarlos aunque la IA no arme la lista)
 export function eventLeads(headlines = {}) {
   const out = [], seen = new Set();
@@ -159,29 +175,32 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
     'TITULARES REALES (fuente: Google Noticias):',
     H('EVENTOS anunciados en Orizaba', headlines.eventos), H('EVENTOS anunciados en la región (Córdoba, Fortín, Río Blanco, Ixtaczoquitlán, Cd. Mendoza, Nogales)', headlines.region),
     H('Noticias de Orizaba', headlines.orizaba), H('Noticias de Veracruz', headlines.veracruz),
-    H('México y el mundo', headlines.mexico), H('Inteligencia artificial', headlines.ia), H('Tecnología', headlines.tech),
+    H('El mundo (internacional)', headlines.mundo), H('México', headlines.mexico),
+    H('Inteligencia artificial (modelos y empresas; «título — resumen»)', headlines.ia), H('Tecnología', headlines.tech),
     '',
-    'Qué va en cada parte:',
-    `- saludo: 1-2 frases cálidas de buenos días para ${name}, con buena energía, mencionando el día y el clima.`,
-    '- climaTip: 1-2 frases prácticas según el clima de hoy y de los próximos días (qué ponerse, a qué hora llueve, si el fin de semana pinta bien para salir).',
+    'Qué va en cada parte (sé ESPECÍFICO: nombres, lugares, fechas y cifras que vengan en los titulares; nada de frases genéricas. Si una sección no tiene titulares, déjala vacía en vez de rellenar):',
+    `- saludo: 1-2 frases cálidas de buenos días para ${name}, mencionando el día y el clima.`,
+    '- climaTip: 1-2 frases prácticas según el clima de hoy y de los próximos días (qué ponerse, a qué hora llueve, cómo pinta el fin de semana).',
     '- tuDia: 1-2 frases sobre su agenda de hoy (citas de tatuaje primero, con la hora). Si no hay nada agendado, déjalo vacío.',
-    '- orizaba: TODOS los eventos próximos (de hoy en adelante) que encuentres en los titulares de EVENTOS, hasta 6: festivales, ferias, conciertos, teatro, exposiciones, carreras, fiestas. ' +
-      '«cuando»: la fecha o rango si el titular la dice (ej. «Vie 13 – Dom 15 nov»), si no, «Próximamente»; «donde»: el lugar o ciudad si se sabe; «detalle»: 1 frase de qué es y por qué vale la pena. ' +
-      'No pongas eventos que ya pasaron. Solo deja la lista vacía si de verdad no hay ningún evento en esos titulares.',
-    '- local: 3-4 noticias de Orizaba y Veracruz útiles para el día a día (servicios, agua, obras, vialidades, clima, cultura, economía local), cada una en 1-2 frases. Evita la nota roja salvo que sea un aviso de seguridad importante.',
-    `- plan: 1-2 frases con un plan concreto para hoy o el fin de semana según el clima y los eventos (si no hay evento, usa uno de estos lugares reales: ${PLACES.join(', ')}).`,
-    '- noticias: las 3-4 noticias más importantes de México y el mundo, cada una en 2 frases (qué pasó y por qué importa). Nada de finanzas ni cripto.',
-    '- ia.resumen: 2-3 frases con el panorama de la IA de esta semana, en tono de resumen, no de nota periodística.',
-    '- ia.puntos: 3-4 avances nuevos o eventos importantes de IA tomados de los titulares de IA, cada uno en 1-2 frases: qué es y para qué sirve.',
-    '- ia.aplicar: 3-4 ideas CONCRETAS de cómo aprovechar esos avances de hoy en SUS APPS Y PROYECTOS. Cada una: «proyecto» (el nombre de la app o proyecto), «avance» (en qué avance de hoy se basa, 2-6 palabras) e «idea» (1-2 frases: qué construir o cambiar y qué ganaría, algo que pueda empezar esta semana). Varía de proyecto; no inventes funciones de los modelos que no digan los titulares.',
-    '- tech: 2-3 novedades de tecnología de los titulares de Tecnología que no sean IA ni cripto.',
+    '- orizaba: TODOS los eventos próximos (de hoy en adelante) de los titulares de EVENTOS, hasta 6: festivales, ferias, conciertos, teatro, exposiciones, carreras, fiestas. ' +
+      '«cuando»: la fecha o rango si el titular la dice (ej. «Vie 13 – Dom 15 nov»), si no, «Próximamente»; «donde»: el lugar o ciudad; «detalle»: 1-2 frases de qué es y por qué ir. ' +
+      'No pongas eventos que ya pasaron. Solo deja la lista vacía si de verdad no hay ningún evento.',
+    '- local: 3-4 noticias de Orizaba y Veracruz útiles para el día a día (servicios, agua, obras, vialidades, cultura, economía local), cada una en 1-2 frases. Evita la nota roja salvo un aviso de seguridad importante.',
+    `- planes: 3 ideas DISTINTAS y concretas para hoy, esta tarde o el fin de semana (una puede ser un evento de la lista, otra un lugar, otra algo creativo o de descanso), pensadas para el clima: «titulo», «cuando» (ej. «Hoy 5 pm», «Sábado mañana») y «detalle» (2 frases: qué hacer y un tip). Lugares reales: ${PLACES.join(', ')}.`,
+    '- noticias: las 4 noticias MÁS importantes del MUNDO hoy (de los titulares internacionales; incluye una de México solo si es de las más grandes). Cada una: «titulo» claro y «resumen» de 2-3 frases: qué pasó, contexto y por qué importa. Nada de finanzas ni cripto.',
+    '- ia.resumen: 2-3 frases con el panorama concreto de la IA esta semana (qué empresas se movieron y hacia dónde va).',
+    '- ia.puntos: 4-5 lanzamientos o actualizaciones de modelos y herramientas de IA de los titulares de IA (aunque vengan en inglés, escríbelos en español). «titulo»: «Empresa · Modelo o producto» (ej. «Google · Gemini 3»); ' +
+      '«resumen»: 2-3 frases con QUÉ hay de nuevo exactamente (capacidades, versión, disponibilidad, precio o si es abierto, según diga la noticia) y para qué le sirve a alguien como él.',
+    '- ia.aplicar: 3-4 ideas CONCRETAS de cómo aprovechar ESOS avances en SUS APPS Y PROYECTOS. Cada una: «proyecto», «avance» (en qué lanzamiento de hoy se basa, 2-6 palabras) e «idea» (2 frases: qué construir o cambiar, cómo y qué ganaría; algo que pueda empezar esta semana). Varía de proyecto.',
+    '- tech: 2-3 novedades de tecnología (no IA ni cripto), cada una en 1-2 frases concretas.',
     '- tatuaje: una idea ORIGINAL de tatuaje en su estilo; puede inspirarse en la temporada, en un evento de la región o en algo de hoy.',
     '- reflexion: 2-3 frases originales para arrancar el día con calma y enfoque (no cites a nadie).',
     '- dato: 1 dato curioso breve y verdadero (de preferencia sobre Orizaba, Veracruz o México).',
     '',
-    'Devuelve EXACTAMENTE este JSON con estas claves (textos cortos y claros, sin URLs):',
-    '{"saludo":"","climaTip":"","tuDia":"","orizaba":[{"titulo":"","cuando":"Vie 13 – Dom 15 nov","donde":"","detalle":""}],"local":[{"titulo":"","resumen":""}],"plan":"",' +
-    '"noticias":[{"titulo":"","resumen":""}],"ia":{"resumen":"","puntos":[{"titulo":"","resumen":""}],"aplicar":[{"proyecto":"NOVA HUB","avance":"","idea":""}]},"tech":[{"titulo":"","resumen":""}],' +
+    'Devuelve EXACTAMENTE este JSON con estas claves (sin URLs):',
+    '{"saludo":"","climaTip":"","tuDia":"","orizaba":[{"titulo":"","cuando":"Vie 13 – Dom 15 nov","donde":"","detalle":""}],"local":[{"titulo":"","resumen":""}],' +
+    '"planes":[{"titulo":"","cuando":"","detalle":""}],"noticias":[{"titulo":"","resumen":""}],' +
+    '"ia":{"resumen":"","puntos":[{"titulo":"Empresa · Modelo","resumen":""}],"aplicar":[{"proyecto":"NOVA HUB","avance":"","idea":""}]},"tech":[{"titulo":"","resumen":""}],' +
     '"tatuaje":{"titulo":"","idea":"","elementos":"","paleta":"","zona":""},"reflexion":"","dato":""}'
   ].join('\n');
 }
@@ -227,11 +246,11 @@ export function parseBriefing(raw) {
   const t = o.tatuaje && typeof o.tatuaje === 'object' ? o.tatuaje : {};
   const s = {
     saludo: str(o.saludo), climaTip: str(o.climaTip),
-    tuDia: str(o.tuDia), plan: str(o.plan),
+    tuDia: str(o.tuDia), plan: str(o.plan), planes: items(o.planes, 3, ['titulo', 'detalle', 'cuando']),
     orizaba: items(o.orizaba || o.eventos, 6, ['titulo', 'cuando', 'detalle', 'donde']),
     local: items(o.local, 4, ['titulo', 'resumen']),
     noticias: items(o.noticias, 4, ['titulo', 'resumen']),
-    ia: {resumen: str(ia.resumen), puntos: items(ia.puntos, 4, ['titulo', 'resumen']), aplicar: items(ia.aplicar, 4, ['proyecto', 'idea', 'avance'])},
+    ia: {resumen: str(ia.resumen), puntos: items(ia.puntos, 5, ['titulo', 'resumen']), aplicar: items(ia.aplicar, 4, ['proyecto', 'idea', 'avance'])},
     tech: items(o.tech, 3, ['titulo', 'resumen']),
     tatuaje: {titulo: str(t.titulo), idea: str(t.idea), elementos: str(t.elementos), paleta: str(t.paleta), zona: str(t.zona)},
     reflexion: str(o.reflexion), dato: str(o.dato)
@@ -256,10 +275,10 @@ export async function generateBriefing({name, nowMs = Date.now(), tz, place = DE
   const [weather, heads] = await Promise.all([fetchWeather(fetchFn, place), headlines ? Promise.resolve(headlines) : fetchHeadlines(fetchFn)]);
   const aiEnv = env && (env.AI || env.GROQ_KEY) ? env : undefined;
   const msgs = [{role: 'system', content: SYSTEM}, {role: 'user', content: buildPrompt({name, dateLabel, dateStr, weather, place, headlines: heads, agenda, projects})}];
-  let raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3800, temperature: .6, budget: server ? 240000 : 120000, timeout: 90000})).text;
+  let raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 4000, temperature: .55, budget: server ? 240000 : 120000, timeout: 90000})).text;
   if (!parseBriefing(raw)) { // a veces el modelo se sale del formato: un segundo intento pidiendo solo el JSON
     msgs.push({role: 'assistant', content: raw.slice(0, 4000)}, {role: 'user', content: 'Devuélvelo de nuevo SOLO como el objeto JSON pedido, sin nada más.'});
-    raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3800, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
+    raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 4000, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
   }
   const sections = parseBriefing(raw);
   if (!sections) throw new Error('La IA no devolvió un briefing válido');

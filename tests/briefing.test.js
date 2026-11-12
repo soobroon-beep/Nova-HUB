@@ -220,3 +220,20 @@ test('IA: ideas para aplicar los avances a sus apps (Nova Hub, Vortex, Neural Br
   const s = B.parseBriefing(JSON.stringify({...SAMPLE, ia: {...SAMPLE.ia, aplicar: [{proyecto: 'NEURAL BRAIN', avance: 'Memoria larga', idea: 'Que recuerde tus notas.'}, {proyecto: '', idea: 'x'}]}}));
   assert.deepStrictEqual(s.ia.aplicar, [{proyecto: 'NEURAL BRAIN', idea: 'Que recuerde tus notas.', avance: 'Memoria larga'}]);
 });
+
+test('titulares: varias fuentes por sección, sin repetidos y con resumen en IA y mundo', async () => {
+  const B = await Bm();
+  const now = new Date().toUTCString();
+  const fake = async url => {
+    if (url.includes('techcrunch')) return new Response(`<rss><channel><item><title><![CDATA[OpenAI launches GPT-6]]></title><description><![CDATA[<p>The new model doubles context and is cheaper.</p>]]></description><pubDate>${now}</pubDate></item></channel></rss>`);
+    if (url.includes('theverge')) return new Response(`<feed><entry><title>OpenAI launches GPT-6</title><updated>${new Date().toISOString()}</updated></entry><entry><title>Google Gemini update</title><summary>Faster on phones and free tier.</summary><updated>${new Date().toISOString()}</updated></entry></feed>`);
+    if (url.includes('bbci')) return new Response(`<rss><item><title>Cumbre del clima termina con acuerdo</title><description>Casi 200 países firmaron.</description><pubDate>${now}</pubDate></item></rss>`);
+    return new Response('<rss></rss>');
+  };
+  const h = await B.fetchHeadlines(fake);
+  assert.deepStrictEqual(h.ia, ['OpenAI launches GPT-6 — The new model doubles context and is cheaper.', 'Google Gemini update — Faster on phones and free tier.']);
+  assert.deepStrictEqual(h.mundo, ['Cumbre del clima termina con acuerdo — Casi 200 países firmaron.']);
+  assert.strictEqual(B.countHeadlines(h), 3);
+  const p = B.buildPrompt({dateLabel: 'hoy', dateStr: '2026-11-11', headlines: h});
+  assert.ok(p.includes('El mundo (internacional)') && p.includes('GPT-6') && p.includes('"planes"'));
+});

@@ -1,0 +1,21 @@
+name: Prueba del briefing (temporal)
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  prueba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Generar un briefing de prueba con titulares reales
+        run: |
+          node --input-type=module -e "
+          const B = await import('./worker/briefing.mjs');
+          const h = await B.fetchHeadlines();
+          for (const [k,v] of Object.entries(h)) console.log('##', k, v.length, '|', (v[0]||'').slice(0,140));
+          const e = await B.generateBriefing({name:'Víctor', headlines:h, server:true, agenda:['15:00 🖋 Cita de tatuaje: prueba'], projects:['Estudio']});
+          console.log(JSON.stringify(e.sections, null, 1));"

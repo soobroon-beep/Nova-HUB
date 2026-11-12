@@ -7075,8 +7075,8 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
     <div class="bf-secs">
       ${briefSection('🎉', 'Eventos en Orizaba y alrededores', evInner, true)}
       ${briefSection('📍', 'Orizaba y Veracruz', briefItems(s.local), open)}
-      ${s.plan ? `<div class="bf-fact bf-plan"><span>🧭 Plan sugerido</span>${_esc(s.plan)}</div>` : ''}
-      ${briefSection('🌎', 'Noticias clave', briefItems(s.noticias), open)}
+      ${(s.planes || []).length ? briefSection('🧭', 'Planes para hoy y el finde', briefItems(s.planes, 'titulo', 'detalle', 'cuando'), open) : s.plan ? `<div class="bf-fact bf-plan"><span>🧭 Plan sugerido</span>${_esc(s.plan)}</div>` : ''}
+      ${briefSection('🌎', 'Noticias del mundo', briefItems(s.noticias), true)}
       ${briefSection('🤖', 'IA: avances y cómo usarlos', iaInner, true)}
       ${briefSection('🎨', 'Idea para tatuaje', tatInner, open)}
       ${briefSection('💡', 'Tecnología', briefItems(s.tech), open)}
