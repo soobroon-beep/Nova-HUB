@@ -125,13 +125,22 @@ export function agendaLines({dateStr, dow, reminders = [], routines = [], events
 /* ───────── Prompt ───────── */
 export const SYSTEM = 'Eres el asistente personal de una persona en Orizaba, Veracruz (México). Escribes su briefing de la mañana: ' +
   'cálido, cercano y fácil de leer, como un buen amigo bien informado de la región, en español de México. Para noticias, eventos, IA, tecnología, Orizaba y Veracruz ' +
-  'usa SOLO los titulares reales que te doy (resúmelos y explica por qué importan; no inventes hechos, fechas, lugares ni cifras). Nunca incluyas criptomonedas, trading, bolsa ni mercados financieros. Responde ÚNICAMENTE con un objeto JSON válido: ' +
+  'usa SOLO los titulares reales que te doy (resúmelos y explica por qué importan; no inventes hechos, fechas, lugares ni cifras). Nunca incluyas criptomonedas, trading, bolsa ni mercados financieros en las noticias (de su app VORTEX solo hablas de mejoras técnicas, nunca de mercados). Responde ÚNICAMENTE con un objeto JSON válido: ' +
   'sin texto antes ni después, sin bloques de código, sin URLs y sin markdown.';
 
 // Lugares reales para sugerir planes (la IA no inventa sitios)
 export const PLACES = ['Cerro del Borrego y su teleférico', 'Paseo del Río Orizaba (reserva animal)', 'Palacio de Hierro (museos)', 'Museo de Arte del Estado (MAEV)', 'Parque Alameda', 'Poliforum Mier y Pesado', 'Centro histórico y Parque Castillo', 'Catedral de San Miguel Arcángel', 'Teatro Ignacio de la Llave', 'Cascada de Rincón Grande', 'Ojo de Agua', 'Mercado Cerritos', 'mirador del Pico de Orizaba', 'cafés del centro'];
 
-export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place = DEFAULT_PLACE, headlines = {}, agenda = []} = {}) {
+// Sus apps y proyectos (para aterrizar los avances de IA a lo que él construye)
+export const MY_APPS = [
+  'NOVA HUB: su PWA de productividad (notas, proyectos, recordatorios, calendario con citas de tatuaje, hábitos, diario, briefing) con Firebase y su asistente de IA Cortex',
+  'VORTEX: su terminal de gráficas con bots, screener, avisos y asistentes de IA (Nexus Pixel, Nova Bot Lab)',
+  'NEURAL BRAIN: su PWA de «segundo cerebro» que quiere que aprenda de todo lo que hace en Nova Hub y Vortex',
+  'INKBOT PRO: su herramienta para crear contenido de tatuajes para Instagram (historias, captions, calendario)',
+  'su estudio de tatuaje (diseños, citas, redes sociales)'
+];
+
+export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place = DEFAULT_PLACE, headlines = {}, agenda = [], projects = []} = {}) {
   const w = weather && weather.ok
     ? `${weather.desc}, ${weather.tempC}°C ahora (sensación ${weather.feelsC}°C), máx ${weather.maxC}°C / mín ${weather.minC}°C, probabilidad de lluvia ${weather.rainPct}%` +
       `${weather.rainWindow ? ' (más probable entre ' + weather.rainWindow + ')' : ''}, humedad ${weather.humidity}%, viento ${weather.windKmph} km/h` +
@@ -143,6 +152,7 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
   return [
     `Hoy es ${dateLabel} (${dateStr}). La persona se llama ${name}: es tatuador profesional en Orizaba (estilo neo-japonés / new school, paleta carmesí, dorado, jade y negro con contraste de línea muy marcado) y le apasionan la IA y la tecnología.`,
     `Clima en ${place.region}: ${w}.`,
+    `SUS APPS Y PROYECTOS:\n${MY_APPS.map(t => '- ' + t).join('\n')}${(Array.isArray(projects) ? projects : []).filter(x => typeof x === 'string' && x.trim()).length ? '\n- Proyectos activos en Nova Hub: ' + projects.filter(x => typeof x === 'string' && x.trim()).slice(0, 12).join(', ') : ''}`,
     '',
     `SU AGENDA DE HOY:\n${ag.length ? ag.map(t => '- ' + t).join('\n') : '- (nada agendado)'}`,
     '',
@@ -162,7 +172,8 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
     `- plan: 1-2 frases con un plan concreto para hoy o el fin de semana según el clima y los eventos (si no hay evento, usa uno de estos lugares reales: ${PLACES.join(', ')}).`,
     '- noticias: las 3-4 noticias más importantes de México y el mundo, cada una en 2 frases (qué pasó y por qué importa). Nada de finanzas ni cripto.',
     '- ia.resumen: 2-3 frases con el panorama de la IA de esta semana, en tono de resumen, no de nota periodística.',
-    '- ia.puntos: 3-4 cosas nuevas o eventos importantes de IA tomados de los titulares de IA, cada una en 1-2 frases: qué es y para qué sirve.',
+    '- ia.puntos: 3-4 avances nuevos o eventos importantes de IA tomados de los titulares de IA, cada uno en 1-2 frases: qué es y para qué sirve.',
+    '- ia.aplicar: 3-4 ideas CONCRETAS de cómo aprovechar esos avances de hoy en SUS APPS Y PROYECTOS. Cada una: «proyecto» (el nombre de la app o proyecto), «avance» (en qué avance de hoy se basa, 2-6 palabras) e «idea» (1-2 frases: qué construir o cambiar y qué ganaría, algo que pueda empezar esta semana). Varía de proyecto; no inventes funciones de los modelos que no digan los titulares.',
     '- tech: 2-3 novedades de tecnología de los titulares de Tecnología que no sean IA ni cripto.',
     '- tatuaje: una idea ORIGINAL de tatuaje en su estilo; puede inspirarse en la temporada, en un evento de la región o en algo de hoy.',
     '- reflexion: 2-3 frases originales para arrancar el día con calma y enfoque (no cites a nadie).',
@@ -170,7 +181,7 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
     '',
     'Devuelve EXACTAMENTE este JSON con estas claves (textos cortos y claros, sin URLs):',
     '{"saludo":"","climaTip":"","tuDia":"","orizaba":[{"titulo":"","cuando":"Vie 13 – Dom 15 nov","donde":"","detalle":""}],"local":[{"titulo":"","resumen":""}],"plan":"",' +
-    '"noticias":[{"titulo":"","resumen":""}],"ia":{"resumen":"","puntos":[{"titulo":"","resumen":""}]},"tech":[{"titulo":"","resumen":""}],' +
+    '"noticias":[{"titulo":"","resumen":""}],"ia":{"resumen":"","puntos":[{"titulo":"","resumen":""}],"aplicar":[{"proyecto":"NOVA HUB","avance":"","idea":""}]},"tech":[{"titulo":"","resumen":""}],' +
     '"tatuaje":{"titulo":"","idea":"","elementos":"","paleta":"","zona":""},"reflexion":"","dato":""}'
   ].join('\n');
 }
@@ -220,7 +231,7 @@ export function parseBriefing(raw) {
     orizaba: items(o.orizaba || o.eventos, 6, ['titulo', 'cuando', 'detalle', 'donde']),
     local: items(o.local, 4, ['titulo', 'resumen']),
     noticias: items(o.noticias, 4, ['titulo', 'resumen']),
-    ia: {resumen: str(ia.resumen), puntos: items(ia.puntos, 4, ['titulo', 'resumen'])},
+    ia: {resumen: str(ia.resumen), puntos: items(ia.puntos, 4, ['titulo', 'resumen']), aplicar: items(ia.aplicar, 4, ['proyecto', 'idea', 'avance'])},
     tech: items(o.tech, 3, ['titulo', 'resumen']),
     tatuaje: {titulo: str(t.titulo), idea: str(t.idea), elementos: str(t.elementos), paleta: str(t.paleta), zona: str(t.zona)},
     reflexion: str(o.reflexion), dato: str(o.dato)
@@ -239,16 +250,16 @@ export function localDate(ms, tz = DEFAULT_PLACE.tz) {
 /* ───────── Todo junto ───────── */
 // headlines: si no se pasan, se descargan (en el servidor). En la app se piden al servidor de avisos (/briefing/feeds).
 // agenda: líneas «HH:MM Título» de hoy (ver agendaLines).
-export async function generateBriefing({name, nowMs = Date.now(), tz, place = DEFAULT_PLACE, fetchFn = fetch, server = false, env, headlines, agenda = [], source = 'auto'} = {}) {
+export async function generateBriefing({name, nowMs = Date.now(), tz, place = DEFAULT_PLACE, fetchFn = fetch, server = false, env, headlines, agenda = [], projects = [], source = 'auto'} = {}) {
   const zone = tz || place.tz;
   const {dateStr, dateLabel} = localDate(nowMs, zone);
   const [weather, heads] = await Promise.all([fetchWeather(fetchFn, place), headlines ? Promise.resolve(headlines) : fetchHeadlines(fetchFn)]);
   const aiEnv = env && (env.AI || env.GROQ_KEY) ? env : undefined;
-  const msgs = [{role: 'system', content: SYSTEM}, {role: 'user', content: buildPrompt({name, dateLabel, dateStr, weather, place, headlines: heads, agenda})}];
-  let raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3200, temperature: .6, budget: server ? 240000 : 120000, timeout: 90000})).text;
+  const msgs = [{role: 'system', content: SYSTEM}, {role: 'user', content: buildPrompt({name, dateLabel, dateStr, weather, place, headlines: heads, agenda, projects})}];
+  let raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3800, temperature: .6, budget: server ? 240000 : 120000, timeout: 90000})).text;
   if (!parseBriefing(raw)) { // a veces el modelo se sale del formato: un segundo intento pidiendo solo el JSON
     msgs.push({role: 'assistant', content: raw.slice(0, 4000)}, {role: 'user', content: 'Devuélvelo de nuevo SOLO como el objeto JSON pedido, sin nada más.'});
-    raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3200, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
+    raw = (await AI.chat(msgs, {fetchFn, server, env: aiEnv, task: 'json', maxTokens: 3800, temperature: .3, budget: server ? 120000 : 60000, timeout: 90000})).text;
   }
   const sections = parseBriefing(raw);
   if (!sections) throw new Error('La IA no devolvió un briefing válido');

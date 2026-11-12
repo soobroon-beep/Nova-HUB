@@ -174,14 +174,15 @@ async function runBriefing(base, name, H, fetchFn, pid, user, bj, nowMs, env) {
   // Candado: evita que la ronda del minuto siguiente lo genere otra vez mientras este sigue en curso
   await patch({briefingLock: encode({date: bj.dateStr, at: nowMs, tries: bj.tries})});
   // Tu agenda de hoy: citas de Google Calendar (las sube la app en gcalAgenda), eventos, recordatorios y bloques de horario
-  let agenda = [];
+  let agenda = [], projects = [];
   try {
-    const g = await fetchFn(`https://firestore.googleapis.com/v1/${name}?mask.fieldPaths=events&mask.fieldPaths=gcalAgenda`, {headers: H});
+    const g = await fetchFn(`https://firestore.googleapis.com/v1/${name}?mask.fieldPaths=events&mask.fieldPaths=gcalAgenda&mask.fieldPaths=projects`, {headers: H});
     const f = g.ok ? ((await g.json()).fields || {}) : {}, ga = decode(f.gcalAgenda);
     agenda = B.agendaLines({dateStr: bj.dateStr, dow: nowInTZ(nowMs, bj.zone).dow, reminders: user.reminders, routines: user.routines,
       events: decode(f.events) || [], gcal: ga && Array.isArray(ga.events) ? ga.events : []});
+    projects = (decode(f.projects) || []).filter(p => p && p.name && p.status !== 'done' && p.status !== 'archived').map(p => String(p.name).slice(0, 60));
   } catch (e) { console.warn('agenda del briefing', e.message); }
-  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, agenda, source: 'auto'});
+  const entry = await B.generateBriefing({name: bj.name, nowMs, tz: bj.zone, fetchFn, server: true, env, agenda, projects, source: 'auto'});
   const root = base.replace(/\/documents$/, '');
   let saved = false;
   for (let attempt = 0; attempt < 3 && !saved; attempt++) {

@@ -212,3 +212,11 @@ test('agenda del día: citas de tatuaje, recordatorios y horario en orden', asyn
     routines: [{title: 'Gym', start: '07:00', repeatDays: [3]}, {title: 'Domingo', start: '08:00', repeatDays: [0]}]});
   assert.deepStrictEqual(l, ['07:00 Bloque: Gym', '12:00 🖋 Cita de tatuaje: Juan brazo (hasta 15:00)', '18:00 ⏰ Comprar tintas']);
 });
+
+test('IA: ideas para aplicar los avances a sus apps (Nova Hub, Vortex, Neural Brain…)', async () => {
+  const B = await Bm();
+  const p = B.buildPrompt({dateLabel: 'hoy', dateStr: '2026-11-11', projects: ['Estudio', 'Web Gaby']});
+  for (const k of ['NOVA HUB', 'VORTEX', 'NEURAL BRAIN', 'INKBOT', 'ia.aplicar', 'Estudio, Web Gaby']) assert.ok(p.includes(k), k);
+  const s = B.parseBriefing(JSON.stringify({...SAMPLE, ia: {...SAMPLE.ia, aplicar: [{proyecto: 'NEURAL BRAIN', avance: 'Memoria larga', idea: 'Que recuerde tus notas.'}, {proyecto: '', idea: 'x'}]}}));
+  assert.deepStrictEqual(s.ia.aplicar, [{proyecto: 'NEURAL BRAIN', idea: 'Que recuerde tus notas.', avance: 'Memoria larga'}]);
+});

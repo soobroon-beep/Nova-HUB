@@ -493,6 +493,7 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .bf-days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .bf-day{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:.72rem;color:var(--text2)}
 .bf-day span{font-weight:700;color:var(--text);text-transform:capitalize}.bf-day b{font-size:1.15rem;line-height:1.3}.bf-day small{font-size:.66rem;color:var(--text3)}
+.bf-sub{margin:14px 0 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:1px;font-weight:800;color:#FFD700}
 .bf-plan{border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
 .bf-quote{margin:0;padding:14px 20px;font-size:.88rem;line-height:1.6;color:var(--text);font-style:italic;border-bottom:1px solid var(--border);background:rgba(124,106,247,.05)}
 .bf-quote::before{content:'🧘 ';font-style:normal}
@@ -7031,7 +7032,7 @@ const generateBriefing = async () => {
   try { const c = new AbortController(), t = setTimeout(() => c.abort(), 12000); const r = await fetch(BRIEF_FEEDS_URL, { signal: c.signal }); clearTimeout(t); if (r.ok) headlines = await r.json(); } catch (e) { console.warn('[NOVA HUB] sin titulares del servidor', e); }
   const now = new Date();
   const agenda = B.agendaLines({ dateStr: localDateStr(now), dow: now.getDay(), reminders: state.reminders, routines: state.routines, events: state.events, gcal: gcal.events });
-  const entry = await B.generateBriefing({ name: briefName(), headlines, agenda, source: 'manual' });
+  const entry = await B.generateBriefing({ name: briefName(), headlines, agenda, projects: (state.projects || []).filter(p => p && p.name && p.status !== 'done' && p.status !== 'archived').map(p => p.name), source: 'manual' });
   state.briefingHistory = mergeBriefings([entry], state.briefingHistory || []);
   save();
   // Lo sube a tu cuenta para verlo en todos tus dispositivos (solo el campo «briefings»)
@@ -7055,7 +7056,9 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
   const daysStrip = Array.isArray(w.days) && w.days.length ? `<div class="bf-days">${w.days.map(x => `<div class="bf-day"><span>${_esc(x.label)}</span><b>${x.icon || ''}</b><small>${_esc(x.maxC)}° / ${_esc(x.minC)}°</small><small>💧${_esc(x.rainPct)}%</small></div>`).join('')}</div>` : '';
   const wx = w.ok ? `<div class="bf-wx"><span class="bf-wx-ic">${w.icon}</span><div><div class="bf-wx-t">${w.tempC}°<small> ${_esc(w.desc)}</small></div><div class="bf-wx-s">${_esc(entry.city || 'Orizaba')} · ↑${w.maxC}° ↓${w.minC}° · 💧${w.rainPct}%</div>${extra ? `<div class="bf-wx-s">${extra}</div>` : ''}</div></div>${daysStrip}` : '';
   const ia = s.ia || {}, t = s.tatuaje || {};
-  const iaInner = (ia.resumen ? `<p class="bf-lead">${_esc(ia.resumen)}</p>` : '') + briefItems(ia.puntos);
+  const apl = (ia.aplicar || []).map(x => `<div class="bf-item"><span class="bf-when">${_esc(x.proyecto)}</span><div>${x.avance ? `<b>${_esc(x.avance)}</b>` : ''}<p>${_esc(x.idea)}</p></div></div>`).join('');
+  const iaInner = (ia.resumen ? `<p class="bf-lead">${_esc(ia.resumen)}</p>` : '') + briefItems(ia.puntos)
+    + (apl ? `<div class="bf-sub">🛠️ Cómo aplicarlo a tus proyectos</div>${apl}` : '');
   const tatInner = t.idea ? `<div class="bf-tat"><b>${_esc(t.titulo)}</b><p>${_esc(t.idea)}</p>${t.elementos ? `<div class="bf-row"><span>Elementos</span>${_esc(t.elementos)}</div>` : ''}${t.paleta ? `<div class="bf-row"><span>Paleta</span>${_esc(t.paleta)}</div>` : ''}${t.zona ? `<div class="bf-row"><span>Zona</span>${_esc(t.zona)}</div>` : ''}</div>` : '';
   const evs = (s.orizaba || []).map(x => ({ ...x, detalle: [x.donde ? '📍 ' + x.donde : '', x.detalle].filter(Boolean).join(' · ') }));
   const evInner = evs.length ? (s.eventosCrudos ? '<p class="bf-lead">Esto se anuncia por la región estos días:</p>' : '') + briefItems(evs, 'titulo', 'detalle', 'cuando')
@@ -7074,7 +7077,7 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
       ${briefSection('📍', 'Orizaba y Veracruz', briefItems(s.local), open)}
       ${s.plan ? `<div class="bf-fact bf-plan"><span>🧭 Plan sugerido</span>${_esc(s.plan)}</div>` : ''}
       ${briefSection('🌎', 'Noticias clave', briefItems(s.noticias), open)}
-      ${briefSection('🤖', 'IA esta semana', iaInner, open)}
+      ${briefSection('🤖', 'IA: avances y cómo usarlos', iaInner, true)}
       ${briefSection('🎨', 'Idea para tatuaje', tatInner, open)}
       ${briefSection('💡', 'Tecnología', briefItems(s.tech), open)}
       ${s.dato ? `<div class="bf-fact"><span>✨ Dato curioso</span>${_esc(s.dato)}</div>` : ''}
