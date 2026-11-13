@@ -1,0 +1,61 @@
+{
+  "name": "NOVA HUB",
+  "short_name": "NOVA HUB",
+  "description": "Nova HUB - Tu centro de control personal",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#0f0f1a",
+  "icons": [
+    {
+      "src": "icon-pc-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-pc-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "scope": "./",
+  "shortcuts": [
+    {
+      "name": "Dictar a Cortex",
+      "short_name": "Dictar",
+      "description": "Abre a Cortex con el micrófono listo: dile qué guardar (nota, idea, tarea, proyecto o recordatorio)",
+      "url": "./index.html?action=cortex&mode=voice",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Escribir a Cortex",
+      "short_name": "Escribir",
+      "description": "Abre a Cortex con el teclado listo para guardar algo rápido",
+      "url": "./index.html?action=cortex&mode=text",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "share_title",
+      "text": "share_text",
+      "url": "share_url"
+    }
+  }
+}
