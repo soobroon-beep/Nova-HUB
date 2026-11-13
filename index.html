@@ -24,7 +24,7 @@ if(_m){document.getElementById('appManifest').href=_m[0];document.querySelector(
 /* En PC (igual que VORTEX): al instalar, en el dock/barra de tareas y en la pestaña sale solo el símbolo blanco, sin fondo y más grande.
    En celular/tablet todo sigue igual (iconos con fondo). */
 window.NH_PC=(function(){try{var u=navigator.userAgent||'',m=/Android|iPhone|iPad|iPod|Mobile/i.test(u)||(navigator.userAgentData&&navigator.userAgentData.mobile)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);return !m&&matchMedia('(pointer: fine)').matches;}catch(e){return false;}})();
-if(window.NH_PC){document.getElementById('appManifest').href='manifest-pc.json';document.querySelectorAll('link[rel="icon"]').forEach(function(l){var s=(l.getAttribute('sizes')||'').split('x')[0];l.href=s==='32'?'icon-pc-32.png':s==='96'?'icon-pc-96.png':'icon-pc-192.png';});}
+if(window.NH_PC){document.getElementById('appManifest').href='manifest-pc2.json';document.querySelectorAll('link[rel="icon"]').forEach(function(l){var s=(l.getAttribute('sizes')||'').split('x')[0];l.href=s==='32'?'icon-pc2-32.png':s==='96'?'icon-pc2-96.png':'icon-pc2-192.png';});}
 </script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -5362,8 +5362,8 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
   const tc = document.querySelector('meta[name="theme-color"]'); if (tc && ic.theme) tc.setAttribute('content', ic.theme);
   // En PC la instalación y la pestaña usan siempre el símbolo blanco sin fondo (el icono elegido sigue cambiando el color y el logo de la app)
   if (window.NH_PC) {
-    if (mf) mf.setAttribute('href', 'manifest-pc.json');
-    document.querySelectorAll('link[rel="icon"]').forEach(l => { const s = (l.getAttribute('sizes') || '').split('x')[0]; l.href = s === '32' ? 'icon-pc-32.png' : s === '96' ? 'icon-pc-96.png' : 'icon-pc-192.png'; });
+    if (mf) mf.setAttribute('href', 'manifest-pc2.json');
+    document.querySelectorAll('link[rel="icon"]').forEach(l => { const s = (l.getAttribute('sizes') || '').split('x')[0]; l.href = s === '32' ? 'icon-pc2-32.png' : s === '96' ? 'icon-pc2-96.png' : 'icon-pc2-192.png'; });
   }
   if (applyColor) {
     const hex = ic.accent || await extractIconColor(ic.src);
