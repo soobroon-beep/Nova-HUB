@@ -33,6 +33,15 @@ async function t(name, fn) { try { await fn(); pass++; console.log('✅ ' + name
   await t('"fcmTokens" como texto se rechaza', () => assertFails(setDoc(doc(alice, 'users/alice'), { fcmTokens: 'x' }, { merge: true })));
   await t('otras colecciones están cerradas', () => assertFails(setDoc(doc(alice, 'otra/x'), { a: 1 })));
   await t('subcolecciones bajo users también cerradas', () => assertFails(setDoc(doc(alice, 'users/alice/sub/x'), { a: 1 })));
+  // Estudio de tatuajes (INKBOT): estudio/{uid}/{coleccion}/{id}
+  await t('Estudio: dueño crea y lee un cliente', async () => { await assertSucceeds(setDoc(doc(alice, 'estudio/alice/clientes/c1'), { id: 'c1', nombre: 'Ana' })); await assertSucceeds(getDoc(doc(alice, 'estudio/alice/clientes/c1'))); });
+  await t('Estudio: dueño lista sus citas', () => assertSucceeds(getDocs(collection(alice, 'estudio/alice/citas'))));
+  await t('Estudio: dueño borra un registro', () => assertSucceeds(deleteDoc(doc(alice, 'estudio/alice/clientes/c1'))));
+  await t('Estudio: otra cuenta NO lee clientes ajenos', () => assertFails(getDocs(collection(bob, 'estudio/alice/clientes'))));
+  await t('Estudio: otra cuenta NO escribe', () => assertFails(setDoc(doc(bob, 'estudio/alice/clientes/x'), { id: 'x' })));
+  await t('Estudio: sin sesión NO lee', () => assertFails(getDocs(collection(anon, 'estudio/alice/clientes'))));
+  await t('Estudio: colección desconocida cerrada', () => assertFails(setDoc(doc(alice, 'estudio/alice/otra/x'), { id: 'x' })));
+  await t('Estudio: id del registro debe coincidir', () => assertFails(setDoc(doc(alice, 'estudio/alice/clientes/c2'), { id: 'zzz' })));
   await env.cleanup();
   console.log(`\n${pass}/${pass + fail} pruebas de reglas pasaron`);
   process.exit(fail ? 1 : 0);
