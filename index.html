@@ -610,6 +610,78 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .note-card .note-body.nmd ul,.note-card .note-body.nmd ol{margin:2px 0}
 .nd-body.nmd ul.nchk>li{cursor:pointer}
 
+/* ── APPS (tus aplicaciones: mapa de conexiones + iconos) ── */
+.ap-wrap{width:100%;max-width:900px;margin:0 auto;padding-bottom:24px;box-sizing:border-box}
+.ap-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.ap-title{font-size:1.35rem;font-weight:800}
+.ap-sub{font-size:.8rem;color:var(--text2);margin-top:2px}
+.ap-card{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:22px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:fadeSlideIn .45s ease both}
+.ap-map{position:relative;width:100%;aspect-ratio:16/9;max-height:520px;margin:0 auto}
+.ap-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ap-lines line{stroke:var(--c1,#888);stroke-width:2;stroke-linecap:round;opacity:.45;vector-effect:non-scaling-stroke;stroke-dasharray:6 7;animation:apFlow 1.6s linear infinite;transition:opacity .25s,stroke-width .25s}
+@keyframes apFlow{to{stroke-dashoffset:-26}}
+.ap-map.focus line{opacity:.08}
+.ap-map.focus line.on{opacity:1;stroke-width:3}
+.ap-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;color:var(--text);font-family:inherit;animation:apPop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*40ms);transition:opacity .25s,filter .25s}
+.ap-node>span:last-child{font-size:.68rem;font-weight:600;max-width:84px;text-align:center;line-height:1.15;color:var(--text2);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.ap-node .ap-ico{width:46px;height:46px;border-radius:14px}
+.ap-node.solo .ap-ico{opacity:.85}
+.ap-node:hover .ap-ico{transform:scale(1.08)}
+.ap-map.focus .ap-node{opacity:.28;filter:grayscale(.6)}
+.ap-map.focus .ap-node.on{opacity:1;filter:none}
+.ap-map.focus .ap-node.on .ap-ico{box-shadow:0 0 0 2px var(--ap),0 0 22px color-mix(in srgb,var(--ap) 60%,transparent)}
+@keyframes apPop{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.ap-ico{position:relative;display:flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:18px;flex-shrink:0;overflow:hidden;background:linear-gradient(145deg,var(--ap),color-mix(in srgb,var(--ap) 45%,#000));box-shadow:0 6px 18px color-mix(in srgb,var(--ap) 30%,transparent),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .2s,box-shadow .25s}
+.ap-ico b{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.ap-node .ap-ico b{font-size:.85rem}
+.ap-ico img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s;background:#0d0d12}
+.ap-ico img.ok{opacity:1}
+.ap-sec{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:20px 4px 10px}
+.ap-dot{width:8px;height:8px;border-radius:50%}
+.ap-dot.dev{background:#ffc94a;box-shadow:0 0 8px #ffc94a;animation:apBlink 1.8s ease-in-out infinite}
+.ap-dot.done{background:#2fe0a5}
+@keyframes apBlink{50%{opacity:.35}}
+.ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px 8px}
+.ap-tile{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;padding:6px 2px;cursor:pointer;color:var(--text);font-family:inherit;border-radius:16px;transition:background .2s}
+.ap-tile:hover{background:rgba(255,255,255,.04)}
+.ap-tile:active .ap-ico{transform:scale(.92)}
+.ap-name{font-size:.74rem;font-weight:600;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* Ficha de la app */
+.ap-sheet-wrap{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);transition:background .25s,backdrop-filter .25s}
+.ap-sheet-wrap.open{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.ap-sheet{width:100%;max-width:420px;max-height:88vh;overflow-y:auto;background:rgba(18,18,24,.82);-webkit-backdrop-filter:blur(24px) saturate(1.3);backdrop-filter:blur(24px) saturate(1.3);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:18px;opacity:0;transform:translateY(24px) scale(.96);transition:opacity .25s,transform .3s cubic-bezier(.34,1.4,.64,1)}
+.ap-sheet-wrap.open .ap-sheet{opacity:1;transform:none}
+.ap-sh-head{display:flex;align-items:center;gap:14px}
+.ap-sh-name{flex:1;font-size:1.15rem;font-weight:800}
+.ap-x{background:rgba(255,255,255,.06);border:none;color:var(--text2);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:.9rem}
+.ap-sh-btns{display:flex;gap:8px;margin-top:16px}
+.ap-sh-btns .btn{flex:1;justify-content:center;text-align:center;text-decoration:none}
+.ap-edit{margin-top:16px;border-top:1px solid rgba(255,255,255,.07);padding-top:12px}
+.ap-edit summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--text2);list-style:none}
+.ap-edit summary::-webkit-details-marker{display:none}
+.ap-edit label{display:block;font-size:.74rem;color:var(--text2);margin-top:10px}
+.ap-edit input{display:block;width:100%;margin-top:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:.88rem;box-sizing:border-box}
+.ap-lbl{font-size:.74rem;color:var(--text2);margin:12px 0 6px}
+.ap-colors{display:flex;flex-wrap:wrap;gap:8px}
+.ap-col{width:26px;height:26px;border-radius:50%;border:2px solid transparent;background:var(--ap);cursor:pointer;padding:0}
+.ap-col.on{border-color:#fff;box-shadow:0 0 0 2px var(--ap)}
+.ap-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ap-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:999px;padding:6px 11px;font-size:.76rem;font-family:inherit;cursor:pointer;transition:all .2s}
+.ap-chip i{width:8px;height:8px;border-radius:50%}
+.ap-chip.on{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.35);color:var(--text)}
+.ap-sh-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+.ap-del{color:#ff6b81 !important}
+@media (max-width:700px){
+  .ap-wrap{padding-bottom:110px}
+  .ap-map{aspect-ratio:1/1.05}
+  .ap-node .ap-ico{width:40px;height:40px;border-radius:12px}
+  .ap-node>span:last-child{font-size:.6rem;max-width:66px}
+  .ap-grid{grid-template-columns:repeat(4,1fr);gap:12px 4px}
+  .ap-ico{width:54px;height:54px;border-radius:16px}
+  .ap-sheet-wrap{align-items:flex-end;padding:10px}
+}
+[data-theme="light"] .ap-sheet{background:rgba(255,255,255,.88)}
+
 /* ── ZONA RELAX ── */
 .rx-wrap{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:20px}
 .rx-top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}
@@ -3229,6 +3301,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
   <div class="nav-section" style="margin-top:20px">Herramientas</div>
   <div class="nav-item" data-view="briefing"><span class="nav-icon">☀️</span> Briefing diario</div>
   <div class="nav-item" data-view="relax"><span class="nav-icon">🌿</span> Zona Relax</div>
+  <div class="nav-item" data-view="apps"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">apps</span></span> Apps</div>
   <div class="nav-item" data-view="ai"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span></span> IA Asistente</div>
   <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span> Ajustes</div>
   <div class="sidebar-bottom">
@@ -5061,6 +5134,7 @@ function rerenderView(v) {
   else if(v==='settings') renderSettingsView();
   else if(v==='briefing') renderBriefingView();
   else if(v==='relax') renderRelaxView();
+  else if(v==='apps') renderAppsView();
 }
 
 // Aplica datos recibidos de Firestore al state local y re-renderiza
@@ -6098,6 +6172,7 @@ const DOCK_META = {
   briefing:  { s:'Briefing',   f:'Briefing diario', i:'☀️', p:'M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14H5v-4h6v4zm0-6H5V7h6v4zm8 6h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V7h6v2z' },
   ai:        { s:'IA',         f:'IA Asistente',   i:'✦',  p:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z' },
   relax:     { s:'Relax',      f:'Zona Relax',     i:'🌿', p:'M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z' },
+  apps:      { s:'Apps',       f:'Apps',           i:'▦',  p:'M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z' },
   dashboard: { s:'Dashboard', f:'Dashboard', i:'⊞', p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
@@ -7270,6 +7345,194 @@ let _relaxWeather = null, _relaxBreath = null;
 const relaxWeather = async () => {
   if (_relaxWeather && Date.now() - _relaxWeather.t < 30 * 60000) return _relaxWeather.w;
   try { const B = await loadBriefCore(); const w = await B.fetchWeather(); _relaxWeather = { t: Date.now(), w }; return w; } catch (e) { return { ok: false }; }
+};
+
+// ══════════════════════════════════════════════
+// APPS — tus aplicaciones en un solo lugar (sin IA, solo visual)
+// · Mapa: iconos en círculo con líneas animadas entre las apps que se conectan.
+// · Cuadrícula: «Creando ahora» y «Creadas». Toca una app para abrirla, ver su repo o editarla.
+// · Se guarda en tu cuenta (state.settings.myApps) para que nunca se te pierdan.
+// ══════════════════════════════════════════════
+const GH_USER = 'soobroon-beep';
+const APPS_DEFAULT = [
+  { id: 'novahub',   name: 'Nova Hub',          repo: 'Nova-HUB',                 url: 'https://soobroon-beep.github.io/Nova-HUB/', icon: 'icon-192.png', color: '#FFD700', status: 'dev',  links: ['neural'] },
+  { id: 'vortex',    name: 'VORTEX',            repo: 'Vortex-By-Nova-Nexus',     url: 'https://vortex-nexus.pages.dev/',           color: '#7c5cff', status: 'dev',  links: ['neural', 'nexuslens', 'sala'] },
+  { id: 'neural',    name: 'Neural Brain',      repo: 'Neural-Brain-Claude',      color: '#b07cff', status: 'dev',  links: [] },
+  { id: 'sala',      name: 'Sala de agentes',   repo: 'sala-de-agentes',          color: '#38d9ff', status: 'dev',  links: [] },
+  { id: 'nexuslens', name: 'Nexus Lens',        repo: 'NexusLens',                color: '#2fe0a5', status: 'done', links: [] },
+  { id: 'inkbot',    name: 'InkBot',            repo: 'InkBot',                   color: '#DC143C', status: 'dev',  links: ['inkvideo'] },
+  { id: 'inkvideo',  name: 'InkBot Video',      repo: 'INKBOT-VIDEO-',            color: '#ff4d6d', status: 'done', links: [] },
+  { id: 'miia',      name: 'Mi IA',             repo: 'mi-ia',                    color: '#ffc94a', status: 'dev',  links: [] },
+  { id: 'jarvis',    name: 'Jarvis',            repo: 'jarvis',                   color: '#00A86B', status: 'dev',  links: [] },
+  { id: 'moldes',    name: "Moldes Gaby's",     repo: 'moldesgabys',              color: '#ff9ec7', status: 'done', links: [] },
+  { id: 'dbot',      name: 'Discord Bot',       repo: 'DISCORD-BOT',              color: '#5865F2', status: 'done', links: [] },
+  { id: 'dzonas',    name: 'Zonas Horarias',    repo: 'DISCORD-ZONAS-HORARIAS',   color: '#7289da', status: 'done', links: [] },
+  { id: 'uno',       name: '1%',                repo: 'APP1PORCIENTO',            color: '#ff8a3d', status: 'done', links: [] },
+  { id: 'benef',     name: 'Beneficios',        repo: 'victor-sobron-beneficios', color: '#4fc3f7', status: 'done', links: [] }
+];
+const APP_COLORS = ['#FFD700', '#DC143C', '#00A86B', '#7c5cff', '#38d9ff', '#ff4d6d', '#ff8a3d', '#ff9ec7', '#b07cff', '#5865F2', '#2fe0a5', '#F5F0E8'];
+const getApps = () => Array.isArray(state.settings.myApps) ? state.settings.myApps : APPS_DEFAULT.map(a => ({ ...a, links: [...a.links] }));
+const setApps = list => { state.settings.myApps = list; save(); };
+const appUrl = a => a.url || (a.repo ? `https://${GH_USER}.github.io/${a.repo}/` : '');
+const appRepoUrl = a => a.repo ? (/^https?:/.test(a.repo) ? a.repo : `https://github.com/${GH_USER}/${a.repo}`) : '';
+// Las conexiones van en los dos sentidos: si A dice B, B también se conecta con A
+const appEdges = list => {
+  const ids = new Set(list.map(a => a.id)), seen = new Set(), out = [];
+  list.forEach(a => (a.links || []).forEach(b => {
+    if (!ids.has(b) || b === a.id) return;
+    const k = [a.id, b].sort().join('|'); if (seen.has(k)) return; seen.add(k); out.push([a.id, b]);
+  }));
+  return out;
+};
+const appInitials = n => (String(n || '?').replace(/[^\p{L}\p{N}%]/gu, ' ').trim().split(/\s+/).filter((w, i, all) => all.length < 2 || !/^(de|del|la|el|y|the|of)$/i.test(w)).map(w => w[0]).join('').slice(0, 2) || '?').toUpperCase();
+// Icono: intenta el icono real de la app; si no carga, queda un monograma con su color
+const _appIconOk = {};
+const appIconHTML = a => {
+  const base = appUrl(a);
+  const cands = a.icon ? [/^https?:|^data:/.test(a.icon) || !base || a.id === 'novahub' ? a.icon : base + a.icon] : base ? [base + 'icon-192.png', base + 'icons/icon-192.png', base + 'apple-touch-icon.png'] : [];
+  const known = _appIconOk[a.id];
+  const list = known === false ? [] : known ? [known] : cands;
+  return `<span class="ap-ico" style="--ap:${_esc(a.color || '#888')}"><b>${_esc(appInitials(a.name))}</b>${list.length ? `<img alt="" loading="lazy" data-app="${_esc(a.id)}" data-c="${_esc(list.join('\n'))}" src="${_esc(list[0])}">` : ''}</span>`;
+};
+const bindAppIcons = root => root.querySelectorAll('.ap-ico img').forEach(img => {
+  img.onload = () => { _appIconOk[img.dataset.app] = img.src; img.classList.add('ok'); };
+  img.onerror = () => {
+    const c = img.dataset.c.split('\n'), i = c.indexOf(img.getAttribute('src')) + 1;
+    if (i > 0 && i < c.length) img.src = c[i]; else { _appIconOk[img.dataset.app] = false; img.remove(); }
+  };
+  if (img.complete && img.naturalWidth) img.onload();
+});
+
+const renderAppsView = () => {
+  const content = document.getElementById('content'); if (!content) return;
+  content.style.padding = '16px';
+  const apps = getApps(), edges = appEdges(apps);
+  const dev = apps.filter(a => a.status !== 'done'), done = apps.filter(a => a.status === 'done');
+  // Orden del mapa: las apps conectadas quedan juntas, las sueltas al final
+  const byId = Object.fromEntries(apps.map(a => [a.id, a])), adj = {};
+  edges.forEach(([x, y]) => { (adj[x] = adj[x] || []).push(y); (adj[y] = adj[y] || []).push(x); });
+  const order = [], vis = new Set();
+  [...apps].sort((p, q) => (adj[q.id] || []).length - (adj[p.id] || []).length).forEach(a => {
+    if (vis.has(a.id)) return; const st = [a.id];
+    while (st.length) { const v = st.shift(); if (vis.has(v)) continue; vis.add(v); order.push(byId[v]); (adj[v] || []).forEach(n => !vis.has(n) && st.push(n)); }
+  });
+  // Acomodo tipo constelación: las conectadas se atraen, todas se repelen (siempre igual, sin azar)
+  const pos = {}, n = order.length, W = innerWidth < 700 ? 1 : 16 / 9;
+  order.forEach((a, i) => { const t = -Math.PI / 2 + (i / Math.max(n, 1)) * Math.PI * 2; pos[a.id] = [Math.cos(t) * W, Math.sin(t)]; });
+  for (let it = 0; it < 400; it++) {
+    const f = {}; order.forEach(a => f[a.id] = [-pos[a.id][0] * .02, -pos[a.id][1] * .02 * W]);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const A = order[i].id, B = order[j].id, dx = pos[A][0] - pos[B][0], dy = pos[A][1] - pos[B][1], d2 = dx * dx + dy * dy + .001, k = .02 / d2;
+      f[A][0] += dx * k; f[A][1] += dy * k; f[B][0] -= dx * k; f[B][1] -= dy * k;
+    }
+    edges.forEach(([A, B]) => { const dx = pos[B][0] - pos[A][0], dy = pos[B][1] - pos[A][1], d = Math.hypot(dx, dy) || .01, k = (d - .5) * .08 / d; f[A][0] += dx * k; f[A][1] += dy * k; f[B][0] -= dx * k; f[B][1] -= dy * k; });
+    order.forEach(a => { pos[a.id][0] += Math.max(-.05, Math.min(.05, f[a.id][0])); pos[a.id][1] += Math.max(-.05, Math.min(.05, f[a.id][1])); });
+  }
+  const xs = order.map(a => pos[a.id][0]), ys = order.map(a => pos[a.id][1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  order.forEach(a => { pos[a.id] = [9 + 82 * (pos[a.id][0] - x0) / ((x1 - x0) || 1), 10 + 76 * (pos[a.id][1] - y0) / ((y1 - y0) || 1)]; });
+  // Que ningún icono quede encimado (distancia mínima entre iconos)
+  const minD = W === 1 ? 19 : 12;
+  for (let it = 0; it < 80; it++) for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    const P = pos[order[i].id], Q = pos[order[j].id], dx = (P[0] - Q[0]) * W, dy = P[1] - Q[1], d = Math.hypot(dx, dy) || .01;
+    if (d >= minD) continue; const m = (minD - d) / 2 / d;
+    P[0] += dx * m / W; P[1] += dy * m; Q[0] -= dx * m / W; Q[1] -= dy * m;
+    [P, Q].forEach(R => { R[0] = Math.max(8, Math.min(92, R[0])); R[1] = Math.max(9, Math.min(88, R[1])); });
+  }
+  const tile = a => `<button class="ap-tile" type="button" data-open="${_esc(a.id)}">${appIconHTML(a)}<span class="ap-name">${_esc(a.name)}</span></button>`;
+  content.innerHTML = `
+  <div class="ap-wrap">
+    <div class="ap-top">
+      <div><div class="ap-title">Apps</div><div class="ap-sub">${apps.length} apps · ${dev.length} creando · ${edges.length} conexiones</div></div>
+      <button class="btn btn-primary btn-sm" id="apAdd">+ Agregar</button>
+    </div>
+    <section class="ap-card ap-map-card">
+      <div class="ap-map" id="apMap">
+        <svg class="ap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          ${edges.map(([x, y]) => `<line data-a="${_esc(x)}" data-b="${_esc(y)}" x1="${pos[x][0]}" y1="${pos[x][1]}" x2="${pos[y][0]}" y2="${pos[y][1]}" style="--c1:${_esc(byId[x].color)}"/>`).join('')}
+        </svg>
+        ${order.map((a, i) => `<button class="ap-node${(adj[a.id] || []).length ? '' : ' solo'}" type="button" data-node="${_esc(a.id)}" style="left:${pos[a.id][0]}%;top:${pos[a.id][1]}%;--i:${i}">${appIconHTML(a)}<span>${_esc(a.name)}</span></button>`).join('')}
+      </div>
+    </section>
+    ${dev.length ? `<div class="ap-sec"><span class="ap-dot dev"></span>Creando ahora</div><div class="ap-grid">${dev.map(tile).join('')}</div>` : ''}
+    ${done.length ? `<div class="ap-sec"><span class="ap-dot done"></span>Creadas</div><div class="ap-grid">${done.map(tile).join('')}</div>` : ''}
+  </div>`;
+  bindAppIcons(content);
+  const map = document.getElementById('apMap');
+  map.addEventListener('click', e => {
+    const nd = e.target.closest('[data-node]');
+    if (!nd) { map.classList.remove('focus'); map.querySelectorAll('.on').forEach(x => x.classList.remove('on')); return; }
+    const id = nd.dataset.node;
+    if (nd.classList.contains('on') && map.classList.contains('focus')) { openAppSheet(id); return; }  // 2º toque: abre la app
+    map.classList.add('focus'); map.querySelectorAll('.on').forEach(x => x.classList.remove('on'));
+    nd.classList.add('on');
+    map.querySelectorAll('line').forEach(l => { if (l.dataset.a === id || l.dataset.b === id) { l.classList.add('on'); map.querySelector(`[data-node="${l.dataset.a === id ? l.dataset.b : l.dataset.a}"]`)?.classList.add('on'); } });
+  });
+  content.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openAppSheet(b.dataset.open)));
+  document.getElementById('apAdd').addEventListener('click', () => openAppSheet(null));
+};
+
+// ── Ficha de una app (abrir, repo, editar) ──
+const openAppSheet = id => {
+  document.getElementById('apSheet')?.remove();
+  const apps = getApps(), a = apps.find(x => x.id === id);
+  const isNew = !a;
+  const cur = a ? { ...a, links: [...(a.links || [])] } : { id: 'app' + Date.now().toString(36), name: '', repo: '', url: '', icon: '', color: APP_COLORS[apps.length % APP_COLORS.length], status: 'dev', links: [] };
+  const linked = new Set([...(cur.links || []), ...apps.filter(x => (x.links || []).includes(cur.id)).map(x => x.id)]);
+  const el = document.createElement('div');
+  el.id = 'apSheet'; el.className = 'ap-sheet-wrap';
+  el.innerHTML = `
+    <div class="ap-sheet" role="dialog" aria-modal="true">
+      <div class="ap-sh-head">${appIconHTML(cur)}<div class="ap-sh-name">${_esc(cur.name || 'Nueva app')}</div><button class="ap-x" type="button" data-close aria-label="Cerrar">✕</button></div>
+      ${!isNew ? `<div class="ap-sh-btns">
+        ${appUrl(cur) ? `<a class="btn btn-primary" href="${_esc(appUrl(cur))}" target="_blank" rel="noopener">Abrir app</a>` : ''}
+        ${appRepoUrl(cur) ? `<a class="btn btn-ghost" href="${_esc(appRepoUrl(cur))}" target="_blank" rel="noopener">GitHub</a>` : ''}
+      </div>` : ''}
+      <details class="ap-edit"${isNew ? ' open' : ''}><summary>${isNew ? 'Datos de la app' : 'Editar'}</summary>
+        <label>Nombre<input id="apfName" value="${_esc(cur.name)}" placeholder="Mi app"></label>
+        <label>Enlace de la app<input id="apfUrl" value="${_esc(cur.url || '')}" placeholder="https://… (opcional)"></label>
+        <label>Repo de GitHub<input id="apfRepo" value="${_esc(cur.repo || '')}" placeholder="nombre-del-repo (opcional)"></label>
+        <label>Icono (URL de imagen)<input id="apfIcon" value="${_esc(cur.icon || '')}" placeholder="opcional"></label>
+        <div class="ap-lbl">Color</div>
+        <div class="ap-colors">${APP_COLORS.map(c => `<button type="button" class="ap-col${c === cur.color ? ' on' : ''}" data-col="${c}" style="--ap:${c}"></button>`).join('')}</div>
+        <div class="ap-lbl">Estado</div>
+        <div class="ap-chips"><button type="button" class="ap-chip${cur.status !== 'done' ? ' on' : ''}" data-st="dev">Creando</button><button type="button" class="ap-chip${cur.status === 'done' ? ' on' : ''}" data-st="done">Creada</button></div>
+        <div class="ap-lbl">Se conecta con</div>
+        <div class="ap-chips">${apps.filter(x => x.id !== cur.id).map(x => `<button type="button" class="ap-chip${linked.has(x.id) ? ' on' : ''}" data-ln="${_esc(x.id)}"><i style="background:${_esc(x.color)}"></i>${_esc(x.name)}</button>`).join('') || '<small style="color:var(--text2)">Aún no hay otras apps</small>'}</div>
+        <div class="ap-sh-foot">
+          ${!isNew ? '<button type="button" class="btn btn-ghost btn-sm ap-del" id="apfDel">Eliminar</button>' : '<span></span>'}
+          <button type="button" class="btn btn-primary" id="apfSave">Guardar</button>
+        </div>
+      </details>
+    </div>`;
+  document.body.appendChild(el);
+  bindAppIcons(el);
+  requestAnimationFrame(() => el.classList.add('open'));
+  const close = () => { el.classList.remove('open'); setTimeout(() => el.remove(), 250); };
+  el.addEventListener('click', e => {
+    if (e.target === el || e.target.closest('[data-close]')) return close();
+    const col = e.target.closest('[data-col]'); if (col) { cur.color = col.dataset.col; el.querySelectorAll('.ap-col').forEach(b => b.classList.toggle('on', b === col)); el.querySelector('.ap-sh-head .ap-ico').style.setProperty('--ap', cur.color); return; }
+    const st = e.target.closest('[data-st]'); if (st) { cur.status = st.dataset.st; el.querySelectorAll('[data-st]').forEach(b => b.classList.toggle('on', b === st)); return; }
+    const ln = e.target.closest('[data-ln]'); if (ln) { ln.classList.toggle('on'); linked[ln.classList.contains('on') ? 'add' : 'delete'](ln.dataset.ln); }
+  });
+  el.querySelector('#apfSave').addEventListener('click', () => {
+    const name = el.querySelector('#apfName').value.trim();
+    if (!name) { el.querySelector('#apfName').focus(); return; }
+    let repo = el.querySelector('#apfRepo').value.trim().replace(/^https?:\/\/github\.com\/[^/]+\//i, '').replace(/\/$/, '');
+    let url = el.querySelector('#apfUrl').value.trim(); if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    if (url && !url.endsWith('/')) url += '/';
+    const item = { ...cur, name, repo, url, icon: el.querySelector('#apfIcon').value.trim(), links: [...linked] };
+    delete _appIconOk[item.id];
+    // La conexión se guarda en esta app; se quita de las demás para no duplicarla
+    const list = getApps().map(x => x.id === item.id ? item : { ...x, links: (x.links || []).filter(l => l !== item.id) });
+    if (isNew) list.push(item);
+    setApps(list); close(); renderAppsView(); toast(isNew ? 'App agregada' : 'App guardada');
+  });
+  el.querySelector('#apfDel')?.addEventListener('click', () => {
+    if (!confirm(`¿Quitar «${cur.name}» de tus apps?`)) return;
+    setApps(getApps().filter(x => x.id !== cur.id).map(x => ({ ...x, links: (x.links || []).filter(l => l !== cur.id) })));
+    close(); renderAppsView(); toast('App quitada');
+  });
 };
 
 const renderRelaxView = () => {
@@ -9367,12 +9630,12 @@ initNotifications();
   const shell=document.getElementById('appShell');
   const sidebar=document.getElementById('sidebar');
   if(!shell||!sidebar||document.getElementById('novaFloatingDock'))return;
-  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','ai','settings'];
+  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','apps','ai','settings'];
   const dock=document.createElement('nav');
   dock.id='novaFloatingDock';
   dock.setAttribute('aria-label','Navegación flotante de Nova Hub');
   const icon=(view)=>{const d=DOCK_META[view];if(view==='projects')return '<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>';return d && d.p ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d.p+'"></path></svg>' : '<span class="material-symbols-outlined" aria-hidden="true">apps</span>';};
-  const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',relax:'Zona Relax',ai:'IA Asistente',settings:'Ajustes'};
+  const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',relax:'Zona Relax',apps:'Apps',ai:'IA Asistente',settings:'Ajustes'};
   const button=(act,label,svg)=>'<button class="nova-dock-item" type="button" data-dock="'+act+'" data-tip="'+label+'" aria-label="'+label+'">'+svg+'</button>';
   dock.innerHTML=views.map((view,i)=>(i===7?'<span class="nova-dock-separator" aria-hidden="true"></span>':'')+button(view,labels[view],icon(view))).join('');
   shell.insertAdjacentElement('afterend',dock);
