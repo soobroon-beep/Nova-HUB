@@ -14,6 +14,9 @@ async function run() {
   const B = await import('../worker/briefing.mjs');
   const headlines = await B.fetchHeadlines();
   for (const [k, v] of Object.entries(headlines)) console.log(`${k}: ${v.length}${v[0] ? '  · ' + v[0].slice(0, 110) : ''}`);
+  // Para el veredicto de trading (LONG / SHORT / ESPERAR): calendario económico y titulares cripto
+  headlines.calendario = await B.fetchCalendar(); headlines.cripto = await B.fetchCryptoHeadlines();
+  console.log(`calendario: ${headlines.calendario.length} · cripto: ${headlines.cripto.length}`);
   const total = B.countHeadlines(headlines);
   if (total < 8) { console.error(`Muy pocos titulares (${total}); no se reemplaza lo guardado.`); process.exit(1); }
   admin.initializeApp({ credential: admin.credential.cert(JSON.parse(raw)) });

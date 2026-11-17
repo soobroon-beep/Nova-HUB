@@ -248,6 +248,7 @@ export default {
       let h = null;
       try { const sh = await serviceHeaders(env || {}); if (sh) h = await cachedHeadlines(sh.base, sh.H); } catch (e) { console.warn('feeds', e.message); }
       if (!h) h = await B.fetchHeadlines();
+      if (!Array.isArray(h.calendario) || !h.calendario.length) { try { h.calendario = await B.fetchCalendar(); } catch {} }
       return new Response(JSON.stringify(h), {headers: {'content-type': 'application/json', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=300'}});
     }
     return new Response(JSON.stringify({ok: true, app: 'NOVA HUB push', note: 'Recordatorios, horario y briefing de las 8:30 con la app cerrada (cron cada minuto)'}), {headers: {'content-type': 'application/json'}}); },

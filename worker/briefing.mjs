@@ -184,9 +184,9 @@ export function buildPrompt({name = 'Payi', dateLabel, dateStr, weather, place =
     '- tuDia: 1-2 frases sobre su agenda de hoy (citas de tatuaje primero, con la hora). Si no hay nada agendado, déjalo vacío.',
     '- orizaba: TODOS los eventos próximos (de hoy en adelante) de los titulares de EVENTOS, hasta 6: festivales, ferias, conciertos, teatro, exposiciones, carreras, fiestas. ' +
       '«cuando»: la fecha o rango si el titular la dice (ej. «Vie 13 – Dom 15 nov»), si no, «Próximamente»; «donde»: el lugar o ciudad; «detalle»: 1-2 frases de qué es y por qué ir. ' +
-      'No pongas eventos que ya pasaron. Solo deja la lista vacía si de verdad no hay ningún evento.',
-    '- local: 3-4 noticias de Orizaba y Veracruz útiles para el día a día (servicios, agua, obras, vialidades, cultura, economía local), cada una en 1-2 frases. Evita la nota roja salvo un aviso de seguridad importante.',
-    `- planes: 3 ideas DISTINTAS y concretas para hoy, esta tarde o el fin de semana (una puede ser un evento de la lista, otra un lugar, otra algo creativo o de descanso), pensadas para el clima: «titulo», «cuando» (ej. «Hoy 5 pm», «Sábado mañana») y «detalle» (2 frases: qué hacer y un tip). Lugares reales: ${PLACES.join(', ')}.`,
+      'No pongas eventos que ya pasaron ni repitas el mismo evento (varios titulares pueden hablar del mismo: júntalos en uno). Solo deja la lista vacía si de verdad no hay ningún evento.',
+    '- local: 3-4 noticias de Orizaba y Veracruz (que NO sean los eventos ya puestos en «orizaba»; nunca repitas un evento) útiles para el día a día (servicios, agua, obras, vialidades, cultura, economía local), cada una en 1-2 frases. Evita la nota roja salvo un aviso de seguridad importante.',
+    `- planes: 3 ideas DISTINTAS y concretas para hoy, esta tarde o el fin de semana (un lugar, algo creativo o de descanso; NO repitas los eventos de «orizaba»), pensadas para el clima: «titulo», «cuando» (ej. «Hoy 5 pm», «Sábado mañana») y «detalle» (2 frases: qué hacer y un tip). Lugares reales: ${PLACES.join(', ')}.`,
     '- noticias: las 4 noticias MÁS importantes del MUNDO hoy (de los titulares internacionales; incluye una de México solo si es de las más grandes). Cada una: «titulo» claro y «resumen» de 2-3 frases: qué pasó, contexto y por qué importa. Nada de finanzas ni cripto.',
     '- ia.resumen: 2-3 frases con el panorama concreto de la IA esta semana (qué empresas se movieron y hacia dónde va).',
     '- ia.puntos: 4-5 lanzamientos o actualizaciones de modelos y herramientas de IA de los titulares de IA (aunque vengan en inglés, escríbelos en español). «titulo»: «Empresa · Modelo o producto» (ej. «Google · Gemini 3»); ' +
@@ -285,7 +285,10 @@ export async function generateBriefing({name, nowMs = Date.now(), tz, place = DE
   // Si hubo anuncios de eventos y la IA no armó la lista, se muestran tal cual (los eventos nunca se pierden)
   const leads = eventLeads(heads);
   if (!sections.orizaba.length && leads.length) { sections.orizaba = leads.slice(0, 5); sections.eventosCrudos = true; }
-  return {v: BRIEFING_VERSION, id: nowMs, date: dateStr, generatedAt: new Date(nowMs).toISOString(), city: place.name, source, weather, sections};
+  dedupeSections(sections);
+  let market = null;
+  try { market = await marketSnapshot({fetchFn, headlines: heads || {}, nowMs, tz: zone}); } catch {}
+  return {v: BRIEFING_VERSION, id: nowMs, date: dateStr, generatedAt: new Date(nowMs).toISOString(), city: place.name, source, weather, sections, market};
 }
 
 // Texto corto para la notificación
@@ -298,4 +301,123 @@ export function pushText(entry) {
 export function addToList(list, entry) {
   const rest = (Array.isArray(list) ? list : []).filter(e => e && e.v === BRIEFING_VERSION && e.date !== entry.date);
   return [entry, ...rest].sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id).slice(0, BRIEFING_KEEP);
+}
+
+/* ───────── Trading en una línea: LONG / SHORT / ESPERAR ─────────
+   Nada de leer noticias ni analizar el calendario evento por evento: se junta todo (día de la semana, eventos
+   fuertes de EE. UU. de hoy, tendencia y zonas de BTC, y el tono de los titulares cripto) en UN veredicto y una frase.
+   Va aparte del resto del briefing (el prompt de la IA sigue sin nada de cripto). */
+export const CRYPTO_SOURCES = [Q('(bitcoin OR BTC OR cripto) when:1d'), BING('bitcoin precio hoy')];
+const FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+// Calendario económico de la semana: solo lo de impacto ALTO de EE. UU. → «ISO|Título|previsión»
+export async function fetchCalendar(fetchFn = fetch) {
+  try {
+    const r = await fetchFn(FF_URL, {headers: {'user-agent': 'Mozilla/5.0 (compatible; NovaHub/1.0)'}}); if (!r.ok) return [];
+    const list = await r.json();
+    return (Array.isArray(list) ? list : []).filter(e => e && e.country === 'USD' && /high/i.test(e.impact || '') && Date.parse(e.date))
+      .map(e => `${new Date(Date.parse(e.date)).toISOString()}|${String(e.title || '').slice(0, 80)}|${String(e.forecast || '')}`).slice(0, 40);
+  } catch { return []; }
+}
+export async function fetchCryptoHeadlines(fetchFn = fetch) {
+  const lists = await Promise.all(CRYPTO_SOURCES.map(async url => {
+    try { const r = await fetchFn(url, {headers: {'user-agent': 'Mozilla/5.0 (compatible; NovaHub/1.0)'}}); return r.ok ? parseRssItems(await r.text(), 25) : []; } catch { return []; }
+  }));
+  const now = Date.now(), seen = new Set(), out = [];
+  for (const l of lists) for (const x of l) { const k = key50(x.t); if (seen.has(k) || (x.ms && now - x.ms > 2 * 864e5)) continue; seen.add(k); out.push(x.t); }
+  return out.slice(0, 20);
+}
+const num = v => Number(v);
+async function klines(fetchFn, interval, limit) {
+  try { // espejo público de Binance (también contesta desde EE. UU. y tiene CORS)
+    const r = await fetchFn(`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`);
+    if (r.ok) { const k = await r.json(); if (Array.isArray(k) && k.length > 20) return k.map(x => ({h: num(x[2]), l: num(x[3]), c: num(x[4])})); }
+  } catch {}
+  try { // respaldo: Kraken
+    const r = await fetchFn(`https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=${interval === '1d' ? 1440 : 240}`);
+    if (r.ok) { const j = await r.json(), k = Object.values(j.result || {}).find(Array.isArray); if (k && k.length > 20) return k.slice(-limit).map(x => ({h: num(x[2]), l: num(x[3]), c: num(x[4])})); }
+  } catch {}
+  return null;
+}
+const ema = (a, n) => { const k = 2 / (n + 1); let e = a[0]; for (let i = 1; i < a.length; i++) e = a[i] * k + e * (1 - k); return e; };
+const rsi = (a, n = 14) => { let g = 0, l = 0; for (let i = a.length - n; i < a.length; i++) { const d = a[i] - a[i - 1]; if (d > 0) g += d; else l -= d; } return l ? 100 - 100 / (1 + g / l) : 100; };
+export async function fetchBtc(fetchFn = fetch) {
+  const [d, h4] = await Promise.all([klines(fetchFn, '1d', 220), klines(fetchFn, '4h', 120)]);
+  if (!d || !h4) return null;
+  const dc = d.map(x => x.c), hc = h4.map(x => x.c), price = hc[hc.length - 1];
+  const wk = d.slice(-8, -1);   // últimos 7 días cerrados
+  return {price, ch24: (price / hc[hc.length - 7] - 1) * 100, ema50d: ema(dc.slice(-150), 50), ema200d: ema(dc, 200), ema50h4: ema(hc, 50), rsi4h: rsi(hc),
+    support: Math.min(...wk.map(x => x.l)), resistance: Math.max(...wk.map(x => x.h))};
+}
+const BULL = /sube|subida|alza|repunt|récord|record|máximo|rally|dispara|rebota|rebote|compra|entradas|aprueba|surge|gana/i;
+const BEAR = /cae|caída|baja|desplom|hund|pierde|mínimo|liquidacion|venta masiva|vende|salidas|hackeo|hack|demanda|prohib|miedo|pánico|retroced/i;
+const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+const EV_ES = [[/Minutes/i, 'minutas de la Fed'], [/FOMC|Federal Funds Rate|Fed Interest/i, 'tasa de la Fed'], [/Powell/i, 'discurso de Powell'], [/Core CPI/i, 'inflación subyacente (IPC)'], [/CPI/i, 'inflación (IPC)'],
+  [/Non-Farm|NFP/i, 'nóminas no agrícolas (NFP)'], [/Unemployment Rate/i, 'tasa de desempleo'], [/Unemployment Claims/i, 'solicitudes de desempleo'], [/Core PCE/i, 'inflación PCE'], [/PCE/i, 'inflación PCE'],
+  [/Core PPI|PPI/i, 'precios al productor (PPI)'], [/Retail Sales/i, 'ventas minoristas'], [/GDP/i, 'PIB de EE. UU.'], [/ISM Manufacturing/i, 'ISM manufacturero'], [/ISM Services/i, 'ISM de servicios'],
+  [/JOLTS/i, 'vacantes de empleo (JOLTS)'], [/ADP/i, 'empleo ADP'], [/Consumer Sentiment/i, 'confianza del consumidor']];
+const evEs = t => { for (const [re, es] of EV_ES) if (re.test(t)) return es; return t; };
+export function marketVerdict({btc, calendar = [], cryptoNews = [], nowMs = Date.now(), tz = DEFAULT_PLACE.tz} = {}) {
+  const parts = new Intl.DateTimeFormat('en-US', {timeZone: tz, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit'}).formatToParts(new Date(nowMs));
+  const P = k => (parts.find(p => p.type === k) || {}).value, today = `${P('year')}-${P('month')}-${P('day')}`;
+  const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(P('weekday'));
+  const dayName = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][dow];
+  const hm = ms => new Intl.DateTimeFormat('es-MX', {timeZone: tz, hour: 'numeric', minute: '2-digit'}).format(new Date(ms));
+  const ymd = ms => new Intl.DateTimeFormat('en-CA', {timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date(ms));
+  // Evento fuerte de EE. UU. que todavía no pasa (o pasó hace menos de 1 h) hoy
+  const evs = (Array.isArray(calendar) ? calendar : []).map(s => { const [iso, t] = String(s).split('|'); return {ms: Date.parse(iso), t}; })
+    .filter(e => e.ms && ymd(e.ms) === today && e.ms > nowMs - 3600000).sort((a, b) => a.ms - b.ms);
+  const ev = evs[0] ? {titulo: evEs(evs[0].t), hora: hm(evs[0].ms), n: evs.length} : null;
+  const weekend = dow === 0 || dow === 6;
+  // Tono de los titulares cripto (solo se cuentan, no se leen)
+  let mood = 0; for (const t of cryptoNews || []) { const s = String(t); if (BULL.test(s)) mood++; if (BEAR.test(s)) mood--; }
+  mood = Math.max(-2, Math.min(2, Math.round(mood / 3)));
+  let score = 0, bias = 'lateral';
+  if (btc) {
+    score = (btc.price > btc.ema200d ? 1 : -1) + (btc.price > btc.ema50h4 ? 1 : -1) + (btc.ema50d > btc.ema200d ? 1 : -1) + mood * .5;
+    if (btc.rsi4h > 70 && score > 0) score -= 1;       // muy estirado: no perseguir el long
+    if (btc.rsi4h < 30 && score < 0) score += 1;       // muy vendido: no perseguir el short
+    bias = score >= 1.5 ? 'alcista' : score <= -1.5 ? 'bajista' : 'lateral';
+  }
+  let verdict = !btc ? 'ESPERAR' : score >= 2 ? 'LONG' : score <= -2 ? 'SHORT' : 'ESPERAR', line;
+  const zone = btc ? (verdict === 'LONG' ? `busca long cerca de ${usd(btc.support)}` : verdict === 'SHORT' ? `busca short cerca de ${usd(btc.resistance)}` : '') : '';
+  if (weekend) {
+    line = `Es ${dayName}: la bolsa está cerrada y hay poco volumen${bias !== 'lateral' ? `; el sesgo es ${bias}` : ''}. Mejor espera al lunes.`;
+    verdict = 'ESPERAR';
+  } else if (ev) {
+    line = `Hoy a las ${ev.hora} sale «${ev.titulo}»${ev.n > 1 ? ` (+${ev.n - 1} más)` : ''}: espera a que pase antes de entrar${bias !== 'lateral' ? `; el sesgo es ${bias}` : ''}.`;
+    verdict = 'ESPERAR';
+  } else if (!btc) {
+    line = 'No pude leer el precio de BTC ahorita; mejor espera y revisa tu gráfico.';
+  } else if (verdict === 'LONG') {
+    line = `BTC arriba de sus medias${mood > 0 ? ' y con noticias a favor' : ''}: ${zone}.`;
+  } else if (verdict === 'SHORT') {
+    line = `BTC debajo de sus medias${mood < 0 ? ' y con noticias en contra' : ''}: ${zone}.`;
+  } else {
+    line = `Señales mezcladas: BTC entre ${usd(btc.support)} y ${usd(btc.resistance)}. Mejor espera a que rompa uno de los dos.`;
+  }
+  return {verdict, bias, line, at: nowMs, event: ev, weekend,
+    btc: btc ? {price: Math.round(btc.price), ch24: Math.round(btc.ch24 * 10) / 10, support: Math.round(btc.support), resistance: Math.round(btc.resistance)} : null};
+}
+// Todo junto (lo usan el servidor a las 8:30 y la app con «↻»)
+export async function marketSnapshot({fetchFn = fetch, headlines = {}, nowMs = Date.now(), tz = DEFAULT_PLACE.tz} = {}) {
+  const [btc, calendar, cryptoNews] = await Promise.all([
+    fetchBtc(fetchFn).catch(() => null),
+    Array.isArray(headlines.calendario) && headlines.calendario.length ? headlines.calendario : fetchCalendar(fetchFn),
+    Array.isArray(headlines.cripto) && headlines.cripto.length ? headlines.cripto : fetchCryptoHeadlines(fetchFn)
+  ]);
+  return marketVerdict({btc, calendar, cryptoNews, nowMs, tz});
+}
+
+/* ───────── Sin repetidos: el mismo evento no sale dos veces (ni en «Orizaba y Veracruz» ni en «Planes») ───────── */
+const toks = t => new Set(String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3 && !/^(orizaba|veracruz|para|este|esta|desde|hasta|como|sobre|entre|todo|todos)$/.test(w)));
+export const sameThing = (a, b) => { const A = toks(a), B = toks(b); if (!A.size || !B.size) return false; let n = 0; A.forEach(w => B.has(w) && n++); return n / Math.min(A.size, B.size) >= .6; };
+export function dedupeSections(s) {
+  if (!s || typeof s !== 'object') return s;
+  const ev = [];
+  for (const e of s.orizaba || []) if (!ev.some(x => sameThing(x.titulo, e.titulo))) ev.push(e);
+  s.orizaba = ev;
+  const isEv = t => ev.some(x => sameThing(x.titulo, t));
+  if (Array.isArray(s.local)) s.local = s.local.filter(x => !isEv(x.titulo));
+  if (Array.isArray(s.planes)) s.planes = s.planes.filter(x => !isEv(x.titulo));
+  return s;
 }

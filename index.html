@@ -499,6 +499,20 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .bf-day span{font-weight:700;color:var(--text);text-transform:capitalize}.bf-day b{font-size:1.15rem;line-height:1.3}.bf-day small{font-size:.66rem;color:var(--text3)}
 .bf-sub{margin:14px 0 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:1px;font-weight:800;color:#FFD700}
 .bf-plan{border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+.bf-mkt{margin:12px 14px 4px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);--mk:#FFD700}
+.bf-mkt.long{--mk:#00C986}.bf-mkt.short{--mk:#ff4d6d}
+.bf-mkt{background:linear-gradient(135deg,color-mix(in srgb,var(--mk) 12%,transparent),rgba(255,255,255,.02));border-color:color-mix(in srgb,var(--mk) 35%,transparent)}
+.bf-mkt-row{display:flex;align-items:center;gap:12px}
+.bf-mkt-v{flex-shrink:0;min-width:78px;text-align:center;padding:8px 10px;border-radius:12px;font-weight:900;font-size:.92rem;letter-spacing:.06em;color:#0b0b12;background:var(--mk)}
+.bf-mkt-v.wait{background:#FFD700}.bf-mkt-v.long{background:#00C986}.bf-mkt-v.short{background:#ff4d6d;color:#fff}
+.bf-mkt-l{flex:1;font-size:.86rem;line-height:1.4;font-weight:600}
+.bf-mkt-re{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:1rem}
+.bf-mkt-re.spin{animation:bfSpin .9s linear infinite}
+@keyframes bfSpin{to{transform:rotate(360deg)}}
+.bf-mkt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.bf-mkt-chips span{font-size:.72rem;color:var(--text2);background:rgba(255,255,255,.05);border-radius:999px;padding:4px 9px}
+.bf-mkt-chips b{color:var(--text)}.bf-mkt-chips i{font-style:normal;font-weight:700}.bf-mkt-chips i.up{color:#00C986}.bf-mkt-chips i.dn{color:#ff4d6d}
+.bf-mkt-foot{font-size:.66rem;color:var(--text3);margin-top:8px}
 .bf-quote{margin:0;padding:14px 20px;font-size:.88rem;line-height:1.6;color:var(--text);font-style:italic;border-bottom:1px solid var(--border);background:rgba(124,106,247,.05)}
 .bf-quote::before{content:'🧘 ';font-style:normal}
 .bf-secs{padding:4px 0}
@@ -610,22 +624,73 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .note-card .note-body.nmd ul,.note-card .note-body.nmd ol{margin:2px 0}
 .nd-body.nmd ul.nchk>li{cursor:pointer}
 
+/* ── AJUSTES ordenados ── */
+.set-hero{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;max-width:760px;margin:0 auto 14px;padding:16px;border-radius:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,transparent),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.1);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.set-av{width:54px;height:54px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent3,#DC143C));overflow:hidden}
+.set-av img{width:100%;height:100%;object-fit:cover}
+.set-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.set-who b{font-size:1.05rem}.set-who small{font-size:.74rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.set-sync{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--text3);margin-top:4px}
+.set-sync i{width:7px;height:7px;border-radius:50%;background:var(--text3)}
+.set-sync.ok{color:#4be3a0}.set-sync.ok i{background:#4be3a0;box-shadow:0 0 8px #4be3a0}
+.set-hero .btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px}
+.set-hero .btn .material-symbols-outlined{font-size:1.05rem}
+.set-hero .btn.busy .material-symbols-outlined{animation:bfSpin 1s linear infinite}
+.settings-wrap{width:100%;max-width:760px;margin:0 auto;gap:10px !important}
+.set-group{border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.09);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);overflow:hidden}
+.set-group>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.set-group>summary::-webkit-details-marker{display:none}
+.set-gi{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);flex-shrink:0}
+.set-gi .material-symbols-outlined{font-size:1.25rem}
+.set-gt{flex:1;min-width:0;display:flex;flex-direction:column}
+.set-gt b{font-size:.92rem;font-weight:700}.set-gt small{font-size:.72rem;color:var(--text2)}
+.set-chev{color:var(--text3);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.set-group[open] .set-chev{transform:rotate(180deg)}
+.set-gb{padding:0 16px 14px;display:flex;flex-direction:column;gap:6px}
+.set-group[open] .set-gb{animation:setIn .35s cubic-bezier(.22,1,.36,1)}
+@keyframes setIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.settings-section.set-block{background:rgba(255,255,255,.025) !important;border:1px solid rgba(255,255,255,.06) !important;border-radius:14px !important;padding:12px 14px !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+.set-block .set-sub-h{font-size:.7rem !important;font-weight:700 !important;letter-spacing:.08em !important;text-transform:uppercase !important;color:var(--text3) !important;margin:0 0 8px !important}
+.set-block .settings-row:last-child{border-bottom:none}
+.set-block .settings-input{width:min(220px,55vw)}
+.set-danger{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,77,109,.25);background:rgba(255,77,109,.06)}
+.set-danger span{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ff6b81}
+[data-theme="light"] .set-group,[data-theme="light"] .set-hero{background:rgba(255,255,255,.75);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .settings-section.set-block{background:rgba(0,0,0,.025) !important;border-color:rgba(0,0,0,.06) !important}
+@media (max-width:700px){.set-hero{flex-wrap:wrap}.set-hero .btn{width:100%;justify-content:center}}
+/* ── Aviso «Guardado en la nube» ── */
+#cloudPill{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));z-index:99999;display:flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;background:rgba(14,22,18,.78);color:#4be3a0;border:1px solid rgba(75,227,160,.35);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);font-size:.8rem;font-weight:700;box-shadow:0 8px 28px rgba(0,0,0,.35);transform:translate(-50%,-140%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .3s}
+#cloudPill.show{transform:translate(-50%,0);opacity:1}
+#cloudPill svg{width:22px;height:22px}
+#cloudPill span{color:var(--text)}
+#cloudPill .ck{stroke-dasharray:20;stroke-dashoffset:20}
+#cloudPill.show .ck{animation:ckDraw .5s .15s ease forwards}
+@keyframes ckDraw{to{stroke-dashoffset:0}}
+.sync-status{cursor:pointer}
+.sync-status.forcing .sync-dot{animation:syncPulse .7s ease-in-out infinite}
+@keyframes syncPulse{50%{transform:scale(1.8);opacity:.4}}
 /* ── APPS (tus aplicaciones: mapa de conexiones + iconos) ── */
 .ap-wrap{width:100%;max-width:900px;margin:0 auto;padding-bottom:24px;box-sizing:border-box}
 .ap-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .ap-title{font-size:1.35rem;font-weight:800}
 .ap-sub{font-size:.8rem;color:var(--text2);margin-top:2px}
 .ap-card{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:22px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:fadeSlideIn .45s ease both}
-.ap-map{position:relative;width:100%;aspect-ratio:16/9;max-height:520px;margin:0 auto}
+.ap-top-btns{display:flex;gap:8px}
+.ap-map{position:relative;width:100%;aspect-ratio:16/10;max-height:560px;margin:0 auto}
 .ap-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.ap-lines line{stroke:var(--c1,#888);stroke-width:2;stroke-linecap:round;opacity:.45;vector-effect:non-scaling-stroke;stroke-dasharray:6 7;animation:apFlow 1.6s linear infinite;transition:opacity .25s,stroke-width .25s}
-@keyframes apFlow{to{stroke-dashoffset:-26}}
-.ap-map.focus line{opacity:.08}
-.ap-map.focus line.on{opacity:1;stroke-width:3}
+.ap-lines path[data-a]{fill:none;stroke:var(--c1,#888);stroke-width:2.2;stroke-linecap:round;opacity:.75;stroke-dasharray:7 8;animation:apFlow 1.1s linear infinite;animation-delay:var(--d,0s);transition:opacity .25s,stroke-width .25s}
+@keyframes apFlow{to{stroke-dashoffset:-30}}
+.ap-map.focus path[data-a]{opacity:.1}
+.ap-map.focus path[data-a].on{opacity:1;stroke-width:3.2}
+.ap-band{position:absolute;left:4%;right:4%;border-top:1px dashed rgba(255,255,255,.12);pointer-events:none}
+.ap-band span{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);background:var(--bg2);padding:0 8px;border-radius:6px}
+.ap-legend{display:flex;align-items:center;gap:8px;font-size:.7rem;color:var(--text3);padding:0 16px 12px}
+.ap-legend i{width:22px;border-top:2px dashed var(--text3)}
+.ap-wrap.editing .ap-node .ap-ico,.ap-wrap.editing .ap-tile .ap-ico{animation:apWiggle .5s ease-in-out infinite alternate}
+@keyframes apWiggle{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
 .ap-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;padding:0;cursor:pointer;color:var(--text);font-family:inherit;animation:apPop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*40ms);transition:opacity .25s,filter .25s}
 .ap-node>span:last-child{font-size:.68rem;font-weight:600;max-width:84px;text-align:center;line-height:1.15;color:var(--text2);text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .ap-node .ap-ico{width:46px;height:46px;border-radius:14px}
-.ap-node.solo .ap-ico{opacity:.85}
 .ap-node:hover .ap-ico{transform:scale(1.08)}
 .ap-map.focus .ap-node{opacity:.28;filter:grayscale(.6)}
 .ap-map.focus .ap-node.on{opacity:1;filter:none}
@@ -673,7 +738,7 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .ap-del{color:#ff6b81 !important}
 @media (max-width:700px){
   .ap-wrap{padding-bottom:110px}
-  .ap-map{aspect-ratio:1/1.05}
+  .ap-map{aspect-ratio:1/1.3}
   .ap-node .ap-ico{width:40px;height:40px;border-radius:12px}
   .ap-node>span:last-child{font-size:.6rem;max-width:66px}
   .ap-grid{grid-template-columns:repeat(4,1fr);gap:12px 4px}
@@ -769,6 +834,14 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 @keyframes navSlide{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(40px) scale(.95)}}
+@media (max-width:700px){
+  /* Las ventanas siguen el área visible: con el teclado abierto se quedan arriba de él, sin saltos */
+  .modal-overlay:not(#noteModal){inset:auto 0 auto 0;top:var(--vvt,0px);height:var(--vvh,100%)}
+  .modal-overlay:not(#noteModal) .modal{max-height:calc(var(--vvh,100dvh) - 24px);overflow-y:auto;overscroll-behavior:contain}
+  #projDetailModal .modal{max-height:calc(var(--vvh,100dvh) - 24px);width:calc(100vw - 20px);max-width:calc(100vw - 20px);overflow:hidden}
+  .modal-overlay.open .modal:not(.expand-from-card){animation:modalSoft .38s cubic-bezier(.22,1,.36,1) both !important}
+}
+@keyframes modalSoft{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes modalBounce{0%{opacity:0;transform:translateY(30px) scale(.94)}60%{transform:translateY(-6px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fabPop{0%{transform:scale(0) rotate(-180deg)}60%{transform:scale(1.15) rotate(8deg)}100%{transform:scale(1) rotate(0deg)}}
 @keyframes cardEntrance{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -1713,8 +1786,12 @@ html{-webkit-tap-highlight-color:transparent}
 .pd-task .pd-del{background:none;border:none;color:var(--red);cursor:pointer;opacity:.55;font-size:.85rem;padding:2px 4px}
 .pd-empty{font-size:.82rem;color:var(--text3);text-align:center;padding:14px 0}
 .pd-add{display:flex;gap:8px;margin-top:10px}
-.pd-add input{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:.88rem;outline:none}
-.pd-add input:focus{border-color:var(--accent)}
+.pd-add{align-items:flex-end}
+.pd-add textarea{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:.88rem;font-family:inherit;line-height:1.35;outline:none;resize:none;overflow-y:auto;max-height:160px;display:block}
+.pd-add textarea:focus{border-color:var(--accent)}
+.pd-add .btn{flex-shrink:0;height:40px}
+.pd-task.pd-new{animation:pdNew .35s cubic-bezier(.22,1,.36,1) both}
+@keyframes pdNew{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .pd-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 16px;border-top:1px solid var(--border)}
 .pd-actions .btn{font-size:.8rem}
 
@@ -3621,7 +3698,7 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager, runTransaction, doc, setDoc, getDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentSingleTabManager, runTransaction, doc, setDoc, getDoc, getDocFromServer, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as isMessagingSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 const firebaseConfig = {
@@ -3670,7 +3747,7 @@ try {
   db = getFirestore(app);
 }
 
-window.fbSDK = { auth, db, runTransaction, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove };
+window.fbSDK = { auth, db, runTransaction, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, doc, getDoc, getDocFromServer, setDoc, deleteDoc, getDocs, collection, query, onSnapshot, arrayUnion, arrayRemove };
 window.onAuthStateChanged = onAuthStateChanged;
 
 // ── Push real (FCM) — registra/elimina el token de ESTE dispositivo ────
@@ -4891,6 +4968,7 @@ const fb = {
         const cloud = snap.exists() ? snap.data() : {};
         const { merged, conflicts } = mergeStates(localSnap, cloud, baseAtStart);
         const payload = { ...merged, settings: settingsSnap, _at: Date.now(), _uid: uid, _deviceId: DEVICE_ID };
+        if (this._forceNext) payload._force = { at: Date.now(), by: DEVICE_ID };   // «Guardar y actualizar todo»: los demás dispositivos se refrescan
         // Firestore guarda todo en UN documento con tope de 1 MiB: si no cabe, NO se intenta (y se avisa claro).
         const size = new Blob([JSON.stringify(payload)]).size;
         if (size > 1000 * 1024) { const e = new Error('too-big'); e.code = 'too-big'; e.size = size; throw e; }
@@ -4914,6 +4992,8 @@ const fb = {
         const el = document.getElementById('syncMeta'); if (el) el.textContent = syncMetaText();
       }
       setSyncStatus('connected', 'Sincronizado ✓');
+      this._forceNext = false;
+      cloudSavedPill();   // confirmado por el servidor de Google: avisa que ya quedó en la nube
     } catch(e) {
       console.error('[NOVA HUB] pushAll error', e.code, e.message);
       if (e.code === 'too-big') {
@@ -5044,10 +5124,16 @@ const fb = {
       // (antes comparaba por _uid, que es igual en todos tus dispositivos
       // con la misma cuenta, así que bloqueaba también los cambios reales
       // que llegaban desde tu otro dispositivo).
+      const forced = data._force && data._force.by !== DEVICE_ID && data._force.at > (this._forceSeen || 0) && Date.now() - data._force.at < 120000;
+      if (data._force) this._forceSeen = Math.max(this._forceSeen || 0, data._force.at);
       if (data._deviceId === DEVICE_ID && data._at && (Date.now() - data._at) < 8000) return;
       applyRemoteData(data);
       setSyncStatus('connected', 'En vivo ✓');
-      toast('🔄 Actualizado desde otro dispositivo');
+      if (forced) {   // otro dispositivo pidió «Guardar y actualizar todo»: se vuelve a dibujar todo y se busca versión nueva de la app
+        const av = document.querySelector('.nav-item.active')?.dataset.view; if (av) rerenderView(av);
+        try { navigator.serviceWorker && navigator.serviceWorker.getRegistration().then(r => r && r.update()); } catch (e) {}
+        cloudSavedPill('🔄 Actualizado desde tu otro dispositivo');
+      } else toast('🔄 Actualizado desde otro dispositivo');
     }, err => {
       console.error('[NOVA HUB] onSnapshot error', err);
       setSyncStatus('error', 'Error de conexión');
@@ -5079,6 +5165,38 @@ window.addEventListener('online', () => {
   }
 });
 // Al minimizar o cerrar la app se sube YA lo pendiente (antes esperaba 1 s y podía perderse).
+// ── «Guardado en la nube ✓» — sale cuando Google confirma que tu cambio ya quedó guardado ──
+let _cloudPillT = 0, _cloudPillLast = 0;
+const cloudSavedPill = (msg) => {
+  if (!msg && Date.now() - _cloudPillLast < 4000) return;   // escribiendo seguido no se repite a cada rato
+  _cloudPillLast = Date.now();
+  let el = document.getElementById('cloudPill');
+  if (!el) { el = document.createElement('div'); el.id = 'cloudPill'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="currentColor" opacity=".25"/><path class="ck" d="M7.5 13.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${msg || 'Guardado en la nube'}</span>`;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(_cloudPillT); _cloudPillT = setTimeout(() => el.classList.remove('show'), msg ? 3200 : 2200);
+};
+// «Guardar y actualizar todo» (como el botón VORTEX): sube YA, comprueba leyendo la nube y refresca tus otros dispositivos
+const forceSyncAll = async () => {
+  if (!fb.enabled || !fb.uid) { toast('Inicia sesión con Google para guardar en la nube'); return; }
+  if (!fb.syncReady) { toast('Espera a que termine de descargar tus datos…'); return; }
+  if (!navigator.onLine) { toast('📴 Sin conexión: se guardará al volver la señal'); return; }
+  document.querySelectorAll('.sync-status').forEach(e => e.classList.add('forcing'));
+  clearTimeout(_pushDebounce); _pushPending = false;
+  fb._forceNext = true;
+  await fb.pushAll();
+  try {
+    const snap = await window.fbSDK.getDocFromServer(window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid));
+    const cloud = snap.exists() ? snap.data() : {}, mine = {}; DATA_KEYS.forEach(k => { mine[k] = state[k]; });
+    const hc = hashMaps(cloud), hl = hashMaps(mine);
+    const missing = DATA_KEYS.reduce((n, k) => n + Object.keys(hl[k]).filter(id => hc[k][id] !== hl[k][id]).length, 0);
+    if (missing) { toast('⚠️ ' + missing + ' cambio(s) aún no coinciden con la nube; reintentando…'); schedulePush(); }
+    else cloudSavedPill('Todo guardado y actualizado en tus dispositivos');
+  } catch (e) { toast('No pude comprobar la nube ahorita: ' + (e.code || e.message)); }
+  finally { document.querySelectorAll('.sync-status').forEach(e => e.classList.remove('forcing')); }
+};
+window.forceSyncAll = forceSyncAll;
+document.getElementById('syncStatus')?.addEventListener('click', forceSyncAll);
 const flushPendingPush = () => {
   if (!fb.enabled || !fb.syncReady) return;
   if (_pushPending) { clearTimeout(_pushDebounce); _pushPending = false; fb.pushAll(); }
@@ -5905,7 +6023,31 @@ const closeModal=id=>{
   }
   m.classList.remove('open');
 };
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);});});
+// Cerrar tocando fuera — solo si el toque EMPEZÓ fuera de la ventana y no estabas escribiendo.
+// (Antes: al tocar «guardar» con el teclado abierto, el teclado se cerraba, la ventana se movía
+//  y el toque caía en el fondo → se cerraba y se perdía lo escrito.)
+(function(){
+  const vv = window.visualViewport;
+  const setVV = () => {
+    const r = document.documentElement.style;
+    r.setProperty('--vvh', (vv ? vv.height : innerHeight) + 'px');
+    r.setProperty('--vvt', (vv ? vv.offsetTop : 0) + 'px');
+    window._vvChangeAt = Date.now();
+  };
+  setVV();
+  if (vv) { vv.addEventListener('resize', setVV); vv.addEventListener('scroll', setVV); }
+  const isField = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]),textarea,select,[contenteditable="true"]');
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    let downBg = false, typing = false;
+    m.addEventListener('pointerdown', e => { downBg = e.target === m; typing = isField(document.activeElement) && m.contains(document.activeElement); });
+    m.addEventListener('click', e => {
+      const ok = e.target === m && downBg && !typing && Date.now() - (window._vvChangeAt || 0) > 450;
+      downBg = false;
+      if (ok) closeModal(m.id);
+      else if (e.target === m && typing) document.activeElement.blur();   // 1er toque fuera: solo cierra el teclado
+    });
+  });
+})();
 document.getElementById('blockDayPills')?.addEventListener('click', e => { const p = e.target.closest('.day-pill'); if(p) p.classList.toggle('active'); });
 
 const showAuthSetupModal=(title,msg)=>{
@@ -6325,6 +6467,9 @@ const getDockTabs = () => DOCK_DEFAULT;
           clone.innerHTML = src.innerHTML;
           svgify(clone);
         });
+      } else if (src.id === 'syncStatus') {
+        clone.style.cursor = 'pointer'; clone.title = 'Guardar y actualizar todo';
+        clone.addEventListener('click', () => { clone.classList.add('forcing'); forceSyncAll().finally(() => { clone.classList.remove('forcing'); clone.innerHTML = src.innerHTML; }); });
       } else clone.style.cursor = 'default';
       svgify(clone);
       dFoot.appendChild(clone);
@@ -7126,12 +7271,67 @@ const generateBriefing = async () => {
   return entry;
 };
 
+// ── Veredicto de trading (LONG / SHORT / ESPERAR) ──
+// Un resumen rapidísimo: junta el día de la semana, el calendario económico, la tendencia y zonas de BTC y el tono
+// de las noticias cripto en UNA línea. Se calcula a las 8:30 y se puede refrescar con ↻ (sin IA, al instante).
+let _mktBusy = false;
+const refreshMarket = async (entry, { quiet = false } = {}) => {
+  if (_mktBusy || !entry) return; _mktBusy = true;
+  document.querySelectorAll('.bf-mkt-re').forEach(b => b.classList.add('spin'));
+  try {
+    const B = await loadBriefCore();
+    let headlines = {};
+    try { const c = new AbortController(), t = setTimeout(() => c.abort(), 10000); const r = await fetch(BRIEF_FEEDS_URL, { signal: c.signal }); clearTimeout(t); if (r.ok) headlines = await r.json(); } catch (e) {}
+    entry.market = await B.marketSnapshot({ fetchFn: fetch, headlines });
+    save();
+    try { if (fb.enabled && fb.uid && window.fbSDK) await window.fbSDK.setDoc(window.fbSDK.doc(window.fbSDK.db, 'users', fb.uid), { briefings: state.briefingHistory }, { merge: true }); } catch (e) {}
+    document.querySelectorAll(`[data-mkt="${entry.id}"]`).forEach(el => { el.outerHTML = marketCardHTML(entry); });
+    bindMarketCards();
+  } catch (e) { if (!quiet) toast('No pude actualizar el veredicto ahorita'); }
+  finally { _mktBusy = false; document.querySelectorAll('.bf-mkt-re').forEach(b => b.classList.remove('spin')); }
+};
+const marketCardHTML = entry => {
+  const m = entry.market, isToday = entry.date === todayBriefStr();
+  if (!m) return isToday ? `<div class="bf-mkt" data-mkt="${entry.id}"><div class="bf-mkt-row"><span class="bf-mkt-v wait">…</span><div class="bf-mkt-l">Calculando el veredicto de hoy…</div><button class="bf-mkt-re" data-mkt-re="${entry.id}" aria-label="Actualizar">↻</button></div></div>` : '';
+  const cls = m.verdict === 'LONG' ? 'long' : m.verdict === 'SHORT' ? 'short' : 'wait';
+  const b = m.btc, t = m.at ? new Date(m.at).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }) : '';
+  const f = n => '$' + Number(n).toLocaleString('en-US');
+  const chips = [b ? `<span>BTC <b>${f(b.price)}</b> <i class="${b.ch24 >= 0 ? 'up' : 'dn'}">${b.ch24 >= 0 ? '+' : ''}${b.ch24}%</i></span>` : '',
+    b ? `<span>Soporte <b>${f(b.support)}</b></span>` : '', b ? `<span>Resistencia <b>${f(b.resistance)}</b></span>` : '',
+    m.event ? `<span>⚡ ${_esc(m.event.hora)}</span>` : ''].filter(Boolean).join('');
+  return `<div class="bf-mkt ${cls}" data-mkt="${entry.id}">
+    <div class="bf-mkt-row"><span class="bf-mkt-v ${cls}">${m.verdict}</span><div class="bf-mkt-l">${_esc(m.line)}</div>${isToday ? `<button class="bf-mkt-re" data-mkt-re="${entry.id}" aria-label="Actualizar veredicto" title="Actualizar">↻</button>` : ''}</div>
+    ${chips ? `<div class="bf-mkt-chips">${chips}</div>` : ''}
+    <div class="bf-mkt-foot">Trading hoy${t ? ' · ' + t : ''} · No es consejo financiero</div>
+  </div>`;
+};
+const bindMarketCards = () => {
+  document.querySelectorAll('[data-mkt-re]').forEach(b => { if (b._b) return; b._b = 1; b.addEventListener('click', e => {
+    e.stopPropagation(); const en = (state.briefingHistory || []).find(x => String(x.id) === b.dataset.mktRe); refreshMarket(en);
+  }); });
+  // Briefing de hoy sin veredicto (o de hace más de 3 h): se calcula solo
+  const today = (state.briefingHistory || []).find(x => x.date === todayBriefStr());
+  if (today && document.querySelector(`[data-mkt="${today.id}"]`) && (!today.market || Date.now() - (today.market.at || 0) > 3 * 3600000)) refreshMarket(today, { quiet: true });
+};
+// El mismo evento no se repite (por si un briefing viejo lo trae dos veces)
+const _bfToks = t => new Set(String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3 && !/^(orizaba|veracruz|para|este|esta|desde|hasta|como|sobre|entre|todo|todos)$/.test(w)));
+const _bfSame = (a, b) => { const A = _bfToks(a), B = _bfToks(b); if (!A.size || !B.size) return false; let n = 0; A.forEach(w => B.has(w) && n++); return n / Math.min(A.size, B.size) >= .6; };
+const dedupeBriefSections = s0 => {
+  const s = { ...s0 }, ev = [];
+  (s.orizaba || []).forEach(e => { if (!ev.some(x => _bfSame(x.titulo, e.titulo))) ev.push(e); });
+  s.orizaba = ev;
+  const isEv = t => ev.some(x => _bfSame(x.titulo, t));
+  s.local = (s.local || []).filter(x => !isEv(x.titulo));
+  s.planes = (s.planes || []).filter(x => !isEv(x.titulo));
+  return s;
+};
+
 // ── Tarjeta de un briefing ──────────────────
 const briefSection = (icon, title, inner, open) => inner ? `<details class="bf-sec"${open ? ' open' : ''}><summary><span class="bf-ic">${icon}</span><span>${title}</span><span class="bf-chev material-symbols-outlined" aria-hidden="true">expand_more</span></summary><div class="bf-body">${inner}</div></details>` : '';
 const briefItems = (list, a = 'titulo', b = 'resumen', tag) => (list || []).map(x => `<div class="bf-item">${tag && x[tag] ? `<span class="bf-when">${_esc(x[tag])}</span>` : ''}<div><b>${_esc(x[a])}</b>${x[b] ? `<p>${_esc(x[b])}</p>` : ''}</div></div>`).join('');
 
 const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
-  const s = entry.sections || {}, w = entry.weather || {};
+  const s = dedupeBriefSections(entry.sections || {}), w = entry.weather || {};
   const d = new Date(entry.date + 'T12:00:00');
   const dateLabel = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   const isToday = entry.date === todayBriefStr();
@@ -7155,6 +7355,7 @@ const briefingCardHTML = (entry, { open = false, dash = false } = {}) => {
       ${s.climaTip ? `<div class="bf-tip">${_esc(s.climaTip)}</div>` : ''}
       ${s.tuDia ? `<div class="bf-tip bf-agenda">🗓️ ${_esc(s.tuDia)}</div>` : ''}
     </header>
+    ${marketCardHTML(entry)}
     ${s.reflexion ? `<blockquote class="bf-quote">${_esc(s.reflexion)}</blockquote>` : ''}
     <div class="bf-secs">
       ${briefSection('🎉', 'Eventos en Orizaba y alrededores', evInner, true)}
@@ -7349,136 +7550,143 @@ const relaxWeather = async () => {
 
 // ══════════════════════════════════════════════
 // APPS — tus aplicaciones en un solo lugar (sin IA, solo visual)
-// · Mapa: iconos en círculo con líneas animadas entre las apps que se conectan.
-// · Cuadrícula: «Creando ahora» y «Creadas». Toca una app para abrirla, ver su repo o editarla.
+// · Mapa de flujo de arriba hacia abajo: las flechas muestran hacia dónde viajan los datos
+//   (Nova Hub y VORTEX → Neural Brain → Mi IA…). Las que no se conectan van abajo, aparte.
+// · Tocar una app la ABRE. Con «Editar» tocas una app para cambiarla o agregas nuevas.
 // · Se guarda en tu cuenta (state.settings.myApps) para que nunca se te pierdan.
 // ══════════════════════════════════════════════
 const GH_USER = 'soobroon-beep';
+const APPS_VERSION = 2;
+// row/x: lugar en el mapa (fila 0 = arriba). «to» = a qué apps les manda datos (conexiones revisadas en cada repo).
 const APPS_DEFAULT = [
-  { id: 'novahub',   name: 'Nova Hub',          repo: 'Nova-HUB',                 url: 'https://soobroon-beep.github.io/Nova-HUB/', icon: 'icon-192.png', color: '#FFD700', status: 'dev',  links: ['neural'] },
-  { id: 'vortex',    name: 'VORTEX',            repo: 'Vortex-By-Nova-Nexus',     url: 'https://vortex-nexus.pages.dev/',           color: '#7c5cff', status: 'dev',  links: ['neural', 'nexuslens', 'sala'] },
-  { id: 'neural',    name: 'Neural Brain',      repo: 'Neural-Brain-Claude',      color: '#b07cff', status: 'dev',  links: [] },
-  { id: 'sala',      name: 'Sala de agentes',   repo: 'sala-de-agentes',          color: '#38d9ff', status: 'dev',  links: [] },
-  { id: 'nexuslens', name: 'Nexus Lens',        repo: 'NexusLens',                color: '#2fe0a5', status: 'done', links: [] },
-  { id: 'inkbot',    name: 'InkBot',            repo: 'InkBot',                   color: '#DC143C', status: 'dev',  links: ['inkvideo'] },
-  { id: 'inkvideo',  name: 'InkBot Video',      repo: 'INKBOT-VIDEO-',            color: '#ff4d6d', status: 'done', links: [] },
-  { id: 'miia',      name: 'Mi IA',             repo: 'mi-ia',                    color: '#ffc94a', status: 'dev',  links: [] },
-  { id: 'jarvis',    name: 'Jarvis',            repo: 'jarvis',                   color: '#00A86B', status: 'dev',  links: [] },
-  { id: 'moldes',    name: "Moldes Gaby's",     repo: 'moldesgabys',              color: '#ff9ec7', status: 'done', links: [] },
-  { id: 'dbot',      name: 'Discord Bot',       repo: 'DISCORD-BOT',              color: '#5865F2', status: 'done', links: [] },
-  { id: 'dzonas',    name: 'Zonas Horarias',    repo: 'DISCORD-ZONAS-HORARIAS',   color: '#7289da', status: 'done', links: [] },
-  { id: 'uno',       name: '1%',                repo: 'APP1PORCIENTO',            color: '#ff8a3d', status: 'done', links: [] },
-  { id: 'benef',     name: 'Beneficios',        repo: 'victor-sobron-beneficios', color: '#4fc3f7', status: 'done', links: [] }
+  { id: 'novahub',   name: 'Nova Hub',        repo: 'Nova-HUB',             url: 'https://soobroon-beep.github.io/Nova-HUB/',         icon: 'icon-192.png',             color: '#FFD700', status: 'dev',  row: 0, x: 18, to: ['neural'] },
+  { id: 'vortex',    name: 'VORTEX',          repo: 'Vortex-By-Nova-Nexus', url: 'https://vortex-nexus.pages.dev/',                   icon: 'app-icons/vortex.png',     color: '#7c5cff', status: 'dev',  row: 0, x: 58, to: ['neural', 'sala'] },
+  { id: 'nexuslens', name: 'Nexus Lens',      repo: 'NexusLens',            url: 'https://soobroon-beep.github.io/NexusLens/',        icon: 'app-icons/nexuslens.png',  color: '#2fe0a5', status: 'done', row: 0, x: 88, to: ['vortex'] },
+  { id: 'neural',    name: 'Neural Brain',    repo: 'Neural-Brain-Claude',  url: 'https://soobroon-beep.github.io/Neural-Brain-Claude/', icon: 'app-icons/neural.png',   color: '#b07cff', status: 'dev',  row: 1, x: 38, to: ['miia', 'vortex'] },
+  { id: 'miia',      name: 'Mi IA',           repo: 'mi-ia',                url: 'https://soobroon-beep.github.io/mi-ia/',            icon: 'app-icons/miia.png',       color: '#ffc94a', status: 'dev',  row: 2, x: 24, to: [] },
+  { id: 'sala',      name: 'Sala de agentes', repo: 'sala-de-agentes',      url: 'https://soobroon-beep.github.io/sala-de-agentes/',  icon: 'app-icons/sala.png',       color: '#38d9ff', status: 'dev',  row: 2, x: 70, to: ['vortex', 'miia'] },
+  { id: 'inkbot',    name: 'InkBot',          repo: 'InkBot',               url: 'https://soobroon-beep.github.io/InkBot/',           icon: 'app-icons/inkbot.png',     color: '#DC143C', status: 'dev',  to: [] },
+  { id: 'inkvideo',  name: 'InkBot Video',    repo: 'INKBOT-VIDEO-',        url: 'https://soobroon-beep.github.io/INKBOT-VIDEO-/',    icon: 'app-icons/inkvideo.png',   color: '#ff4d6d', status: 'done', to: [] },
+  { id: 'moldes',    name: "Moldes Gaby's",   repo: 'moldesgabys',          url: 'https://soobroon-beep.github.io/moldesgabys/',      icon: 'app-icons/moldes.png',     color: '#ff9ec7', status: 'done', to: [] },
+  { id: 'uno',       name: '1%',              repo: 'APP1PORCIENTO',        url: 'https://soobroon-beep.github.io/APP1PORCIENTO/',    icon: 'app-icons/uno.png',        color: '#ff8a3d', status: 'done', to: [] }
 ];
 const APP_COLORS = ['#FFD700', '#DC143C', '#00A86B', '#7c5cff', '#38d9ff', '#ff4d6d', '#ff8a3d', '#ff9ec7', '#b07cff', '#5865F2', '#2fe0a5', '#F5F0E8'];
-const getApps = () => Array.isArray(state.settings.myApps) ? state.settings.myApps : APPS_DEFAULT.map(a => ({ ...a, links: [...a.links] }));
-const setApps = list => { state.settings.myApps = list; save(); };
+const _appsCopy = list => list.map(a => ({ ...a, to: [...(a.to || [])] }));
+const getApps = () => {
+  const st = state.settings;
+  if (Array.isArray(st.myApps) && st.myAppsV === APPS_VERSION) return st.myApps;
+  // Versión nueva: lista revisada + las apps que tú agregaste a mano (las que no eran de la lista original)
+  const OLD = ['novahub', 'vortex', 'neural', 'sala', 'nexuslens', 'inkbot', 'inkvideo', 'miia', 'jarvis', 'moldes', 'dbot', 'dzonas', 'uno', 'benef'];
+  const mine = (Array.isArray(st.myApps) ? st.myApps : []).filter(a => a && !OLD.includes(a.id)).map(a => ({ ...a, to: a.to || a.links || [] }));
+  return _appsCopy(APPS_DEFAULT).concat(mine);
+};
+const setApps = list => { state.settings.myApps = list; state.settings.myAppsV = APPS_VERSION; save(); };
 const appUrl = a => a.url || (a.repo ? `https://${GH_USER}.github.io/${a.repo}/` : '');
 const appRepoUrl = a => a.repo ? (/^https?:/.test(a.repo) ? a.repo : `https://github.com/${GH_USER}/${a.repo}`) : '';
-// Las conexiones van en los dos sentidos: si A dice B, B también se conecta con A
+const openApp = a => { const u = appUrl(a); if (u) window.open(u, '_blank', 'noopener'); else openAppSheet(a.id); };
+// Flechas: [de, a]. Si van en los dos sentidos se dibujan dos curvas.
 const appEdges = list => {
-  const ids = new Set(list.map(a => a.id)), seen = new Set(), out = [];
-  list.forEach(a => (a.links || []).forEach(b => {
-    if (!ids.has(b) || b === a.id) return;
-    const k = [a.id, b].sort().join('|'); if (seen.has(k)) return; seen.add(k); out.push([a.id, b]);
-  }));
+  const ids = new Set(list.map(a => a.id)), out = [];
+  list.forEach(a => (a.to || []).forEach(b => { if (ids.has(b) && b !== a.id && !out.some(([x, y]) => x === a.id && y === b)) out.push([a.id, b]); }));
   return out;
 };
 const appInitials = n => (String(n || '?').replace(/[^\p{L}\p{N}%]/gu, ' ').trim().split(/\s+/).filter((w, i, all) => all.length < 2 || !/^(de|del|la|el|y|the|of)$/i.test(w)).map(w => w[0]).join('').slice(0, 2) || '?').toUpperCase();
-// Icono: intenta el icono real de la app; si no carga, queda un monograma con su color
-const _appIconOk = {};
-const appIconHTML = a => {
-  const base = appUrl(a);
-  const cands = a.icon ? [/^https?:|^data:/.test(a.icon) || !base || a.id === 'novahub' ? a.icon : base + a.icon] : base ? [base + 'icon-192.png', base + 'icons/icon-192.png', base + 'apple-touch-icon.png'] : [];
-  const known = _appIconOk[a.id];
-  const list = known === false ? [] : known ? [known] : cands;
-  return `<span class="ap-ico" style="--ap:${_esc(a.color || '#888')}"><b>${_esc(appInitials(a.name))}</b>${list.length ? `<img alt="" loading="lazy" data-app="${_esc(a.id)}" data-c="${_esc(list.join('\n'))}" src="${_esc(list[0])}">` : ''}</span>`;
-};
-const bindAppIcons = root => root.querySelectorAll('.ap-ico img').forEach(img => {
-  img.onload = () => { _appIconOk[img.dataset.app] = img.src; img.classList.add('ok'); };
-  img.onerror = () => {
-    const c = img.dataset.c.split('\n'), i = c.indexOf(img.getAttribute('src')) + 1;
-    if (i > 0 && i < c.length) img.src = c[i]; else { _appIconOk[img.dataset.app] = false; img.remove(); }
-  };
-  if (img.complete && img.naturalWidth) img.onload();
-});
+const appIconHTML = a => `<span class="ap-ico" style="--ap:${_esc(a.color || '#888')}"><b>${_esc(appInitials(a.name))}</b>${a.icon ? `<img alt="" loading="lazy" src="${_esc(a.icon)}" onload="this.classList.add('ok')" onerror="this.remove()">` : ''}</span>`;
 
+// Lugar de cada app en el mapa (en %). Las conectadas sin lugar fijo se acomodan debajo de quien les manda datos.
+const layoutApps = (apps, edges) => {
+  const linked = new Set(edges.flat()), pos = {}, rows = {};
+  const conn = apps.filter(a => linked.has(a.id)), solo = apps.filter(a => !linked.has(a.id));
+  conn.forEach(a => {
+    let r = Number.isFinite(a.row) ? a.row : null;
+    if (r === null) { const from = edges.filter(e => e[1] === a.id).map(e => apps.find(x => x.id === e[0])).filter(x => x && Number.isFinite(x.row)); r = from.length ? Math.max(...from.map(x => x.row)) + 1 : 0; }
+    (rows[r] = rows[r] || []).push(a);
+  });
+  const rowKeys = Object.keys(rows).map(Number).sort((p, q) => p - q), nR = rowKeys.length;
+  const bandTop = solo.length ? 74 : 92;
+  rowKeys.forEach((r, ri) => {
+    const y = nR === 1 ? bandTop / 2 : 12 + (bandTop - 22) * ri / (nR - 1);
+    const L = rows[r], auto = L.filter(a => !Number.isFinite(a.x));
+    L.forEach(a => { if (Number.isFinite(a.x)) pos[a.id] = [a.x, y]; });
+    auto.forEach((a, i) => { pos[a.id] = [(i + 1) * 100 / (auto.length + 1), y]; });
+  });
+  solo.forEach((a, i) => { pos[a.id] = [(i + .5) * 100 / solo.length, 89]; });
+  return { pos, solo: solo.length, bandTop };
+};
+
+let _appsEdit = false;
 const renderAppsView = () => {
   const content = document.getElementById('content'); if (!content) return;
   content.style.padding = '16px';
-  const apps = getApps(), edges = appEdges(apps);
+  const apps = getApps(), edges = appEdges(apps), byId = Object.fromEntries(apps.map(a => [a.id, a]));
   const dev = apps.filter(a => a.status !== 'done'), done = apps.filter(a => a.status === 'done');
-  // Orden del mapa: las apps conectadas quedan juntas, las sueltas al final
-  const byId = Object.fromEntries(apps.map(a => [a.id, a])), adj = {};
-  edges.forEach(([x, y]) => { (adj[x] = adj[x] || []).push(y); (adj[y] = adj[y] || []).push(x); });
-  const order = [], vis = new Set();
-  [...apps].sort((p, q) => (adj[q.id] || []).length - (adj[p.id] || []).length).forEach(a => {
-    if (vis.has(a.id)) return; const st = [a.id];
-    while (st.length) { const v = st.shift(); if (vis.has(v)) continue; vis.add(v); order.push(byId[v]); (adj[v] || []).forEach(n => !vis.has(n) && st.push(n)); }
-  });
-  // Acomodo tipo constelación: las conectadas se atraen, todas se repelen (siempre igual, sin azar)
-  const pos = {}, n = order.length, W = innerWidth < 700 ? 1 : 16 / 9;
-  order.forEach((a, i) => { const t = -Math.PI / 2 + (i / Math.max(n, 1)) * Math.PI * 2; pos[a.id] = [Math.cos(t) * W, Math.sin(t)]; });
-  for (let it = 0; it < 400; it++) {
-    const f = {}; order.forEach(a => f[a.id] = [-pos[a.id][0] * .02, -pos[a.id][1] * .02 * W]);
-    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-      const A = order[i].id, B = order[j].id, dx = pos[A][0] - pos[B][0], dy = pos[A][1] - pos[B][1], d2 = dx * dx + dy * dy + .001, k = .02 / d2;
-      f[A][0] += dx * k; f[A][1] += dy * k; f[B][0] -= dx * k; f[B][1] -= dy * k;
-    }
-    edges.forEach(([A, B]) => { const dx = pos[B][0] - pos[A][0], dy = pos[B][1] - pos[A][1], d = Math.hypot(dx, dy) || .01, k = (d - .5) * .08 / d; f[A][0] += dx * k; f[A][1] += dy * k; f[B][0] -= dx * k; f[B][1] -= dy * k; });
-    order.forEach(a => { pos[a.id][0] += Math.max(-.05, Math.min(.05, f[a.id][0])); pos[a.id][1] += Math.max(-.05, Math.min(.05, f[a.id][1])); });
-  }
-  const xs = order.map(a => pos[a.id][0]), ys = order.map(a => pos[a.id][1]);
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  order.forEach(a => { pos[a.id] = [9 + 82 * (pos[a.id][0] - x0) / ((x1 - x0) || 1), 10 + 76 * (pos[a.id][1] - y0) / ((y1 - y0) || 1)]; });
-  // Que ningún icono quede encimado (distancia mínima entre iconos)
-  const minD = W === 1 ? 19 : 12;
-  for (let it = 0; it < 80; it++) for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-    const P = pos[order[i].id], Q = pos[order[j].id], dx = (P[0] - Q[0]) * W, dy = P[1] - Q[1], d = Math.hypot(dx, dy) || .01;
-    if (d >= minD) continue; const m = (minD - d) / 2 / d;
-    P[0] += dx * m / W; P[1] += dy * m; Q[0] -= dx * m / W; Q[1] -= dy * m;
-    [P, Q].forEach(R => { R[0] = Math.max(8, Math.min(92, R[0])); R[1] = Math.max(9, Math.min(88, R[1])); });
-  }
-  const tile = a => `<button class="ap-tile" type="button" data-open="${_esc(a.id)}">${appIconHTML(a)}<span class="ap-name">${_esc(a.name)}</span></button>`;
+  const { pos, solo, bandTop } = layoutApps(apps, edges);
+  const tile = a => `<button class="ap-tile" type="button" data-app="${_esc(a.id)}">${appIconHTML(a)}<span class="ap-name">${_esc(a.name)}</span></button>`;
   content.innerHTML = `
-  <div class="ap-wrap">
+  <div class="ap-wrap${_appsEdit ? ' editing' : ''}">
     <div class="ap-top">
-      <div><div class="ap-title">Apps</div><div class="ap-sub">${apps.length} apps · ${dev.length} creando · ${edges.length} conexiones</div></div>
-      <button class="btn btn-primary btn-sm" id="apAdd">+ Agregar</button>
+      <div><div class="ap-title">Apps</div><div class="ap-sub">${apps.length} apps · ${dev.length} creando · ${_appsEdit ? 'toca una app para editarla' : 'toca una app para abrirla'}</div></div>
+      <div class="ap-top-btns">
+        ${_appsEdit ? '<button class="btn btn-ghost btn-sm" id="apAdd">+ Agregar</button>' : ''}
+        <button class="btn ${_appsEdit ? 'btn-primary' : 'btn-ghost'} btn-sm" id="apEdit">${_appsEdit ? 'Listo' : 'Editar'}</button>
+      </div>
     </div>
     <section class="ap-card ap-map-card">
       <div class="ap-map" id="apMap">
-        <svg class="ap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          ${edges.map(([x, y]) => `<line data-a="${_esc(x)}" data-b="${_esc(y)}" x1="${pos[x][0]}" y1="${pos[x][1]}" x2="${pos[y][0]}" y2="${pos[y][1]}" style="--c1:${_esc(byId[x].color)}"/>`).join('')}
-        </svg>
-        ${order.map((a, i) => `<button class="ap-node${(adj[a.id] || []).length ? '' : ' solo'}" type="button" data-node="${_esc(a.id)}" style="left:${pos[a.id][0]}%;top:${pos[a.id][1]}%;--i:${i}">${appIconHTML(a)}<span>${_esc(a.name)}</span></button>`).join('')}
+        <svg class="ap-lines" id="apLines" aria-hidden="true"></svg>
+        ${solo ? `<div class="ap-band" style="top:${bandTop + 2}%"><span>Sin conexión</span></div>` : ''}
+        ${apps.map((a, i) => `<button class="ap-node" type="button" data-app="${_esc(a.id)}" style="left:${pos[a.id][0]}%;top:${pos[a.id][1]}%;--i:${i}">${appIconHTML(a)}<span>${_esc(a.name)}</span></button>`).join('')}
       </div>
+      <div class="ap-legend"><i></i>Las flechas muestran hacia dónde viajan los datos</div>
     </section>
     ${dev.length ? `<div class="ap-sec"><span class="ap-dot dev"></span>Creando ahora</div><div class="ap-grid">${dev.map(tile).join('')}</div>` : ''}
     ${done.length ? `<div class="ap-sec"><span class="ap-dot done"></span>Creadas</div><div class="ap-grid">${done.map(tile).join('')}</div>` : ''}
   </div>`;
-  bindAppIcons(content);
-  const map = document.getElementById('apMap');
-  map.addEventListener('click', e => {
-    const nd = e.target.closest('[data-node]');
-    if (!nd) { map.classList.remove('focus'); map.querySelectorAll('.on').forEach(x => x.classList.remove('on')); return; }
-    const id = nd.dataset.node;
-    if (nd.classList.contains('on') && map.classList.contains('focus')) { openAppSheet(id); return; }  // 2º toque: abre la app
-    map.classList.add('focus'); map.querySelectorAll('.on').forEach(x => x.classList.remove('on'));
-    nd.classList.add('on');
-    map.querySelectorAll('line').forEach(l => { if (l.dataset.a === id || l.dataset.b === id) { l.classList.add('on'); map.querySelector(`[data-node="${l.dataset.a === id ? l.dataset.b : l.dataset.a}"]`)?.classList.add('on'); } });
-  });
-  content.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openAppSheet(b.dataset.open)));
-  document.getElementById('apAdd').addEventListener('click', () => openAppSheet(null));
+
+  // Flechas en píxeles reales (curvas suaves; ida y vuelta = dos curvas)
+  const map = document.getElementById('apMap'), svg = document.getElementById('apLines');
+  const draw = () => {
+    const W = map.clientWidth, H = map.clientHeight; if (!W || !H) return;
+    const R = W < 520 ? 27 : 32;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const both = (x, y) => edges.some(([p, q]) => p === y && q === x);
+    svg.innerHTML = `<defs>${edges.map(([x], i) => `<marker id="apAr${i}" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M1 1L9 5L1 9L3.2 5z" fill="${_esc(byId[x].color)}"/></marker>`).join('')}</defs>` +
+      edges.map(([x, y], i) => {
+        const [x1, y1] = [pos[x][0] * W / 100, pos[x][1] * H / 100], [x2, y2] = [pos[y][0] * W / 100, pos[y][1] * H / 100];
+        const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+        const bend = both(x, y) ? 26 : Math.min(40, d * .12);          // ida y vuelta: cada una por su lado
+        const mx = (x1 + x2) / 2 - uy * bend, my = (y1 + y2) / 2 + ux * bend;
+        const a1 = [x1 + ux * R, y1 + uy * R], a2 = [x2 - ux * (R + 4), y2 - uy * (R + 4)];
+        return `<path data-a="${_esc(x)}" data-b="${_esc(y)}" d="M${a1[0]} ${a1[1]} Q${mx} ${my} ${a2[0]} ${a2[1]}" style="--c1:${_esc(byId[x].color)};--d:${(i * .23).toFixed(2)}s" marker-end="url(#apAr${i})"/>`;
+      }).join('');
+  };
+  draw();
+  if (window._apRO) window._apRO.disconnect();
+  window._apRO = new ResizeObserver(() => draw()); window._apRO.observe(map);
+
+  // Pasar el cursor (PC) resalta sus conexiones
+  const focus = id => {
+    map.classList.toggle('focus', !!id);
+    map.querySelectorAll('.ap-node').forEach(n => n.classList.toggle('on', n.dataset.app === id));
+    svg.querySelectorAll('path[data-a]').forEach(p => { const on = p.dataset.a === id || p.dataset.b === id; p.classList.toggle('on', on); if (on) map.querySelector(`.ap-node[data-app="${p.dataset.a === id ? p.dataset.b : p.dataset.a}"]`)?.classList.add('on'); });
+  };
+  map.querySelectorAll('.ap-node').forEach(n => { n.addEventListener('mouseenter', () => focus(n.dataset.app)); n.addEventListener('mouseleave', () => focus(null)); });
+  content.querySelectorAll('[data-app]').forEach(b => b.addEventListener('click', () => {
+    const a = getApps().find(x => x.id === b.dataset.app); if (!a) return;
+    _appsEdit ? openAppSheet(a.id) : openApp(a);
+  }));
+  document.getElementById('apEdit').addEventListener('click', () => { _appsEdit = !_appsEdit; renderAppsView(); });
+  document.getElementById('apAdd')?.addEventListener('click', () => openAppSheet(null));
 };
 
-// ── Ficha de una app (abrir, repo, editar) ──
+// ── Ficha de una app (editar / agregar) ──
 const openAppSheet = id => {
   document.getElementById('apSheet')?.remove();
   const apps = getApps(), a = apps.find(x => x.id === id);
   const isNew = !a;
-  const cur = a ? { ...a, links: [...(a.links || [])] } : { id: 'app' + Date.now().toString(36), name: '', repo: '', url: '', icon: '', color: APP_COLORS[apps.length % APP_COLORS.length], status: 'dev', links: [] };
-  const linked = new Set([...(cur.links || []), ...apps.filter(x => (x.links || []).includes(cur.id)).map(x => x.id)]);
+  const cur = a ? { ...a, to: [...(a.to || [])] } : { id: 'app' + Date.now().toString(36), name: '', repo: '', url: '', icon: '', color: APP_COLORS[apps.length % APP_COLORS.length], status: 'dev', to: [] };
+  const sendsTo = new Set(cur.to), getsFrom = new Set(apps.filter(x => (x.to || []).includes(cur.id)).map(x => x.id));
+  const chips = (set, kind) => apps.filter(x => x.id !== cur.id).map(x => `<button type="button" class="ap-chip${set.has(x.id) ? ' on' : ''}" data-${kind}="${_esc(x.id)}"><i style="background:${_esc(x.color)}"></i>${_esc(x.name)}</button>`).join('') || '<small style="color:var(--text2)">Aún no hay otras apps</small>';
   const el = document.createElement('div');
   el.id = 'apSheet'; el.className = 'ap-sheet-wrap';
   el.innerHTML = `
@@ -7488,49 +7696,50 @@ const openAppSheet = id => {
         ${appUrl(cur) ? `<a class="btn btn-primary" href="${_esc(appUrl(cur))}" target="_blank" rel="noopener">Abrir app</a>` : ''}
         ${appRepoUrl(cur) ? `<a class="btn btn-ghost" href="${_esc(appRepoUrl(cur))}" target="_blank" rel="noopener">GitHub</a>` : ''}
       </div>` : ''}
-      <details class="ap-edit"${isNew ? ' open' : ''}><summary>${isNew ? 'Datos de la app' : 'Editar'}</summary>
+      <div class="ap-edit">
         <label>Nombre<input id="apfName" value="${_esc(cur.name)}" placeholder="Mi app"></label>
-        <label>Enlace de la app<input id="apfUrl" value="${_esc(cur.url || '')}" placeholder="https://… (opcional)"></label>
+        <label>Enlace de la app<input id="apfUrl" value="${_esc(cur.url || '')}" placeholder="https://…"></label>
         <label>Repo de GitHub<input id="apfRepo" value="${_esc(cur.repo || '')}" placeholder="nombre-del-repo (opcional)"></label>
         <label>Icono (URL de imagen)<input id="apfIcon" value="${_esc(cur.icon || '')}" placeholder="opcional"></label>
         <div class="ap-lbl">Color</div>
         <div class="ap-colors">${APP_COLORS.map(c => `<button type="button" class="ap-col${c === cur.color ? ' on' : ''}" data-col="${c}" style="--ap:${c}"></button>`).join('')}</div>
         <div class="ap-lbl">Estado</div>
         <div class="ap-chips"><button type="button" class="ap-chip${cur.status !== 'done' ? ' on' : ''}" data-st="dev">Creando</button><button type="button" class="ap-chip${cur.status === 'done' ? ' on' : ''}" data-st="done">Creada</button></div>
-        <div class="ap-lbl">Se conecta con</div>
-        <div class="ap-chips">${apps.filter(x => x.id !== cur.id).map(x => `<button type="button" class="ap-chip${linked.has(x.id) ? ' on' : ''}" data-ln="${_esc(x.id)}"><i style="background:${_esc(x.color)}"></i>${_esc(x.name)}</button>`).join('') || '<small style="color:var(--text2)">Aún no hay otras apps</small>'}</div>
+        <div class="ap-lbl">Le manda datos a →</div>
+        <div class="ap-chips">${chips(sendsTo, 'to')}</div>
+        <div class="ap-lbl">Recibe datos de ←</div>
+        <div class="ap-chips">${chips(getsFrom, 'from')}</div>
         <div class="ap-sh-foot">
-          ${!isNew ? '<button type="button" class="btn btn-ghost btn-sm ap-del" id="apfDel">Eliminar</button>' : '<span></span>'}
+          ${!isNew ? '<button type="button" class="btn btn-ghost btn-sm ap-del" id="apfDel">Quitar</button>' : '<span></span>'}
           <button type="button" class="btn btn-primary" id="apfSave">Guardar</button>
         </div>
-      </details>
+      </div>
     </div>`;
   document.body.appendChild(el);
-  bindAppIcons(el);
   requestAnimationFrame(() => el.classList.add('open'));
   const close = () => { el.classList.remove('open'); setTimeout(() => el.remove(), 250); };
   el.addEventListener('click', e => {
     if (e.target === el || e.target.closest('[data-close]')) return close();
     const col = e.target.closest('[data-col]'); if (col) { cur.color = col.dataset.col; el.querySelectorAll('.ap-col').forEach(b => b.classList.toggle('on', b === col)); el.querySelector('.ap-sh-head .ap-ico').style.setProperty('--ap', cur.color); return; }
     const st = e.target.closest('[data-st]'); if (st) { cur.status = st.dataset.st; el.querySelectorAll('[data-st]').forEach(b => b.classList.toggle('on', b === st)); return; }
-    const ln = e.target.closest('[data-ln]'); if (ln) { ln.classList.toggle('on'); linked[ln.classList.contains('on') ? 'add' : 'delete'](ln.dataset.ln); }
+    const t = e.target.closest('[data-to]'); if (t) { t.classList.toggle('on'); sendsTo[t.classList.contains('on') ? 'add' : 'delete'](t.dataset.to); return; }
+    const f = e.target.closest('[data-from]'); if (f) { f.classList.toggle('on'); getsFrom[f.classList.contains('on') ? 'add' : 'delete'](f.dataset.from); }
   });
   el.querySelector('#apfSave').addEventListener('click', () => {
     const name = el.querySelector('#apfName').value.trim();
     if (!name) { el.querySelector('#apfName').focus(); return; }
-    let repo = el.querySelector('#apfRepo').value.trim().replace(/^https?:\/\/github\.com\/[^/]+\//i, '').replace(/\/$/, '');
+    const repo = el.querySelector('#apfRepo').value.trim().replace(/^https?:\/\/github\.com\/[^/]+\//i, '').replace(/\/$/, '');
     let url = el.querySelector('#apfUrl').value.trim(); if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
-    if (url && !url.endsWith('/')) url += '/';
-    const item = { ...cur, name, repo, url, icon: el.querySelector('#apfIcon').value.trim(), links: [...linked] };
-    delete _appIconOk[item.id];
-    // La conexión se guarda en esta app; se quita de las demás para no duplicarla
-    const list = getApps().map(x => x.id === item.id ? item : { ...x, links: (x.links || []).filter(l => l !== item.id) });
+    if (url && !/[/?#]$/.test(url) && !/\.[a-z0-9]{2,5}$/i.test(url.split('/').pop())) url += '/';
+    const item = { ...cur, name, repo, url, icon: el.querySelector('#apfIcon').value.trim(), to: [...sendsTo] };
+    if (isNew) { delete item.row; delete item.x; }
+    const list = getApps().map(x => x.id === item.id ? item : { ...x, to: getsFrom.has(x.id) ? [...new Set([...(x.to || []), item.id])] : (x.to || []).filter(l => l !== item.id) });
     if (isNew) list.push(item);
     setApps(list); close(); renderAppsView(); toast(isNew ? 'App agregada' : 'App guardada');
   });
   el.querySelector('#apfDel')?.addEventListener('click', () => {
     if (!confirm(`¿Quitar «${cur.name}» de tus apps?`)) return;
-    setApps(getApps().filter(x => x.id !== cur.id).map(x => ({ ...x, links: (x.links || []).filter(l => l !== cur.id) })));
+    setApps(getApps().filter(x => x.id !== cur.id).map(x => ({ ...x, to: (x.to || []).filter(l => l !== cur.id) })));
     close(); renderAppsView(); toast('App quitada');
   });
 };
@@ -7704,6 +7913,7 @@ const renderBriefingView = () => {
     <div id="briefingLoadingArea" class="bf-loading" style="display:none"><div class="bf-spin">☀️</div><b>Preparando tu briefing…</b><small id="briefingLoadStep">Revisando el clima en Orizaba</small></div>
     <div id="briefingHistoryList">${apiKey && !history.length ? `<div class="bf-empty-card"><div style="font-size:2rem">🌅</div><b>Aún no hay briefings</b><p>${auto ? 'Mañana a las 8:30 te llega el primero. O genéralo ahora.' : 'Pulsa «Generar ahora».'}</p></div>` : ''}${history.map((e, i) => i === 0 ? briefingCardHTML(e, { open: true }) : `<details class="bf-old"><summary>${new Date(e.date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</summary>${briefingCardHTML(e, { open: false })}</details>`).join('')}</div>`;
 
+  bindMarketCards();
   const goSettings = () => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelector('.nav-item[data-view="settings"]')?.classList.add('active');
@@ -7825,6 +8035,7 @@ const renderDailyBriefing = (container) => {
     return;
   }
   container.innerHTML = briefingCardHTML(latest, { dash: true }) + `<button id="dashBriefingViewBtn" class="bf-prev">Ver anteriores →</button>`;
+  bindMarketCards();
   container.querySelector('#dashBriefingViewBtn')?.addEventListener('click', goToBriefingView);
 };
 
@@ -8096,6 +8307,69 @@ const renderSettingsView=()=>{
   document.getElementById('emptyTrashBtn')?.addEventListener('click', emptyTrash);
   document.querySelectorAll('.trash-restore-btn').forEach(b=>b.addEventListener('click',()=>restoreFromTrash(b.dataset.trashid)));
   document.querySelectorAll('.trash-delete-btn').forEach(b=>b.addEventListener('click',()=>{ if(confirm('¿Eliminar este elemento para siempre? No se podrá deshacer.')) deleteFromTrashForever(b.dataset.trashid); }));
+  restyleSettings();
+};
+
+// ── Ajustes ordenados: tarjeta de cuenta arriba + grupos plegables (se MUEVEN los mismos elementos,
+//    así todos los botones siguen funcionando igual) ──
+const SET_GROUPS = [
+  { id: 'cuenta',  icon: 'account_circle', title: 'Cuenta y nube',       match: ['Perfil', 'Nube', 'Google Calendar'] },
+  { id: 'aspecto', icon: 'palette',        title: 'Apariencia',          match: ['Color de acento', 'Apariencia del fondo', 'Icono de la app', 'Barra inferior'] },
+  { id: 'inicio',  icon: 'dashboard',      title: 'Pantalla de inicio',  match: ['Widgets'] },
+  { id: 'avisos',  icon: 'notifications',  title: 'Notificaciones',      match: ['Notificaciones'] },
+  { id: 'ia',      icon: 'auto_awesome',   title: 'Inteligencia artificial', match: ['IA', 'Cortex', 'Asistente'] },
+  { id: 'datos',   icon: 'inventory_2',    title: 'Datos y papelera',    match: ['Datos', 'Papelera'] },
+  { id: 'mas',     icon: 'tune',           title: 'Más',                 match: [] }
+];
+const _setOpen = () => { try { return JSON.parse(sessionStorage.getItem('nn_set_open') || '["cuenta"]'); } catch (e) { return ['cuenta']; } };
+const restyleSettings = () => {
+  const ct = document.getElementById('content'), wrap = ct && ct.querySelector('.settings-wrap'); if (!wrap) return;
+  ct.style.padding = innerWidth < 700 ? '16px' : '24px';
+  const title = wrap.previousElementSibling; if (title && !title.classList.contains('set-hero')) title.remove();
+  const strip = t => t.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+  const secs = [...wrap.querySelectorAll(':scope > .settings-section')];
+  const open = _setOpen(), boxes = {};
+  // Tarjeta de cuenta
+  const name = state.settings.username || 'Tú', photo = state.settings.photoURL;
+  const on = !!(fb.enabled && fb.uid), widgetsOn = Object.values(state.settings.dashboardWidgets || {}).filter(Boolean).length;
+  const hero = document.createElement('div'); hero.className = 'set-hero';
+  hero.innerHTML = `<div class="set-av">${photo ? `<img src="${_esc(photo)}" alt="">` : _esc(name.charAt(0).toUpperCase())}</div>
+    <div class="set-who"><b>${_esc(name)}</b><small>${on ? _esc(fb.email || 'Cuenta de Google') : 'Sin sesión · tus datos solo están aquí'}</small>
+      <span class="set-sync ${on ? 'ok' : ''}"><i></i>${on ? (hasUnsynced() ? 'Cambios por subir' : 'Todo guardado en la nube') : 'Sin nube'}</span></div>
+    <button class="btn btn-primary btn-sm" id="setForceSync">${on ? '<span class="material-symbols-outlined">cloud_sync</span> Guardar y actualizar' : 'Iniciar sesión'}</button>`;
+  wrap.before(hero);
+  hero.querySelector('#setForceSync').addEventListener('click', async e => {
+    if (!on) { document.getElementById('fbLoginBtn')?.click(); return; }
+    const b = e.currentTarget; b.disabled = true; b.classList.add('busy');
+    await forceSyncAll(); b.disabled = false; b.classList.remove('busy');
+    const sy = hero.querySelector('.set-sync'); if (sy) sy.lastChild.textContent = hasUnsynced() ? 'Cambios por subir' : 'Todo guardado en la nube';
+  });
+  const subs = {
+    cuenta: on ? 'Sesión iniciada · ' + (gcal.status === 'ok' ? 'Calendario conectado' : 'Calendario sin conectar') : 'Inicia sesión para sincronizar',
+    aspecto: 'Color, fondo, icono y barra',
+    inicio: widgetsOn + ' tarjetas visibles',
+    avisos: (window.Notification && Notification.permission === 'granted' && state.settings.notificationsEnabled) ? 'Activadas' : 'Apagadas',
+    ia: 'IA gratuita activa',
+    datos: (state.trash || []).length ? (state.trash.length + ' en la papelera') : 'Respaldo y papelera',
+    mas: ''
+  };
+  SET_GROUPS.forEach(g => {
+    const d = document.createElement('details'); d.className = 'set-group'; d.dataset.g = g.id; if (open.includes(g.id)) d.open = true;
+    d.innerHTML = `<summary><span class="set-gi"><span class="material-symbols-outlined">${g.icon}</span></span><span class="set-gt"><b>${g.title}</b><small>${subs[g.id]}</small></span><span class="material-symbols-outlined set-chev">expand_more</span></summary><div class="set-gb"></div>`;
+    d.addEventListener('toggle', () => { const o = new Set(_setOpen()); d.open ? o.add(g.id) : o.delete(g.id); try { sessionStorage.setItem('nn_set_open', JSON.stringify([...o])); } catch (e) {} });
+    boxes[g.id] = d;
+  });
+  secs.forEach(sec => {
+    const h = sec.querySelector(':scope > h3'), t = h ? strip(h.textContent) : '';
+    const g = SET_GROUPS.find(x => x.match.some(m => t.includes(m))) || SET_GROUPS[SET_GROUPS.length - 1];
+    if (h) { h.textContent = t.replace(/\s*\(\d+\)$/, ''); h.className = 'set-sub-h'; }
+    sec.classList.add('set-block');
+    boxes[g.id].querySelector('.set-gb').appendChild(sec);
+  });
+  SET_GROUPS.forEach(g => { if (boxes[g.id].querySelector('.set-block')) wrap.appendChild(boxes[g.id]); });
+  // Zona peligrosa al final de «Datos»
+  const reset = document.getElementById('resetDataBtn');
+  if (reset) { const z = document.createElement('div'); z.className = 'set-danger'; z.innerHTML = '<span>Zona peligrosa</span>'; z.appendChild(reset); boxes.datos.querySelector('.set-gb').appendChild(z); reset.closest('.settings-row:empty')?.remove(); }
 };
 
 /* Rest of the views skipped to fit in max-tokens, will use minimal placeholders for now but ensure functional app */
@@ -8177,6 +8451,14 @@ const refreshProjectsBehind = () => {
   updateStats();
 };
 
+// Progreso y filas de tareas por separado: al agregar una tarea solo se añade su fila (sin redibujar
+// toda la ventana), así el teclado del celular no se cierra ni la ventana «brinca».
+const pdProgressHTML = p => {
+  const tasks = p.tasks || [], done = tasks.filter(t => t.done).length, pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  return `<div class="progress-bar" style="height:6px;border-radius:6px;background:var(--bg3)"><div class="progress-fill" style="width:${pct}%;border-radius:6px;background:linear-gradient(90deg,${p.color||'var(--accent)'},var(--accent3))"></div></div>
+      <div class="pd-progress-txt"><span>${tasks.length - done} pendiente${tasks.length - done === 1 ? '' : 's'} · ${done} hecha${done === 1 ? '' : 's'}</span><span>${pct}%</span></div>`;
+};
+const pdTaskRowHTML = (t, i) => `<div class="pd-task${t.done ? ' done' : ''}"><label class="pd-check-wrap"><input type="checkbox" class="pd-check" data-idx="${i}" ${t.done ? 'checked' : ''} aria-label="Marcar como hecha"/></label><span class="pd-text" contenteditable="true" spellcheck="false" enterkeyhint="done" data-idx="${i}">${_esc(t.title)}</span><button class="pd-del" data-idx="${i}" title="Eliminar tarea">✖</button></div>`;
 const renderProjectDetail = () => {
   const box = document.getElementById('projDetailBox'); if (!box) return;
   const p = state.projects.find(x => x.id == _openProjId);
@@ -8196,14 +8478,13 @@ const renderProjectDetail = () => {
       <button class="pd-close" id="pdClose" aria-label="Cerrar">✕</button>
     </div>
     <div class="pd-body">
-      <div class="progress-bar" style="height:6px;border-radius:6px;background:var(--bg3)"><div class="progress-fill" style="width:${pct}%;border-radius:6px;background:linear-gradient(90deg,${p.color||'var(--accent)'},var(--accent3))"></div></div>
-      <div class="pd-progress-txt"><span>${tasks.length - done} pendiente${tasks.length - done === 1 ? '' : 's'} · ${done} hecha${done === 1 ? '' : 's'}</span><span>${pct}%</span></div>
+      <div id="pdProg">${pdProgressHTML(p)}</div>
       <div id="pdTasks">${
         tasks.length
-          ? tasks.map((t, i) => `<div class="pd-task${t.done ? ' done' : ''}"><label class="pd-check-wrap"><input type="checkbox" class="pd-check" data-idx="${i}" ${t.done ? 'checked' : ''} aria-label="Marcar como hecha"/></label><span class="pd-text" contenteditable="true" spellcheck="false" enterkeyhint="done" data-idx="${i}">${_esc(t.title)}</span><button class="pd-del" data-idx="${i}" title="Eliminar tarea">✖</button></div>`).join('')
+          ? tasks.map((t, i) => pdTaskRowHTML(t, i)).join('')
           : '<div class="pd-empty">Sin tareas todavía</div>'
       }</div>
-      <div class="pd-add"><input id="pdNewTask" placeholder="Nueva tarea…" maxlength="200"/><button class="btn btn-primary" id="pdAddTask">＋</button></div>
+      <div class="pd-add"><textarea id="pdNewTask" rows="1" placeholder="Nueva tarea…" enterkeyhint="send"></textarea><button type="button" class="btn btn-primary" id="pdAddTask" aria-label="Agregar tarea">＋</button></div>
     </div>
     <div class="pd-actions">
       <button class="btn btn-ghost" id="pdPin">${p.pinned ? '📌 Desfijar' : '📌 Fijar'}</button>
@@ -8216,7 +8497,8 @@ const renderProjectDetail = () => {
 
   box.querySelector('#pdClose').addEventListener('click', () => closeModal('projDetailModal'));
 
-  box.querySelectorAll('.pd-check').forEach(c => c.addEventListener('change', () => {
+  const bindRows = root => {
+  root.querySelectorAll('.pd-check').forEach(c => c.addEventListener('change', () => {
     const t = p.tasks[Number(c.dataset.idx)]; if (!t) return;
     t.done = c.checked; save();
     renderProjectDetail(); refreshProjectsBehind();
@@ -8224,7 +8506,7 @@ const renderProjectDetail = () => {
   }));
 
   // Editar el texto de la tarea con un toque: Enter o salir del campo guarda; Esc cancela.
-  box.querySelectorAll('.pd-text').forEach(sp => {
+  root.querySelectorAll('.pd-text').forEach(sp => {
     const idx = Number(sp.dataset.idx);
     sp.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); sp.blur(); }
@@ -8237,7 +8519,7 @@ const renderProjectDetail = () => {
     });
     sp.addEventListener('blur', () => {
       const t = p.tasks[idx]; if (!t) return;
-      const val = sp.textContent.replace(/\s+/g, ' ').trim().slice(0, 200);
+      const val = sp.textContent.replace(/\s+/g, ' ').trim();
       if (!val) { sp.textContent = t.title; return; }   // no se permite dejarla vacía
       if (val === t.title) { sp.textContent = val; return; }
       t.title = val; save();
@@ -8246,7 +8528,7 @@ const renderProjectDetail = () => {
     });
   });
 
-  box.querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', () => {
+  root.querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', () => {
     const idx = Number(b.dataset.idx);
     if (!confirm('¿Eliminar esta tarea?')) return;
     const t = p.tasks[idx]; if (!t) return;
@@ -8257,7 +8539,7 @@ const renderProjectDetail = () => {
   }));
 
   // Swipe: derecha completa/reabre (jade), izquierda borra a la papelera (carmesí)
-  box.querySelectorAll('.pd-task').forEach(row => {
+  (root.classList && root.classList.contains('pd-task') ? [root] : root.querySelectorAll('.pd-task')).forEach(row => {
     const cb = row.querySelector('.pd-check'); if (!cb) return;
     const idx = Number(cb.dataset.idx);
     attachSwipe(row, {
@@ -8279,15 +8561,29 @@ const renderProjectDetail = () => {
     });
   });
 
-  const addTask = () => {
-    const inp = box.querySelector('#pdNewTask');
-    const title = inp.value.trim(); if (!title) { inp.focus(); return; }
-    p.tasks = p.tasks || []; p.tasks.push({ title, done: false }); save();
-    renderProjectDetail(); refreshProjectsBehind();
-    box.querySelector('#pdNewTask')?.focus();
   };
-  box.querySelector('#pdAddTask').addEventListener('click', addTask);
-  box.querySelector('#pdNewTask').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+  bindRows(box);
+
+  const inp = box.querySelector('#pdNewTask');
+  const grow = () => { inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 160) + 'px'; };
+  inp.addEventListener('input', grow);
+  const addTask = () => {
+    const title = inp.value.replace(/\s*\n\s*/g, ' ').trim(); if (!title) { inp.focus(); return; }
+    p.tasks = p.tasks || []; p.tasks.push({ title, done: false }); save();
+    const i = p.tasks.length - 1, list = box.querySelector('#pdTasks');
+    list.querySelector('.pd-empty')?.remove();
+    list.insertAdjacentHTML('beforeend', pdTaskRowHTML(p.tasks[i], i));
+    const row = list.lastElementChild; row.classList.add('pd-new'); bindRows(row);
+    box.querySelector('#pdProg').innerHTML = pdProgressHTML(p);
+    inp.value = ''; grow();
+    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    refreshProjectsBehind(); haptic && haptic('tap');
+  };
+  // pointerdown + preventDefault: el campo no pierde el foco, el teclado no se cierra y el toque no «cae» en otro lado
+  const addBtn = box.querySelector('#pdAddTask');
+  addBtn.addEventListener('pointerdown', e => { if (document.activeElement === inp) e.preventDefault(); });
+  addBtn.addEventListener('click', addTask);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); } });
 
   box.querySelector('#pdPin').addEventListener('click', () => {
     pinProject(p); window._pinPopId = p.pinned ? p.id : null; save();

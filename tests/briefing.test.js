@@ -237,3 +237,22 @@ test('titulares: varias fuentes por sección, sin repetidos y con resumen en IA 
   const p = B.buildPrompt({dateLabel: 'hoy', dateStr: '2026-11-11', headlines: h});
   assert.ok(p.includes('El mundo (internacional)') && p.includes('GPT-6') && p.includes('"planes"'));
 });
+
+test('veredicto de trading: fin de semana y evento fuerte → ESPERAR; tendencia clara → LONG/SHORT', async () => {
+  const B = await Bm();
+  const up = {price: 95000, ch24: 1, ema50d: 90000, ema200d: 80000, ema50h4: 93000, rsi4h: 55, support: 91000, resistance: 98000};
+  const dn = {price: 70000, ch24: -2, ema50d: 80000, ema200d: 85000, ema50h4: 72000, rsi4h: 45, support: 68000, resistance: 76000};
+  const wed = Date.parse('2026-11-18T18:00:00Z'), sun = Date.parse('2026-11-22T18:00:00Z');
+  assert.strictEqual(B.marketVerdict({btc: up, nowMs: wed}).verdict, 'LONG');
+  assert.strictEqual(B.marketVerdict({btc: dn, nowMs: wed}).verdict, 'SHORT');
+  const w = B.marketVerdict({btc: up, nowMs: sun}); assert.strictEqual(w.verdict, 'ESPERAR'); assert.match(w.line, /domingo/);
+  const e = B.marketVerdict({btc: up, nowMs: wed, calendar: [new Date(wed + 3600e3).toISOString() + '|CPI m/m|0.3%']});
+  assert.strictEqual(e.verdict, 'ESPERAR'); assert.match(e.line, /inflación/);
+  assert.strictEqual(B.marketVerdict({btc: null, nowMs: wed}).verdict, 'ESPERAR');
+});
+
+test('sin repetidos: el mismo evento no sale dos veces ni en noticias locales', async () => {
+  const B = await Bm();
+  const s = B.dedupeSections({orizaba: [{titulo: 'Festival del Café en Orizaba este sábado'}, {titulo: 'Llega el Festival del Café a Orizaba'}], local: [{titulo: 'Festival del Café Orizaba sábado'}, {titulo: 'Obras en Oriente 6'}], planes: []});
+  assert.strictEqual(s.orizaba.length, 1); assert.strictEqual(s.local.length, 1);
+});
