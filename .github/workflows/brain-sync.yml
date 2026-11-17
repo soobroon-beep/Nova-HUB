@@ -1,18 +1,22 @@
 name: Cerebro · conector de Nova Hub
 
-# Manda a tu cerebro (Neural Brain) lo que creas, editas o borras en Nova Hub, cada 30 minutos.
+# Manda a tu cerebro (Neural Brain) lo que creas, editas o borras en Nova Hub, cada 2 horas.
+# GitHub retrasa mucho los horarios cortos (el de «cada 30 min» corría cada 6-8 h), así que funciona como el Motor de VORTEX:
+# el trabajo se queda prendido ~5 h 40 min, sincroniza al empezar y luego cada 2 h, y al terminar se vuelve a lanzar solo.
+# El horario de abajo solo lo revive si algún día se detiene. Un push sincroniza una vez y termina.
 # No cambia nada en la app. Usa el mismo FIREBASE_SERVICE_ACCOUNT del resto de los jobs (esa cuenta de servicio
 # tiene permiso «Usuario de Cloud Datastore» en el proyecto neural-brain-148a4).
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '7 */3 * * *'
   push:
     branches: [main]
   workflow_dispatch: {}
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: brain-sync
@@ -21,7 +25,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,8 +38,24 @@ jobs:
 
       - run: npm install --omit=dev
 
-      - name: Mandar actividad al cerebro
-        run: node scripts/brain-sync.js
+      - name: Mandar actividad al cerebro (cada 2 h)
+        run: |
+          EVERY_MIN=115; RUN_MIN=340
+          [ "${{ github.event_name }}" = "push" ] && RUN_MIN=0
+          start=$(date +%s)
+          while :; do
+            echo "── $(TZ=America/Mexico_City date '+%d/%m %H:%M') sincronizando…"
+            node scripts/brain-sync.js || echo "La sincronización falló; se reintenta en la siguiente vuelta."
+            left=$(( RUN_MIN*60 - ($(date +%s) - start) ))
+            if [ $left -le $(( EVERY_MIN*60 )) ]; then [ $left -gt 0 ] && sleep $left; break; fi  # la próxima la hace el relevo
+            sleep $(( EVERY_MIN*60 ))
+          done
         env:
           BRAIN_APP: novahub
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Volver a lanzarse
+        if: always() && github.event_name != 'push'
+        run: gh workflow run brain-sync.yml --ref "${GITHUB_REF_NAME}" || echo "no se pudo relanzar (el horario lo revive)"
+        env:
+          GH_TOKEN: ${{ github.token }}
