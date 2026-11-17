@@ -39,6 +39,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ESTUDIO DE TATUAJES (app INKBOT, mismo proyecto de Firebase).
+    // Ruta: estudio/{uid}/{coleccion}/{id}. Solo el dueño de la cuenta lee y escribe lo suyo,
+    // y solo en las colecciones que usa el Estudio. Cada registro debe traer su propio id.
+    function estudioCol(c) {
+      return c in ['clientes', 'tatuajes', 'fotos', 'citas', 'pagos', 'cotizaciones', 'proyectos',
+                   'consentimientos', 'espera', 'flash', 'gastos', 'insumos', 'ajustes'];
+    }
+    match /estudio/{userId}/{col}/{docId} {
+      allow read, delete: if isOwner(userId) && estudioCol(col);
+      allow create, update: if isOwner(userId) && estudioCol(col)
+                            && request.resource.data.id == docId;
+    }
+
     // Todo lo demás, cerrado.
     match /{document=**} {
       allow read, write: if false;
