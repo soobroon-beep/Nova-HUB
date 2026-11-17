@@ -1,0 +1,35 @@
+name: Respaldo cifrado de Firestore (fuera de la base)
+# Además del respaldo diario dentro de Firestore (backup-firestore.yml), esta copia completa de Nova Hub queda FUERA de la base:
+# cifrada con AES-256-GCM y guardada como artefacto de GitHub por 90 días. Si se perdiera el proyecto de Firebase o se borrara
+# todo por error, desde aquí se puede restaurar. Sin la llave nadie la puede leer (el repositorio es público).
+# Llave: el secreto BACKUP_KEY si lo agregas; si no, se deriva de FIREBASE_SERVICE_ACCOUNT.
+# Restaurar: descarga el artefacto y corre  node scripts/backup-restore.js <archivo> --dry-run  (luego --write).
+on:
+  schedule:
+    - cron: '52 9 * * *'   # 03:52 hora de Ciudad de México (después del respaldo interno)
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency: {group: backup-cifrado, cancel-in-progress: false}
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --omit=dev --no-audit --no-fund
+      - name: Exportar y cifrar
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          BACKUP_KEY: ${{ secrets.BACKUP_KEY }}
+          EXCLUDE: backups          # las copias internas por día ya están dentro de cada cuenta
+          MAX_READS: '40000'
+        run: node scripts/backup-export.js respaldo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-novahub-${{ github.run_number }}
+          path: respaldo/*.vxbak
+          retention-days: 90
+          if-no-files-found: error
