@@ -6340,6 +6340,10 @@ const getDockTabs = () => DOCK_DEFAULT;
   };
   g.addEventListener('click', go);
   g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  // marca el saludo como «página actual» cuando ya estás en el Dashboard (accesibilidad; y la Revisión de apps de la Sala no lo cuenta como botón que no hace nada)
+  const sync = () => { if (document.querySelector('#sidebar .nav-item.active')?.dataset.view === 'dashboard') g.setAttribute('aria-current', 'page'); else g.removeAttribute('aria-current'); };
+  const sb = document.getElementById('sidebar'); if (sb) new MutationObserver(sync).observe(sb, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  sync();
 })();
 
 // ── BARRA INFERIOR FLOTANTE (móvil/tablet) + botón central (+) + hápticos globales ──
