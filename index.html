@@ -3351,6 +3351,86 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 .mood-btn .nova-ui-icon{font-size:1.5rem;margin-right:0}
 .nova-ui-icon[aria-hidden="true"]{user-select:none}
 
+
+/* ══ PILAS DE TARJETAS (notas y proyectos) ══ */
+.reorder-grab{transition:none!important}
+.reorder-grab.stacking{opacity:.82!important}
+.drop-target:not(.stack-target){outline:2px dashed color-mix(in srgb,var(--accent) 70%,transparent);outline-offset:3px}
+.stack-target:not(.stack-card),.stack-card.stack-target > .stk-face{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 65%,transparent),0 10px 26px rgba(0,0,0,.3)!important;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+.stack-ready:not(.stack-card),.stack-card.stack-ready > .stk-face{transform:scale(.95)!important;box-shadow:0 0 0 3px var(--accent),0 0 34px color-mix(in srgb,var(--accent) 55%,transparent)!important}
+.stk-hint{position:absolute!important;left:50%;top:-14px;transform:translateX(-50%);z-index:60!important;display:flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 12px 9px;border-radius:999px;background:rgba(10,12,20,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:.74rem;font-weight:700;pointer-events:none;overflow:hidden;animation:stkHintIn .22s cubic-bezier(.22,1,.36,1) both}
+.stk-hint .material-symbols-outlined{font-size:1.05rem}
+.stk-hint i{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--accent);transform-origin:left;animation:stkHold linear both}
+.stack-ready > .stk-hint{background:var(--accent);color:#fff;border-color:transparent}
+@keyframes stkHold{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes stkHintIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.stack-card{position:relative;padding-top:14px;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;align-self:start;animation:cardEntrance .38s cubic-bezier(.22,1,.36,1) both}
+.no-enter > .stack-card{animation:none}
+.no-enter > .stack-card.stack-pop,.stack-card.stack-pop{animation:stkPop .55s cubic-bezier(.34,1.56,.64,1)!important}
+@keyframes stkPop{0%{transform:scale(.9)}55%{transform:scale(1.04)}100%{transform:none}}
+.stk-layer{position:absolute;left:12px;right:12px;top:7px;height:34px;border-radius:14px 14px 0 0;pointer-events:none;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--card-bg) 42%,#141a2b),color-mix(in srgb,var(--card-bg) 18%,#101522));
+  border:1px solid color-mix(in srgb,var(--card-bg) 70%,rgba(255,255,255,.2));border-bottom:none;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.stk-layer.l2{left:25px;right:25px;top:0;opacity:.8}
+[data-theme="light"] .stk-layer{background:color-mix(in srgb,var(--card-bg) 30%,#fff)}
+@media(hover:hover){.stack-card:hover .stk-layer.l1{transform:translateY(-3px) rotate(-1.4deg)}.stack-card:hover .stk-layer.l2{transform:translateY(-6px) rotate(1.8deg)}}
+.stack-card.reorder-pending .stk-layer.l1{transform:translateY(2px)}
+.stack-card > .stk-face{margin:0!important;position:relative;z-index:1;animation:none!important}
+.stack-card.reorder-pending,.stack-card.reorder-grab{box-shadow:none!important}
+.stack-card.reorder-grab > .stk-face{box-shadow:0 18px 38px rgba(0,0,0,.45)!important}
+.stk-head{display:flex;align-items:center;gap:9px;min-width:0}
+.stk-ico{width:32px;height:32px;border-radius:10px;display:flex!important;align-items:center;justify-content:center;flex-shrink:0;font-size:1.15rem!important;color:#fff;background:color-mix(in srgb,var(--card-bg) 70%,rgba(0,0,0,.3));box-shadow:0 4px 12px color-mix(in srgb,var(--card-bg) 35%,transparent)}
+.stk-name{flex:1;min-width:0;font-weight:800;font-size:1.02rem;line-height:1.2;color:var(--card-fg,var(--text));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stk-count{flex-shrink:0;min-width:24px;height:24px;padding:0 7px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:800;background:var(--card-chip,rgba(255,255,255,.12));color:var(--card-fg,var(--text))}
+.stack-card .proj-full-card .proj-notif{z-index:40!important}
+.stk-list{list-style:none;margin:11px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.stk-list li{display:flex;align-items:center;gap:7px;min-width:0;padding:6px 9px;border-radius:9px;background:var(--card-chip,rgba(255,255,255,.06));font-size:.8rem;font-weight:600;color:var(--card-fg,var(--text))}
+.stk-list li > span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stk-list li i{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--dot);box-shadow:0 0 0 1.5px rgba(255,255,255,.55),0 0 8px var(--dot)}
+.stk-list li .material-symbols-outlined{font-size:1rem;color:var(--card-fg);flex-shrink:0;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--dot);box-shadow:0 0 0 1.5px rgba(255,255,255,.4)}
+.stk-list li.stk-more{background:none;color:var(--card-fg2,var(--text3));font-size:.72rem;padding:2px 9px}
+.stk-foot{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:.7rem;color:var(--card-fg2,var(--text3))}
+.stk-foot .material-symbols-outlined{font-size:.95rem}
+@media(max-width:700px){
+  .stack-card{padding-top:12px}
+  .stk-layer{left:9px;right:9px;top:6px}.stk-layer.l2{left:19px;right:19px;top:0}
+  .stk-ico{width:26px;height:26px;border-radius:8px;font-size:1rem!important}
+  .stk-name{font-size:.88rem}.stk-count{min-width:20px;height:20px;font-size:.66rem}
+  .stk-list{margin-top:8px;gap:4px}.stk-list li{padding:4px 7px;font-size:.72rem}
+  .stk-foot{font-size:.62rem;margin-top:7px}
+}
+
+/* Ventana de la pila (por debajo de la de detalle/edición para abrir notas encima) */
+#stackModal{z-index:990}
+#stackModal .modal{padding:0;overflow:hidden;display:flex;flex-direction:column;width:780px;max-width:94vw;max-height:88vh}
+.stk-mhead{display:flex;align-items:center;gap:12px;padding:18px 20px 16px;border-bottom:1px solid var(--border);
+  background:radial-gradient(ellipse 90% 140% at 0% 0%,color-mix(in srgb,var(--card-bg) 34%,transparent),transparent 75%)}
+.stk-mhead .stk-ico{width:40px;height:40px;border-radius:12px;font-size:1.35rem!important}
+.stk-mtitle{flex:1;min-width:0}
+.stk-name-input{width:100%;background:transparent;border:none;border-bottom:1.5px dashed rgba(255,255,255,.22);color:var(--text);font:inherit;font-size:1.2rem;font-weight:800;padding:2px 0 3px;outline:none;border-radius:0}
+.stk-name-input:focus{border-bottom-color:var(--card-bg);border-bottom-style:solid}
+.stk-mtitle small{display:block;font-size:.72rem;color:var(--text3);margin-top:4px}
+.stk-body{flex:1;min-height:0;overflow-y:auto;padding:18px 14px 8px}
+.stk-grid{padding-top:4px}
+.stk-grid > .note-card,.stk-grid > .proj-full-card{animation:stkFan .5s cubic-bezier(.22,1,.36,1) both!important;animation-delay:calc(var(--stk-i,0) * 55ms)!important}
+.stk-grid.no-enter > .note-card,.stk-grid.no-enter > .proj-full-card{animation:none!important}
+@keyframes stkFan{from{opacity:0;transform:translateY(-34px) scale(.86) rotate(calc(var(--stk-i,0) * 2deg - 3deg))}to{opacity:1;transform:none}}
+.stk-grid .stk-out{position:absolute!important;right:8px;bottom:8px;z-index:6!important;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(8,10,18,.55);border:1px solid rgba(255,255,255,.18);color:#fff;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:.75;transition:opacity .2s,transform .2s}
+.stk-grid .stk-out .material-symbols-outlined{font-size:1.05rem}
+.stk-grid .stk-out:hover{opacity:1;transform:scale(1.08)}
+.stk-grid > .note-card{padding-bottom:42px}
+.stk-actions{justify-content:space-between!important;align-items:center}
+.stk-actions .btn{display:inline-flex;align-items:center;gap:5px}
+.stk-actions .material-symbols-outlined{font-size:1.05rem}
+@media(max-width:640px){
+  #stackModal .modal{width:calc(100vw - 20px);max-width:calc(100vw - 20px);max-height:calc(var(--vvh,100dvh) - 24px)}
+  .stk-mhead{padding:14px 14px 12px}.stk-body{padding:14px 8px 6px}
+  .stk-name-input{font-size:1.05rem}
+}
+@media(prefers-reduced-motion:reduce){.stk-grid > .note-card,.stk-grid > .proj-full-card,.stack-card,.stk-hint{animation:none!important}}
 </style>
 <link rel="stylesheet" href="pixel.css">
 </head>
@@ -3577,6 +3657,10 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
       <button class="btn btn-primary" id="projSave">Guardar</button>
     </div>
   </div>
+</div>
+
+<div class="modal-overlay" id="stackModal">
+  <div class="modal" id="stackBox"></div>
 </div>
 
 <div class="modal-overlay" id="projDetailModal">
@@ -4274,7 +4358,13 @@ function softRender(fn) {
   if (ct) ct.scrollTop = top;
 }
 
-function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
+// Arrastre de tarjetas (notas y proyectos):
+//  · Mantén presionada una tarjeta → se levanta y sigue tu dedo.
+//  · Suéltala sobre otra → se coloca antes o después de esa tarjeta.
+//  · Déjala SOSTENIDA encima de otra un momento → aparece «Suelta para apilar» y,
+//    al soltar, las dos tarjetas quedan apiladas (onStack). Solo si se pasa onStack.
+const STACK_HOLD_MS = 650;
+function enableDragReorder(container, { idAttr = 'data-rid', onDrop, onStack } = {}) {
   if (!container || container._reorderBound) return;
   container._reorderBound = true;
   container.style.position = 'relative';
@@ -4291,78 +4381,134 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   let dragEl = null, pointerId = null, startX = 0, startY = 0;
   let grabOffX = 0, grabOffY = 0, pressTimer = null, dragging = false, started = false;
   let scrolling = false, scrollParent = null, lastY = 0;
-  // Estado para sincronizar el arrastre con el refresco de pantalla (rAF):
-  // pointermove dispara más veces que frames hay; hacemos el trabajo pesado
-  // (medir + reordenar el DOM) UNA sola vez por frame para que no se trabe.
-  let rafId = null, moveX = 0, moveY = 0, containerRect = null;
+  let rafId = null, moveX = 0, moveY = 0;
+  // Tarjeta sobre la que está el dedo y temporizador de «sostener para apilar»
+  let hoverEl = null, hoverTimer = null, stackReady = false, autoRaf = null;
 
   const cards = () => [...container.querySelectorAll(`:scope > [${idAttr}]`)];
-
   const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
 
   const positionDrag = (clientX, clientY) => {
-    // containerRect se cachea al confirmar el long-press; durante el arrastre
-    // el scroll está bloqueado, así que el rect no cambia y evitamos un reflow.
-    const cRect = containerRect || (containerRect = container.getBoundingClientRect());
+    const cRect = container.getBoundingClientRect();
     const x = (clientX - cRect.left) - grabOffX - dragEl.offsetLeft;
     const y = (clientY - cRect.top) - grabOffY - dragEl.offsetTop;
-    dragEl.style.transform = `translate(${x}px, ${y}px) scale(1.045) rotate(-1deg)`;
+    const sc = stackReady ? 'scale(.82) rotate(-4deg)' : 'scale(1.045) rotate(-1deg)';
+    dragEl.style.setProperty('transform', `translate(${x}px, ${y}px) ${sc}`, 'important');
   };
 
-  // Trabajo de arrastre agrupado en un único frame.
+  const setHint = (el, ready) => {
+    let h = el.querySelector(':scope > .stk-hint');
+    if (!h) { h = document.createElement('div'); h.className = 'stk-hint'; el.appendChild(h); }
+    h.innerHTML = ready
+      ? '<span class="material-symbols-outlined">stacks</span>Suelta para apilar'
+      : '<span class="material-symbols-outlined">stacks</span>Mantén para apilar<i style="animation-duration:' + STACK_HOLD_MS + 'ms"></i>';
+  };
+  const clearHover = () => {
+    if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+    if (hoverEl) {
+      hoverEl.classList.remove('stack-target', 'stack-ready', 'drop-target');
+      hoverEl.querySelector(':scope > .stk-hint')?.remove();
+    }
+    hoverEl = null;
+    if (stackReady) { stackReady = false; dragEl?.classList.remove('stacking'); }
+  };
+  const setHover = (el) => {
+    if (el === hoverEl) return;
+    clearHover();
+    if (!el) return;
+    hoverEl = el;
+    el.classList.add('drop-target');
+    if (!onStack) return;
+    el.classList.add('stack-target'); setHint(el, false);
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      if (hoverEl !== el || !dragging) return;
+      stackReady = true;
+      el.classList.add('stack-ready'); setHint(el, true);
+      dragEl?.classList.add('stacking');
+      haptic('select');
+      positionDrag(moveX, moveY);
+    }, STACK_HOLD_MS);
+  };
+
+  // Tarjeta debajo del dedo (ignorando la que estás arrastrando)
+  const cardAt = (x, y) => {
+    const hit = (document.elementsFromPoint ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)])
+      .find(n => n && !dragEl.contains(n));
+    const c = hit && hit.closest && hit.closest(`[${idAttr}]`);
+    return c && c !== dragEl && c.parentElement === container ? c : null;
+  };
+
   const applyMove = () => {
     rafId = null;
     if (!dragEl || !dragging) return;
     positionDrag(moveX, moveY);
-    const under = document.elementFromPoint(moveX, moveY)?.closest(`[${idAttr}]`);
-    if (under && under !== dragEl && under.parentElement === container) {
-      const list = cards();
-      const di = list.indexOf(dragEl), ti = list.indexOf(under);
-      if (di < 0 || ti < 0) return;
-      _flip(list.filter(c => c !== dragEl), () => {
-        if (di < ti) container.insertBefore(dragEl, under.nextSibling);
-        else container.insertBefore(dragEl, under);
-        if (container._relayout) container._relayout();   // cuadrícula de notas: recalcular columnas
-      });
-      positionDrag(moveX, moveY);
+    setHover(cardAt(moveX, moveY));
+  };
+
+  // Desplazamiento automático al llevar la tarjeta al borde de arriba o de abajo
+  const autoScroll = () => {
+    autoRaf = null;
+    if (!dragEl || !dragging || !scrollParent) return;
+    const isDoc = scrollParent === document.scrollingElement || scrollParent === document.documentElement;
+    const r = isDoc ? { top: 0, bottom: innerHeight } : scrollParent.getBoundingClientRect();
+    const edge = 70; let v = 0;
+    if (moveY < r.top + edge) v = -Math.ceil((r.top + edge - moveY) / 6);
+    else if (moveY > r.bottom - edge) v = Math.ceil((moveY - (r.bottom - edge)) / 6);
+    if (v) {
+      const before = scrollParent.scrollTop;
+      scrollParent.scrollTop += Math.max(-18, Math.min(18, v));
+      if (scrollParent.scrollTop !== before) { positionDrag(moveX, moveY); setHover(cardAt(moveX, moveY)); }
+      autoRaf = requestAnimationFrame(autoScroll);
     }
   };
 
   const onMove = (e) => {
-    if (!dragEl) return;
-
-    if (dragging) {
-      e.preventDefault();
-      // Guardamos la última posición y dejamos que rAF haga el cálculo.
-      moveX = e.clientX; moveY = e.clientY;
-      if (rafId == null) rafId = requestAnimationFrame(applyMove);
-    }
+    if (!dragEl || !dragging) return;
+    e.preventDefault();
+    moveX = e.clientX; moveY = e.clientY;
+    if (rafId == null) rafId = requestAnimationFrame(applyMove);
+    if (autoRaf == null) autoRaf = requestAnimationFrame(autoScroll);
   };
 
   const finish = () => {
     clearPress(); clearPendingVisual();
     if (rafId != null) { cancelAnimationFrame(rafId); rafId = null; }
-    containerRect = null;
+    if (autoRaf != null) { cancelAnimationFrame(autoRaf); autoRaf = null; }
+    const target = hoverEl, doStack = stackReady && !!onStack && !!target;
+    clearHover();
+    let changed = false;
     if (dragEl) {
-      dragEl.classList.remove('reorder-pending', 'reorder-grab');
-      dragEl.style.transform = '';
+      dragEl.classList.remove('reorder-pending', 'reorder-grab', 'stacking');
+      dragEl.style.removeProperty('transform');
       dragEl.style.touchAction = 'pan-y'; // restaurar scroll vertical nativo
       dragEl.style.willChange = '';
+      // Soltar sobre una tarjeta (sin apilar): se coloca antes o después de ella
+      if (dragging && started && target && !doStack) {
+        const list = cards(), di = list.indexOf(dragEl), ti = list.indexOf(target);
+        if (di >= 0 && ti >= 0 && di !== ti) {
+          changed = true;
+          _flip(list, () => {
+            if (di < ti) container.insertBefore(dragEl, target.nextSibling);
+            else container.insertBefore(dragEl, target);
+            if (container._relayout) container._relayout();
+          });
+        }
+      }
     }
     container.classList.remove('reorder-mode-active');
     if (dragging && started) {
       _suppressNextCardClick = true;
       setTimeout(() => { _suppressNextCardClick = false; }, 300);
-      onDrop(cards().map(el => el.getAttribute(idAttr)));
+      const dragId = dragEl && dragEl.getAttribute(idAttr);
+      if (doStack) onStack(dragId, target.getAttribute(idAttr));
+      else if (changed && onDrop) onDrop(cards().map(el => el.getAttribute(idAttr)));
     }
     dragEl = null; dragging = false; started = false; scrolling = false; scrollParent = null; pointerId = null;
     _setDragTouchActive(false);
   };
 
   // Retardo para mostrar el feedback visual "reorder-pending" (leve encogimiento).
-  // Es más corto que LONGPRESS_MS para que se vea la señal antes de confirmar el
-  // arrastre, pero lo bastante largo para que un tap, o apoyar el dedo para
-  // empezar a hacer scroll, nunca parezca "selección".
   const PENDING_VISUAL_DELAY = 260;
   let pendingVisualTimer = null;
   const clearPendingVisual = () => {
@@ -4372,16 +4518,15 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
   container.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const card = e.target.closest(`[${idAttr}]`);
-    if (!card || e.target.closest('button,input,textarea,a,select')) return;
+    if (!card || card.parentElement !== container || e.target.closest('button,input,textarea,a,select')) return;
     dragEl = card; pointerId = e.pointerId; startX = e.clientX; startY = e.clientY;
+    moveX = startX; moveY = startY;
     dragging = false; started = false; scrolling = false;
     lastY = e.clientY;
     scrollParent = getScrollParent(container);
     const r = card.getBoundingClientRect();
     grabOffX = e.clientX - r.left; grabOffY = e.clientY - r.top;
 
-    // ── feedback visual retrasado 160ms ──
-    // Los taps (<150ms) y scrolls (cancelan antes de 160ms) nunca ven el scale(.96).
     clearPress(); clearPendingVisual();
     pendingVisualTimer = setTimeout(() => {
       if (dragEl) card.classList.add('reorder-pending');
@@ -4392,7 +4537,6 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
       dragging = true; started = true;
       card.style.touchAction = 'none';
       card.style.willChange = 'transform';
-      containerRect = container.getBoundingClientRect();
       _setDragTouchActive(true, scrollParent);
       try { dragEl.setPointerCapture(pointerId); } catch (_) {}
       dragEl.classList.remove('reorder-pending');
@@ -4407,12 +4551,8 @@ function enableDragReorder(container, { idAttr = 'data-rid', onDrop } = {}) {
     if (!dragEl) return;
     if (dragging) { onMove(e); return; }
     // Long-press pendiente: cancelamos si el dedo se mueve antes de que se confirme.
-    // — Si el movimiento es predominantemente VERTICAL (scroll), cancelamos de inmediato
-    //   con umbral bajo (6px) para no interferir con el scroll nativo.
-    // — Si es predominantemente HORIZONTAL o diagonal, esperamos un umbral mayor (14px)
-    //   ya que podría ser el inicio de un arrastre intencional.
     const dx = Math.abs(e.clientX - startX), dy = Math.abs(e.clientY - startY);
-    const isScrollIntent = dy > dx;          // el dedo va más hacia arriba/abajo
+    const isScrollIntent = dy > dx;
     const threshold = isScrollIntent ? 6 : 14;
     const moved = Math.max(dx, dy) > threshold;
     if (moved) {
@@ -5679,7 +5819,7 @@ const setNotePinned=(n,val)=>{
    then each column receives the next card immediately under its own previous card. */
 const layoutPinnedMasonry=container=>{
  if(!container||!container.isConnected)return;
- const cards=[...container.children].filter(el=>el.matches('.note-card,.proj-full-card'));
+ const cards=[...container.children].filter(el=>el.matches('.note-card,.proj-full-card,.stack-card'));
  if(!cards.length)return;
  // Count tracks from the container's ACTUAL content width. Do not read the
  // expanded computed gridTemplateColumns: auto-fill may include zero-width
@@ -5698,7 +5838,7 @@ const layoutPinnedMasonry=container=>{
  const bottom=Array(columns).fill(0);
  cards.forEach((card,i)=>{
    const column=i%columns;
-   const height=Math.max(1,Math.ceil(card.getBoundingClientRect().height));
+   const height=Math.max(1,Math.ceil(card.offsetHeight||card.getBoundingClientRect().height));   // offsetHeight: no lo altera una animación de escala
    const col=String(column+1),row=(bottom[column]+1)+' / span '+height;
    if(card.style.getPropertyValue('grid-column')!==col)
      card.style.setProperty('grid-column',col,'important');
@@ -5721,7 +5861,7 @@ const bindPinnedMasonry=container=>{
  if('ResizeObserver' in window){
   const ob=new ResizeObserver(relayout);container._pinnedMasonryObserver=ob;
   ob.observe(container);
-  [...container.children].filter(el=>el.matches('.note-card,.proj-full-card')).forEach(el=>ob.observe(el));
+  [...container.children].filter(el=>el.matches('.note-card,.proj-full-card,.stack-card')).forEach(el=>ob.observe(el));
  }
  relayout();
  if(document.fonts?.ready)document.fonts.ready.then(relayout);
@@ -5958,12 +6098,12 @@ const renderProjects=()=>{
 // Guarda la tarjeta tocada para que la ventana se expanda desde ella
 let _tapCard = null;
 document.addEventListener('click', e => {
-  const c = e.target.closest && e.target.closest('.note-card,.proj-full-card,.project-item');
+  const c = e.target.closest && e.target.closest('.stack-card,.note-card,.proj-full-card,.project-item');
   _tapCard = c ? { r: c.getBoundingClientRect(), t: Date.now() } : null;
 }, true);
 const _prepareCardExpand = (overlay) => {
   const modal = overlay.querySelector('.modal'); if(!modal) return;
-  const ok = (overlay.id === 'noteDetailModal' || overlay.id === 'projDetailModal') && _tapCard && Date.now() - _tapCard.t < 600;
+  const ok = (overlay.id === 'noteDetailModal' || overlay.id === 'projDetailModal' || overlay.id === 'stackModal') && _tapCard && Date.now() - _tapCard.t < 600;
   modal.classList.remove('expand-from-card');
   if(!ok) return;
   const r = _tapCard.r, w = modal.offsetWidth || 400, h = modal.offsetHeight || 400;
@@ -6004,6 +6144,7 @@ document.getElementById('blockDelete')?.addEventListener('click',()=>{
   addToTrash('routine', b); state.routines=state.routines.filter(x=>x.id!=id); save(); closeModal('blockModal'); _afterCalDelete(); toast('🗑️ Movido a la papelera');
 });
 const closeModal=id=>{
+  if(id==='noteModal'||id==='projModal') window._newIntoStack=null;   // «+ aquí» de una pila se cancela al cerrar sin guardar
   if(id==='noteModal'){const nm=document.querySelector('#noteModal .note-editor-modal');if(nm)setTimeout(()=>{nm.classList.remove('ne-compact');nm.style.height='';},400);}
   const m=document.getElementById(id); if(!m) return;
   const modal=m.querySelector('.modal');
@@ -6067,6 +6208,7 @@ document.getElementById('noteSave')?.addEventListener('click',()=>{
     if(n) { n.title=t; n.body=document.getElementById('noteBody').value.trim(); n.tags=document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean); n.color=document.getElementById('noteColor').value; n.motion=motion; n.updatedAt=new Date().toISOString(); }
   } else {
     state.notes.unshift({id:Date.now(),title:t,body:document.getElementById('noteBody').value.trim(),tags:document.getElementById('noteTags').value.split(',').map(s=>s.trim()).filter(Boolean),color:document.getElementById('noteColor').value,motion,pinned:false,createdAt:new Date().toISOString()});
+    takeNewIntoStack('note', state.notes[0]);
   }
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='notes') renderNotesView(); else renderNotes();
   closeModal('noteModal'); ['noteTitle','noteBody','noteTags','noteId'].forEach(id=>document.getElementById(id).value=''); toast('✅ Nota guardada');
@@ -6096,6 +6238,7 @@ document.getElementById('projSave')?.addEventListener('click',()=>{
     if(p) { p.name=n; p.desc=document.getElementById('projDesc').value.trim(); p.status=document.getElementById('projStatus').value; p.color=c; p.icon=ic; p.motion=motion; p.updatedAt=new Date().toISOString(); }
   } else {
     state.projects.unshift({id:Date.now(),name:n,desc:document.getElementById('projDesc').value.trim(),status:document.getElementById('projStatus').value,color:c,icon:ic,motion,pinned:false,tasks:[],createdAt:new Date().toISOString()});
+    takeNewIntoStack('project', state.projects[0]);
   }
   save(); if(document.querySelector('.nav-item.active')?.dataset.view==='projects') renderProjectsView(); else renderProjects(); 
   closeModal('projModal'); document.getElementById('projName').value=''; document.getElementById('projDesc').value=''; document.getElementById('projId').value=''; toast('✅ Guardado');
@@ -8403,46 +8546,48 @@ const renderProjectsView=()=>{
     return;
   }
 
-  sortProjects(state.projects).forEach(p=>{
-    // Tarjeta compacta: solo icono, título, descripción y conteo de pendientes.
-    // Las tareas se ven al abrir el proyecto (ventana de detalle).
-    const total = p.tasks?.length || 0;
-    const pending = (p.tasks||[]).filter(t=>!t.done).length;
-    const pendingTxt = !total ? 'Sin tareas' : (pending === 0 ? 'Todo listo' : `${pending} pendiente${pending===1?'':'s'}`);
-    const pendingIcon = !total ? 'playlist_add' : (pending === 0 ? 'task_alt' : 'checklist');
-    const el=document.createElement('div'); el.className='proj-full-card colored compact'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
-    el.setAttribute('style', cardToneStyle(p.color));
-    el.dataset.novaMotion=NOVA_MOTIONS.includes(p.motion)?p.motion:'glow';
-    el.innerHTML=`
-      <span class="nova-card-fx" aria-hidden="true"></span>
-      ${pending > 0 ? `<span class="proj-notif" aria-label="${pending} pendiente${pending===1?'':'s'}">${pending > 99 ? '99+' : pending}</span>` : ''}
-      <div class="proj-card-head">
-        <div class="proj-card-info">
-          <div class="proj-icon-badge"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
-          <div class="proj-card-info-text">
-            <div class="proj-card-title">${_esc(p.name)}</div>
-            <div class="proj-card-desc">${_esc(p.desc||'Sin descripción')}</div>
-          </div>
-        </div>
-      </div>
-      <div class="proj-card-pending"><span class="material-symbols-outlined">${pendingIcon}</span>${pendingTxt}</div>
-    `;
-    el.addEventListener('click', () => {
-      if (_suppressNextCardClick) return;
-      openProjectDetail(p.id);
-    });
-    list.appendChild(el);
+  stackEntries(sortProjects(state.projects)).forEach(en=>{
+    list.appendChild(en.stack ? buildStackCard('project', en) : buildProjectCard(en.item));
   });
 
-  window._pinPopId = null;
+  window._pinPopId = null; window._stackPopId = null;
   bindPinnedMasonry(list);
-  enableDragReorder(list, { onDrop: (orderedIds) => {
-    orderedIds.forEach((id,i)=>{
-      const proj=state.projects.find(x=>x.id==id);
-      if(proj&&!proj.pinned)proj.order=i;
-    });
-    save(); toast('↕️ Orden actualizado');
-  }});
+  enableDragReorder(list, {
+    onDrop: ids => { applyGridOrder('project', ids); toast('↕️ Orden actualizado'); },
+    onStack: (a, b) => stackItems('project', a, b)
+  });
+  refreshOpenStack('project');
+};
+
+// Tarjeta compacta de proyecto: solo icono, título, descripción y conteo de pendientes.
+// Las tareas se ven al abrir el proyecto (ventana de detalle).
+const buildProjectCard = (p) => {
+  const total = p.tasks?.length || 0;
+  const pending = (p.tasks||[]).filter(t=>!t.done).length;
+  const pendingTxt = !total ? 'Sin tareas' : (pending === 0 ? 'Todo listo' : `${pending} pendiente${pending===1?'':'s'}`);
+  const pendingIcon = !total ? 'playlist_add' : (pending === 0 ? 'task_alt' : 'checklist');
+  const el=document.createElement('div'); el.className='proj-full-card colored compact'+(p.pinned?' pinned':'')+(window._pinPopId===p.id?' pin-pop':''); el.setAttribute('data-rid', p.id);
+  el.setAttribute('style', cardToneStyle(p.color));
+  el.dataset.novaMotion=NOVA_MOTIONS.includes(p.motion)?p.motion:'glow';
+  el.innerHTML=`
+    <span class="nova-card-fx" aria-hidden="true"></span>
+    ${pending > 0 ? `<span class="proj-notif" aria-label="${pending} pendiente${pending===1?'':'s'}">${pending > 99 ? '99+' : pending}</span>` : ''}
+    <div class="proj-card-head">
+      <div class="proj-card-info">
+        <div class="proj-icon-badge"><span class="material-symbols-outlined">${p.icon||'rocket_launch'}</span></div>
+        <div class="proj-card-info-text">
+          <div class="proj-card-title">${_esc(p.name)}</div>
+          <div class="proj-card-desc">${_esc(p.desc||'Sin descripción')}</div>
+        </div>
+      </div>
+    </div>
+    <div class="proj-card-pending"><span class="material-symbols-outlined">${pendingIcon}</span>${pendingTxt}</div>
+  `;
+  el.addEventListener('click', () => {
+    if (_suppressNextCardClick) return;
+    openProjectDetail(p.id);
+  });
+  return el;
 };
 
 // ══════════════════════════════════════════════
@@ -8730,48 +8875,263 @@ const renderNotesView=()=>{
   const sorted=sortNotes(state.notes);
   if(!sorted.length){ c.innerHTML='<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:20px;column-span:all;grid-column:1/-1">No hay notas.</div>'; return; }
   
-  sorted.forEach(n=>{
-    const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
-    el.setAttribute('style', cardToneStyle(n.color));
-    el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
-    el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div class="note-title">${n.title||'Sin título'}</div>
-        <button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button>
-      </div>
-      <div class="note-body nmd">${noteMd(n.body)}</div>
-      ${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}
-    `;
-
-    // Fijar / desfijar (la nota fijada se queda arriba, debajo de las que ya estaban fijadas)
-    el.querySelector('.pin-note-btn').addEventListener('click',(e)=>{
-      e.stopPropagation();
-      if(_suppressNextCardClick) return;
-      const note=state.notes.find(x=>x.id===n.id); if(!note) return;
-      setNotePinned(note,!note.pinned);
-      softRender(renderNotesView); toast(note.pinned?'📌 Anclada':'Desanclada');
-    });
-
-    // Clic en la nota: abrir la ventana de lectura (ahí se edita o se elimina)
-    el.addEventListener('click',(e)=>{
-      if(_suppressNextCardClick) return;
-      if(e.target.closest('.pin-note-btn')) return;
-      openNoteDetail(n.id);
-    });
-    c.appendChild(el);
+  stackEntries(sorted).forEach(en=>{
+    c.appendChild(en.stack ? buildStackCard('note', en) : buildNoteCard(en.item));
   });
 
-  window._pinPopId = null;
+  window._pinPopId = null; window._stackPopId = null;
   bindNotesGrid(c);
-  enableDragReorder(c, { onDrop: (orderedIds) => {
-    // Arrastrar cambia el orden de notas no fijadas, no la antigüedad
-    // de las fijaciones: la primera fijada siempre permanece primero.
-    orderedIds.forEach((id, i) => {
-      const note=state.notes.find(x=>x.id==id);
-      if(note&&!note.pinned)note.order=i;
-    });
-    save(); toast('↕️ Orden actualizado');
+  // Arrastrar cambia el orden de notas no fijadas, no la antigüedad de las fijaciones.
+  enableDragReorder(c, {
+    onDrop: ids => { applyGridOrder('note', ids); toast('↕️ Orden actualizado'); },
+    onStack: (a, b) => stackItems('note', a, b)
+  });
+  refreshOpenStack('note');
+};
+
+const buildNoteCard = (n) => {
+  const el=document.createElement('div'); el.className='note-card colored'+(n.pinned?' pinned':'')+(window._pinPopId===n.id?' pin-pop':''); el.setAttribute('data-rid', n.id);
+  el.setAttribute('style', cardToneStyle(n.color));
+  el.dataset.novaMotion=NOVA_MOTIONS.includes(n.motion)?n.motion:'glow';
+  el.innerHTML=`<span class="nova-card-fx" aria-hidden="true"></span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="note-title">${n.title||'Sin título'}</div>
+      <button class="pin-note-btn" title="${n.pinned?'Desfijar':'Fijar'}" aria-label="${n.pinned?'Desfijar':'Fijar'}">📌</button>
+    </div>
+    <div class="note-body nmd">${noteMd(n.body)}</div>
+    ${n.tags?.length?`<div class="note-tags">${n.tags.map(t=>`<span class="note-tag">${t}</span>`).join('')}</div>`:''}
+  `;
+  // Fijar / desfijar (la nota fijada se queda arriba, debajo de las que ya estaban fijadas)
+  el.querySelector('.pin-note-btn').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    if(_suppressNextCardClick) return;
+    const note=state.notes.find(x=>x.id===n.id); if(!note) return;
+    setNotePinned(note,!note.pinned);
+    softRender(renderNotesView); toast(note.pinned?'📌 Anclada':'Desanclada');
+  });
+  // Clic en la nota: abrir la ventana de lectura (ahí se edita o se elimina)
+  el.addEventListener('click',(e)=>{
+    if(_suppressNextCardClick) return;
+    if(e.target.closest('.pin-note-btn')) return;
+    openNoteDetail(n.id);
+  });
+  return el;
+};
+
+// ══════════════════════════════════════════════
+// PILAS DE TARJETAS (notas y proyectos)
+// Una pila NO es otra carpeta guardada aparte: cada nota/proyecto solo lleva
+// stackId + stackName. Así se sincroniza igual que siempre y, si una pila
+// se queda con una sola tarjeta, esa tarjeta vuelve a verse suelta.
+// ══════════════════════════════════════════════
+const STACK_KIND = {
+  note:    { key: 'notes',    one: 'nota',     many: 'notas',     render: () => renderNotesView(),    soft: () => softRender(renderNotesView) },
+  project: { key: 'projects', one: 'proyecto', many: 'proyectos', render: () => renderProjectsView(), soft: () => softRender(renderProjectsView) }
+};
+const stackNameOf = members => (members.find(x => x.stackName) || {}).stackName || 'Pila';
+const stackMembersOf = (kind, sid) => sortPinnedCards((state[STACK_KIND[kind].key] || []).filter(x => x.stackId === sid));
+// Convierte la lista ordenada en «tarjetas sueltas» y «pilas» (la pila ocupa el lugar de su primera tarjeta)
+const stackEntries = (sorted) => {
+  const groups = new Map();
+  sorted.forEach(x => { if (x.stackId) { if (!groups.has(x.stackId)) groups.set(x.stackId, []); groups.get(x.stackId).push(x); } });
+  const out = [], done = new Set();
+  sorted.forEach(x => {
+    const g = x.stackId && groups.get(x.stackId);
+    if (g && g.length > 1) {
+      if (done.has(x.stackId)) return;
+      done.add(x.stackId);
+      out.push({ stack: true, id: x.stackId, name: stackNameOf(g), members: g });
+    } else out.push({ item: x });
+  });
+  return out;
+};
+// Lista de ids de la cuadrícula (con «stack:ID») → orden real de cada tarjeta
+const applyGridOrder = (kind, ids) => {
+  const list = state[STACK_KIND[kind].key] || [];
+  const flat = [];
+  ids.forEach(rid => {
+    rid = String(rid);
+    if (rid.startsWith('stack:')) stackMembersOf(kind, rid.slice(6)).forEach(x => flat.push(x));
+    else { const it = list.find(x => String(x.id) === rid); if (it) flat.push(it); }
+  });
+  flat.forEach((x, i) => { if (!x.pinned) x.order = i; });
+  save();
+};
+const _stackTagName = (members) => {
+  // Si todas las notas comparten una etiqueta (p. ej. «trading»), esa es la sugerencia de nombre
+  const sets = members.map(m => new Set((m.tags || []).map(t => String(t).trim().toLowerCase()).filter(Boolean)));
+  if (!sets.length || !sets[0].size) return '';
+  const common = [...sets[0]].find(t => sets.every(st => st.has(t)));
+  return common ? common.charAt(0).toUpperCase() + common.slice(1) : '';
+};
+const stackItems = (kind, dragRid, targetRid) => {
+  const K = STACK_KIND[kind], list = state[K.key] || [];
+  const resolve = rid => {
+    rid = String(rid);
+    if (rid.startsWith('stack:')) { const sid = rid.slice(6), m = stackMembersOf(kind, sid); return m.length ? { sid, members: m } : null; }
+    const it = list.find(x => String(x.id) === rid); return it ? { members: [it] } : null;
+  };
+  const A = resolve(dragRid), B = resolve(targetRid);
+  if (!A || !B || A === B || (A.sid && A.sid === B.sid)) return;
+  let sid, name, isNew = false;
+  if (B.sid) { sid = B.sid; name = stackNameOf(B.members); }
+  else if (A.sid) { sid = A.sid; name = stackNameOf(A.members); }
+  else { sid = 'stk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); name = _stackTagName([...A.members, ...B.members]) || 'Nueva pila'; isNew = true; }
+  // La que arrastraste queda ENCIMA; la pila se queda en el lugar de la tarjeta de abajo
+  const moving = [...new Set([...A.members, ...B.members])];
+  const seq = sortPinnedCards(list);
+  const idx = seq.slice(0, seq.indexOf(B.members[0])).filter(x => !moving.includes(x)).length;
+  const rest = seq.filter(x => !moving.includes(x));
+  [...rest.slice(0, idx), ...moving, ...rest.slice(idx)].forEach((x, i) => { x.order = i; });
+  const now = new Date().toISOString();
+  moving.forEach(x => { x.stackId = sid; x.stackName = name; x.updatedAt = now; });
+  save(); haptic('success');
+  window._stackPopId = sid;
+  K.soft();
+  if (isNew) { toast('🗂️ Tarjetas apiladas — ponle nombre a la pila'); openStack(kind, sid, { focusName: true }); }
+  else toast(`🗂️ Agregado a «${name}»`);
+};
+const renameStack = (kind, sid, name) => {
+  name = String(name || '').trim().slice(0, 60) || 'Pila';
+  const m = stackMembersOf(kind, sid); if (!m.length || m.every(x => x.stackName === name)) return;
+  const now = new Date().toISOString();
+  m.forEach(x => { x.stackName = name; x.updatedAt = now; });
+  save(); STACK_KIND[kind].soft();
+};
+const _clearStack = x => { delete x.stackId; delete x.stackName; x.updatedAt = new Date().toISOString(); };
+const unstackItem = (kind, id) => {
+  const list = state[STACK_KIND[kind].key] || [];
+  const it = list.find(x => String(x.id) === String(id)); if (!it || !it.stackId) return;
+  const sid = it.stackId;
+  _clearStack(it);
+  // Queda justo después de la pila
+  const seq = sortPinnedCards(list).filter(x => x !== it);
+  const lastIdx = seq.map(x => x.stackId).lastIndexOf(sid);
+  seq.splice(lastIdx + 1, 0, it);
+  seq.forEach((x, i) => { x.order = i; });
+  const left = list.filter(x => x.stackId === sid);
+  if (left.length < 2) left.forEach(_clearStack);    // una pila de 1 ya no es pila
+  save(); haptic('tap');
+  STACK_KIND[kind].soft();
+  if (left.length < 2) closeModal('stackModal');
+  toast('↩️ Sacado de la pila');
+};
+const unstackAll = (kind, sid) => {
+  stackMembersOf(kind, sid).forEach(_clearStack);
+  save(); haptic('tap');
+  closeModal('stackModal');
+  STACK_KIND[kind].soft();
+  toast('↩️ Pila deshecha: las tarjetas siguen ahí, sueltas');
+};
+
+// Tarjeta de pila en la cuadrícula: la de arriba + capas detrás (se ve como tarjetas una encima de otra)
+const buildStackCard = (kind, en) => {
+  const K = STACK_KIND[kind], m = en.members, top = m[0];
+  const el = document.createElement('div');
+  el.className = 'stack-card' + (window._stackPopId === en.id ? ' stack-pop' : '');
+  el.dataset.kind = kind;
+  el.setAttribute('data-rid', 'stack:' + en.id);
+  const layer = (x, cls) => x ? `<div class="stk-layer ${cls}" style="${cardToneStyle(x.color)}" aria-hidden="true"></div>` : '';
+  const titleOf = x => kind === 'note' ? (x.title || 'Sin título') : (x.name || 'Sin nombre');
+  const pending = kind === 'project' ? m.reduce((a, p) => a + (p.tasks || []).filter(t => !t.done).length, 0) : 0;
+  const rows = m.slice(0, 4).map(x => `<li style="--dot:rgb(${_resolveRgb(x.color).join(',')})">${kind === 'project'
+      ? `<span class="material-symbols-outlined">${_esc(x.icon || 'rocket_launch')}</span>` : '<i></i>'}<span>${_esc(titleOf(x))}</span></li>`).join('');
+  const face = kind === 'note' ? 'note-card colored' : 'proj-full-card colored compact';
+  el.innerHTML = `${layer(m[2], 'l2')}${layer(m[1], 'l1')}
+    <div class="${face} stk-face" style="${cardToneStyle(top.color)}" data-nova-motion="${NOVA_MOTIONS.includes(top.motion) ? top.motion : 'glow'}">
+      <span class="nova-card-fx" aria-hidden="true"></span>
+      ${pending > 0 ? `<span class="proj-notif">${pending > 99 ? '99+' : pending}</span>` : ''}
+      <div class="stk-head">
+        <span class="stk-ico material-symbols-outlined">stacks</span>
+        <div class="stk-name">${_esc(en.name)}</div>
+        <span class="stk-count">${m.length}</span>
+      </div>
+      <ul class="stk-list">${rows}${m.length > 4 ? `<li class="stk-more"><span>+${m.length - 4} más</span></li>` : ''}</ul>
+      <div class="stk-foot"><span class="material-symbols-outlined">unfold_more</span>${m.length} ${K.many} · toca para abrir</div>
+    </div>`;
+  el.addEventListener('click', () => { if (_suppressNextCardClick) return; openStack(kind, en.id); });
+  return el;
+};
+
+// Ventana de la pila: se despliegan las tarjetas, se renombra, se reordena y se sacan
+let _openStack = null;
+const openStack = (kind, sid, opts = {}) => {
+  _openStack = { kind, sid };
+  renderStackModal(opts);
+  openModal('stackModal');
+  if (opts.focusName) setTimeout(() => { const i = document.getElementById('stkNameInput'); if (i) { i.focus(); i.select(); } }, 380);
+};
+const refreshOpenStack = (kind) => {
+  const ov = document.getElementById('stackModal');
+  if (!_openStack || _openStack.kind !== kind || !ov || !ov.classList.contains('open')) return;
+  if (stackMembersOf(kind, _openStack.sid).length < 2) { closeModal('stackModal'); return; }
+  renderStackModal({ soft: true });
+};
+const renderStackModal = (opts = {}) => {
+  const box = document.getElementById('stackBox'); if (!box || !_openStack) return;
+  const { kind, sid } = _openStack, K = STACK_KIND[kind], m = stackMembersOf(kind, sid);
+  if (!m.length) return;
+  const name = stackNameOf(m);
+  const typing = document.activeElement && document.activeElement.id === 'stkNameInput';
+  const prevScroll = box.querySelector('.stk-body')?.scrollTop || 0;
+  box.style.cssText = cardToneStyle(m[0].color);
+  box.innerHTML = `
+    <div class="stk-mhead">
+      <span class="stk-ico material-symbols-outlined">stacks</span>
+      <div class="stk-mtitle">
+        <input id="stkNameInput" class="stk-name-input" maxlength="60" value="${_esc(name)}" placeholder="Nombre de la pila" aria-label="Nombre de la pila" enterkeyhint="done">
+        <small>${m.length} ${K.many} apiladas · mantén presionada una para moverla</small>
+      </div>
+      <button class="pd-close" id="stkClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="stk-body"><div id="stackGrid" class="${kind === 'note' ? 'notes-masonry' : 'proj-masonry'} stk-grid${opts.soft ? ' no-enter' : ''}"></div></div>
+    <div class="pd-actions stk-actions">
+      <button class="btn btn-ghost" id="stkUnstackAll"><span class="material-symbols-outlined">layers_clear</span> Desapilar todo</button>
+      <button class="btn btn-primary" id="stkAdd">+ ${kind === 'note' ? 'Nota' : 'Proyecto'} aquí</button>
+    </div>`;
+  const grid = box.querySelector('#stackGrid');
+  m.forEach((x, i) => {
+    const el = kind === 'note' ? buildNoteCard(x) : buildProjectCard(x);
+    el.style.setProperty('--stk-i', i);
+    const out = document.createElement('button');
+    out.className = 'stk-out'; out.type = 'button'; out.title = 'Sacar de la pila'; out.setAttribute('aria-label', 'Sacar de la pila');
+    out.innerHTML = '<span class="material-symbols-outlined">move_up</span>';
+    out.addEventListener('click', e => { e.stopPropagation(); unstackItem(kind, x.id); });
+    el.appendChild(out);
+    grid.appendChild(el);
+  });
+  const body = box.querySelector('.stk-body'); if (body) body.scrollTop = prevScroll;
+  bindPinnedMasonry(grid);
+  enableDragReorder(grid, { onDrop: ids => {
+    // Reordenar dentro de la pila: reutiliza los mismos «lugares» de orden que ya tenía
+    const items = ids.map(id => m.find(x => String(x.id) === String(id))).filter(Boolean);
+    const slots = items.map(x => x.order ?? 0).sort((a, b) => a - b);
+    items.forEach((x, i) => { x.order = slots[i] + i * 1e-6; });
+    save(); K.soft(); toast('↕️ Orden de la pila actualizado');
   }});
+  const inp = box.querySelector('#stkNameInput');
+  if (typing) { inp.focus(); const v = inp.value.length; inp.setSelectionRange(v, v); }
+  const commit = () => renameStack(kind, sid, inp.value);
+  inp.addEventListener('change', commit);
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+  box.querySelector('#stkClose').addEventListener('click', () => closeModal('stackModal'));
+  box.querySelector('#stkUnstackAll').addEventListener('click', () => {
+    if (confirm(`¿Deshacer la pila «${stackNameOf(m)}»? No se borra nada: las ${m.length} ${K.many} vuelven a verse sueltas.`)) unstackAll(kind, sid);
+  });
+  box.querySelector('#stkAdd').addEventListener('click', () => {
+    if (kind === 'note') document.getElementById('newNoteBtnView')?.click();
+    else document.getElementById('newProjBtn')?.click();
+    window._newIntoStack = { kind, sid };
+  });
+};
+// Una nota/proyecto nuevo creado desde «+ aquí» entra directo en la pila
+const takeNewIntoStack = (kind, item) => {
+  const t = window._newIntoStack; window._newIntoStack = null;
+  if (!t || t.kind !== kind || !item) return;
+  const m = stackMembersOf(kind, t.sid); if (!m.length) return;
+  item.stackId = t.sid; item.stackName = stackNameOf(m);
+  item.order = Math.min(...m.map(x => x.order ?? 0)) - 1e-6;
 };
 
 // ══════════════════════════════════════════════
