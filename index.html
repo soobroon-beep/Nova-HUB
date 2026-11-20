@@ -7183,7 +7183,7 @@ const setupQuickAdd = () => {
     micBtn.dataset.listening='1'; micBtn.classList.add('qa-listening'); if(micIcon) micIcon.textContent='stop_circle';
     try { _qaRecognition.start(); } catch(e) { micBtn.dataset.listening='0'; micBtn.classList.remove('qa-listening'); if(micIcon) micIcon.textContent='mic'; return; }
     _qaRecognition.onresult = e => {
-      const transcript = e.results[0][0].transcript;
+      const transcript = window.VozLimpia ? (VozLimpia.clean(VozLimpia.fromResults(e.results)) || e.results[0][0].transcript) : e.results[0][0].transcript; // sin muletillas ni repeticiones
       input.value = (input.value.trim() ? input.value.trim()+' ' : '') + transcript;
       autosize();
     };
@@ -10762,6 +10762,7 @@ if ('serviceWorker' in navigator) {
   };
 })();
 </script>
+<script src="voz-limpia.js"></script>
 <script src="pixel.js"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)

@@ -214,6 +214,8 @@
     const diary = (d.diary || []).slice(-4).map(e => ({fecha: e.id ? ymd(new Date(+e.id)) : '', animo: e.mood, texto: cut(e.content, 220)}));
     return {ahora: `${today} ${p2(now.getHours())}:${p2(now.getMinutes())} (${DIAS[dow]})`, seccionAbierta: NAMES[section()] || section(), notas: notes, proyectos: projects, recordatorios: remOut, eventosProximos14dias: evs, horarioDeHoy: routines, habitos: habits, diarioReciente: diary};
   }
+  const VL = () => window.VozLimpia || {clean: t => String(t || '').trim(), merge: (a, b) => (a + ' ' + b).trim(), fromResults: r => { let t = ''; for (let i = 0; i < r.length; i++) t += r[i][0].transcript; return t; }, HINT: '', TRANSCRIBE: ''};
+  const VOZ = () => VL().HINT || ''; // pista: entiende la intención aunque el dictado traiga muletillas o repeticiones
   function profile() {
     const c = CFG(), out = [], name = c.nombre || H().user();
     if (name) out.push(`El usuario se llama ${name}: llámalo así.`);
@@ -262,7 +264,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     'Corrige la puntuación y ponle un título corto, pero no cambies lo que dije. No preguntes nada salvo la hora de un recordatorio que la necesite.\n\nLo que quiero guardar: ';
   async function llmAsk(text) {
     const q = quickMode ? QUICK + text : text;
-    const msgs = [{role: 'system', content: SYS + profile()}, ...hist.slice(-6), {role: 'user', content: `${q}\n\nMIS DATOS (JSON): ${JSON.stringify(context(text)).slice(0, 14000)}`}];
+    const msgs = [{role: 'system', content: SYS + profile() + VOZ()}, ...hist.slice(-6), {role: 'user', content: `${q}\n\nMIS DATOS (JSON): ${JSON.stringify(context(text)).slice(0, 14000)}`}];
     const raw = String(await chat(msgs, 800) || ''), m = raw.match(/\{[\s\S]*\}/); let j = null; try { j = m ? JSON.parse(m[0]) : null; } catch {}
     const reply = j && typeof j.reply === 'string' ? j.reply : raw.replace(/```[\s\S]*?```/g, '').replace(/^\s*\{[\s\S]*\}\s*$/, '').trim();
     const OK = ['note', 'project', 'task', 'reminder', 'event', 'habit', 'checkHabit', 'doneTask', 'diary', 'go'];
@@ -382,7 +384,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     const AC = window.AudioContext || window.webkitAudioContext, ac = new AC(), dec = await ac.decodeAudioData(await blob.arrayBuffer()); try { ac.close(); } catch {}
     const len = Math.ceil(dec.duration * 16000), off = new OfflineAudioContext(1, Math.max(1, len), 16000), src = off.createBufferSource(); src.buffer = dec; src.connect(off.destination); src.start(); const pcm = (await off.startRendering()).getChannelData(0);
     const wav = b64(toWav(pcm));
-    const body = {model: 'openai-audio', temperature: 0, max_tokens: 300, messages: [{role: 'system', content: 'Eres un transcriptor. Escribe EXACTAMENTE lo que dice la persona en el audio, en español, sin responderle, sin comillas y sin agregar nada. Si no se entiende nada, responde solo: ""'}, {role: 'user', content: [{type: 'text', text: 'Transcribe este audio.'}, {type: 'input_audio', input_audio: {data: wav, format: 'wav'}}]}]};
+    const body = {model: 'openai-audio', temperature: 0, max_tokens: 300, messages: [{role: 'system', content: VL().TRANSCRIBE || 'Eres un transcriptor. Escribe EXACTAMENTE lo que dice la persona en el audio, en español, sin responderle, sin comillas y sin agregar nada. Si no se entiende nada, responde solo: ""'}, {role: 'user', content: [{type: 'text', text: 'Transcribe este audio.'}, {type: 'input_audio', input_audio: {data: wav, format: 'wav'}}]}]};
     try { // 1) tu servidor NOVA HUB: Whisper open source gratis (Groq / Cloudflare)
       const r = await fetchT('https://nova-hub-push.soobroon.workers.dev/ai/transcribe', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({audio: wav, language: 'es'})}, 30000);
       if (r.ok) { const j = await r.json(); if (typeof j.text === 'string') return j.text.replace(/^["«“\s]+|["»”\s]+$/g, '').trim(); }
@@ -402,7 +404,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
       if (micCancel) { micCancel = false; return; }
       if (!chunks.length || dur < 600) { mood('neutral', 'idle'); say('No alcancé a escucharte. Toca el micrófono y habla.'); return; }
       busy = true; bub.classList.add('working'); mood('thinking', 'think'); say('Escuchando lo que dijiste…', {busy: true}); status('transcribiendo…');
-      let t = ''; try { t = await transcribe(new Blob(chunks, {type})); } catch (e) { console.warn('Nova Pixel voz', e); }
+      let t = ''; try { t = VL().clean(await transcribe(new Blob(chunks, {type}))); } catch (e) { console.warn('Nova Pixel voz', e); } // sin muletillas ni repeticiones
       busy = false; bub.classList.remove('working'); status('IA de NOVA HUB');
       if (!t || t.length < 2) { mood('surprised', 'idle'); say('No te entendí bien. Intenta otra vez un poco más cerca del micrófono, o escríbeme.'); return; }
       input.value = t; ask(t); };
@@ -414,14 +416,14 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     const start = () => {
       const r = rec = new SR(); r.lang = 'es-MX'; r.interimResults = true; r.continuous = true; r.maxAlternatives = 1; fail = ''; t0 = Date.now();
       r.onstart = () => { if (done) { input.value = done; return; } micUI(true); }; // al reanudar no borra lo que ya dijiste
-      r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; heard = (done + ' ' + t).replace(/\s+/g, ' ').trim(); input.value = heard; };
+      r.onresult = e => { heard = VL().merge(done, VL().fromResults(e.results)); input.value = heard; }; // sin duplicar lo que Android repite
       r.onerror = e => { fail = e.error; };
       r.onend = () => { if (rec !== r) return;
         if (micOn && fail !== 'not-allowed' && fail !== 'service-not-allowed' && fail !== 'audio-capture' && !(fail === 'network' && Date.now() - t0 < 1500)) { done = heard; try { start(); return; } catch {} }
         finish(); };
       r.start();
     };
-    const finish = () => { micOn = false; micUI(false); status('IA de NOVA HUB'); rec = null; mood('neutral', 'idle'); const t = heard; heard = '';
+    const finish = () => { micOn = false; micUI(false); status('IA de NOVA HUB'); rec = null; mood('neutral', 'idle'); const t = VL().clean(heard) || heard; heard = ''; if (t) input.value = t;
       if (micCancel) { micCancel = false; return; }
       if (t) { ask(t); return; }
       if (fail === 'not-allowed' && autoMic) { autoMic = false; mic.classList.add('px-pulse'); say('Toca el micrófono 🎙️ para empezar a dictar (la primera vez Android pide permiso).'); return; }
