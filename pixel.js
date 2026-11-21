@@ -74,6 +74,11 @@
     const b = document.getElementById('novaCreateFab'); if (!b || mobile()) return null; const r = b.getBoundingClientRect(); return r.width && r.top < AH() ? r : null; };
   function home() {
     const s = AV(), c = createBtn();
+    const rail = fab.closest('#novaFloatingDock');
+    if (rail) {
+      const r = fab.getBoundingClientRect(), dock = rail.getBoundingClientRect();
+      return {x:clamp(r.left+(r.width-s.w)/2,0,AW()-s.w), y:clamp(r.top,Math.min(dock.top+8,AH()-s.h),AH()-s.h-8)};
+    }
     // PC: descansa flotando abajo a la derecha, pegado al botón (+) de crear
     if (c) return {x: clamp(c.right + 6, 0, AW() - s.w), y: clamp(c.top - s.h + 18, 0, AH() - s.h - 24)}; // más arriba: los pies quedan a la altura del (+), sin cortarse
     const h = ls.home2; if (mobile() && h && Number.isFinite(h.rx) && Number.isFinite(h.by)) return {x: clamp(AW() - h.rx - s.w, 0, AW() - s.w), y: clamp(AH() - h.by - s.h, 0, AH() - bottomGap() - s.h - 6)};

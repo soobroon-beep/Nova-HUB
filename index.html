@@ -3465,7 +3465,7 @@ html[data-studio] {
 }
 html[data-studio] :is(body,#appShell,#main){background:var(--paper)!important;color:var(--ink)}
 html[data-studio] :is(#psBgWrap,#novaTexture,#novaVortexBg){display:none!important}
-html[data-studio] :is(#topbar,#tabbar,#moreDrawer,#novaCreateMenu,#tabSheet,.modal,.set-group,.set-hero){
+html[data-studio] :is(#topbar,#tabbar,#moreDrawer,#novaCreateMenu,.modal,.set-group,.set-hero){
   background:var(--paper)!important;color:var(--ink);border-color:var(--rule)!important;
   backdrop-filter:none!important;box-shadow:none!important;
 }
@@ -3616,6 +3616,73 @@ html[data-studio] .studio-choice{display:flex;gap:8px;align-items:center;flex-wr
   html[data-studio] #diaryListWrap{grid-column:2;grid-row:2/span 2}
   html[data-studio] .settings-wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
   html[data-studio] .settings-wrap>details[open]{grid-column:1/-1}
+}
+
+/* A closed quick-create sheet must have neither a paint box nor focus targets. */
+html[data-studio] #tabSheet:not(.open){visibility:hidden;background:transparent!important}
+html[data-studio] #tabSheet.open{background:transparent!important}
+html[data-studio] #tabSheet.open button{background:var(--panel)!important;color:var(--ink);border-color:var(--rule)}
+html[data-studio]{--sr-a:#2676cd;--sr-b:#8054cd;--sr-c:#13877c;--sr-d:#c16a21}
+html[data-studio="dark"]{--sr-a:#7ab7ff;--sr-b:#b597ff;--sr-c:#54c7b5;--sr-d:#f2ac72}
+html[data-studio] .stat-card:nth-child(1){--sr-art:var(--sr-a)}
+html[data-studio] .stat-card:nth-child(2){--sr-art:var(--sr-c)}
+html[data-studio] .stat-card:nth-child(3){--sr-art:var(--sr-d)}
+html[data-studio] .stat-card:nth-child(4){--sr-art:var(--sr-b)}
+html[data-studio] .studio-art i{color:var(--sr-art);border-color:color-mix(in srgb,var(--sr-art) 35%,var(--rule));background:linear-gradient(135deg,var(--paper),color-mix(in srgb,var(--sr-art) 14%,var(--paper)))}
+html[data-studio] .studio-steps i{background:var(--panel);border-top-color:var(--sr-art)}
+html[data-studio] .ring[data-ring="tasks"] .ring-bar{stroke:var(--sr-a)}
+html[data-studio] .ring[data-ring="projects"] .ring-bar{stroke:var(--sr-c)}
+html[data-studio] .ring[data-ring="habits"] .ring-bar{stroke:var(--sr-b)}
+html[data-studio] .studio-report{
+  --report:var(--sr-c);padding:clamp(15px,1.7vw,24px);min-width:0;
+  background:linear-gradient(125deg,color-mix(in srgb,var(--report) 6%,var(--panel)),var(--panel) 68%)!important;
+}
+html[data-studio] #studioWeek{--report:var(--sr-b)}
+.sr-header{display:flex;align-items:center;gap:9px}
+.sr-header h2{font:650 clamp(.94rem,1.28vw,1.15rem)/1.2 system-ui;letter-spacing:-.04em;color:var(--ink);margin:0}
+.sr-icon{color:var(--report);background:color-mix(in srgb,var(--report) 12%,var(--panel));border-radius:9px;font-size:18px!important;padding:6px}
+.sr-link{margin-left:auto;border:0;cursor:pointer;background:transparent;color:var(--quiet);font:550 .75rem system-ui;text-decoration:underline;text-underline-offset:3px;min-height:34px}
+.sr-link:hover{color:var(--ink)}
+.sr-summary{display:flex;align-items:center;gap:14px;margin:16px 0 12px}
+.sr-number{font:620 clamp(2rem,3.3vw,3.25rem)/1 system-ui;letter-spacing:-.07em;color:var(--ink);font-variant-numeric:tabular-nums}
+.sr-caption{max-width:21ch;color:var(--secondary);font:450 .8rem/1.4 system-ui}
+.sr-meter{height:10px;background:var(--raised);border-radius:4px;position:relative;overflow:hidden}
+.sr-meter:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 2px),var(--panel) calc(5% - 2px) 5%)}
+.sr-meter i{display:block;height:100%;background:var(--report);transform-origin:left}
+.sr-projects:not(:empty){margin-top:13px}
+.sr-project{background:transparent;width:100%;display:flex;gap:9px;align-items:center;border:0;border-top:1px solid var(--rule);cursor:pointer;color:var(--ink);padding:9px 2px;font:550 .83rem system-ui;text-align:left}
+.sr-project:hover .sr-name{text-decoration:underline;text-underline-offset:3px}
+.sr-dot{width:8px;height:8px;flex:none;border-radius:50%;box-shadow:0 0 0 1px var(--rule)}
+.sr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-ratio{margin-left:auto;white-space:nowrap;color:var(--quiet);font-size:.76rem;font-variant-numeric:tabular-nums}
+.sr-arrow{color:var(--quiet)}
+.sr-week{margin:4px 0 0;list-style:none;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.sr-week li{display:grid;justify-items:center;gap:4px;min-width:0;font:500 .69rem/1.2 system-ui;color:var(--quiet)}
+.sr-week .sr-today{color:var(--report);font-weight:700}
+.sr-track{height:46px;width:min(24px,72%);display:flex;align-items:flex-end;background:color-mix(in srgb,var(--report) 9%,var(--raised));border-radius:4px;overflow:hidden}
+.sr-track i{display:block;width:100%;background:color-mix(in srgb,var(--report) 68%,var(--panel));border-radius:4px;transform-origin:bottom}
+.sr-today .sr-track i{background:var(--report)}
+.sr-count{color:var(--secondary);font-variant-numeric:tabular-nums}
+@keyframes sr-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes sr-rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media(prefers-reduced-motion:no-preference){
+ .sr-meter i{animation:sr-fill .75s cubic-bezier(.2,.75,.2,1) both}
+ .sr-track i{animation:sr-rise .52s var(--sr-delay,0ms) cubic-bezier(.2,.75,.2,1) both}
+}
+@media(min-width:901px){
+ html[data-studio] #novaFloatingDock>.px-peek{
+   position:relative;inset:auto!important;display:flex;align-items:center;gap:8px;width:100%;height:56px;flex:none;
+   margin-top:8px;padding:6px 10px;border-top:1px solid var(--rule);border-radius:0;color:var(--ink);text-align:left;
+ }
+ html[data-studio] #novaFloatingDock>.px-peek:after{content:'Cortex';font:600 .86rem system-ui}
+ html[data-studio] #novaFloatingDock>.px-peek .px-peek-in{position:static;display:grid;place-items:center;width:36px}
+ html[data-studio] #novaFloatingDock>.px-peek .nph{width:36px;height:36px}
+ html[data-studio] .px-layer:has(.px-av:not([hidden])){z-index:99}
+}
+@media(max-width:700px){
+ .sr-project{min-height:44px}
+ .sr-header{gap:6px}
+ .sr-header .sr-link{min-height:40px}
 }
 </style>
 <script>
@@ -5897,9 +5964,9 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
 const NovaStudio = (() => {
   let group = 'Hoy';
   const groups = [
-    ['Hoy', [['#focusCard', '#dashReminders'], ['#ringsCard', '.cal-card']]],
+    ['Hoy', [['#studioProjects', '#focusCard', '#dashReminders'], ['#studioWeek', '.cal-card']]],
     ['Mi trabajo', [['.notes-section', '#dashDiary'], ['#projectsList', '#dashHabits']]],
-    ['Actividad', [['#dailyBriefingCard', '#daySummaryCard'], ['#dashActivityList', '.ai-card']]]
+    ['Actividad', [['#ringsCard', '#dailyBriefingCard', '#daySummaryCard'], ['#dashActivityList', '.ai-card']]]
   ];
   const item = (tag, cls, text) => {
     const el = document.createElement(tag);
@@ -5907,6 +5974,93 @@ const NovaStudio = (() => {
     if (text) el.textContent = text;
     return el;
   };
+  function reportHeader(title, icon, view, action) {
+    const header = item('header', 'sr-header');
+    const mark = item('span', 'material-symbols-outlined sr-icon', icon);
+    mark.setAttribute('aria-hidden', 'true');
+    const link = item('button', 'sr-link', action);
+    link.type = 'button';
+    link.addEventListener('click', () => document.querySelector('#sidebar [data-view="'+view+'"]')?.click());
+    header.append(mark, item('h2','',title), link);
+    return header;
+  }
+  function projectReport(panel) {
+    const active = sortProjects(state.projects || []).filter(p => p.status === 'active');
+    const rows = active.map(project => {
+      const tasks = project.tasks || [];
+      return {project, count:tasks.length, done:tasks.filter(t => t.done).length};
+    });
+    const total = rows.reduce((n, row) => n + row.count, 0);
+    const done = rows.reduce((n, row) => n + row.done, 0);
+    const pct = total ? Math.round(done * 100 / total) : 0;
+    const summary = item('div','sr-summary');
+    summary.append(item('strong','sr-number',total ? pct+'%' : '—'),
+      item('span','sr-caption', total ? done+' de '+total+' tareas completadas en proyectos activos' :
+        (active.length ? 'Agrega tareas para medir tu avance.' : 'Tus proyectos activos aparecerán aquí.')));
+    const bar = item('div','sr-meter'); bar.setAttribute('aria-hidden','true');
+    const fill = item('i',''); fill.style.width = pct+'%'; bar.append(fill);
+    const list = item('div','sr-projects');
+    for (const {project, count, done} of rows.slice(0,3)) {
+      const button = item('button','sr-project');
+      button.type = 'button';
+      const dot = item('i','sr-dot'); dot.style.backgroundColor = project.color || 'var(--accent)';
+      const label = item('span','sr-name',project.name || 'Proyecto');
+      const ratio = item('span','sr-ratio',count ? done+'/'+count : 'Sin tareas');
+      const arrow = item('span','sr-arrow','↗'); arrow.setAttribute('aria-hidden','true');
+      button.append(dot,label,ratio,arrow);
+      button.addEventListener('click', () => openProjectDetail(project.id));
+      list.append(button);
+    }
+    panel.replaceChildren(reportHeader('Avance de proyectos','timeline','projects','Ver proyectos'), summary, bar, list);
+  }
+  function weeklyReport(panel) {
+    const habits = state.habits || [];
+    // Use the same day keys used when a habit is checked elsewhere in NovaHub.
+    const today = new Date(), dow = new Intl.DateTimeFormat('es-MX',{weekday:'short',timeZone:'UTC'});
+    const label = new Intl.DateTimeFormat('es-MX',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'});
+    const days = Array.from({length:7}, (_, i) => {
+      const date = new Date(today);
+      date.setUTCDate(date.getUTCDate() - 6 + i);
+      const key = date.toISOString().slice(0,10);
+      return {date, count:habits.reduce((n,h) => n + Number((h.logs || []).includes(key)), 0)};
+    });
+    const total = days.reduce((n,d) => n+d.count,0);
+    const summary = item('div','sr-summary');
+    summary.append(item('strong','sr-number',String(total)),item('span','sr-caption',total === 1 ? 'registro en los últimos 7 días' : 'registros en los últimos 7 días'));
+    const chart = item('ol','sr-week');
+    chart.setAttribute('aria-label','Hábitos completados por día');
+    for (const [i, day] of days.entries()) {
+      const col = item('li',i === 6 ? 'sr-today' : '');
+      col.setAttribute('aria-label',label.format(day.date)+': '+day.count);
+      col.title = label.format(day.date)+' · '+day.count+' de '+habits.length+' hábitos';
+      const track = item('div','sr-track');
+      const fill = item('i',''); fill.style.height = (habits.length ? day.count*100/habits.length : 0)+'%';
+      fill.style.setProperty('--sr-delay',i*40+'ms');
+      track.append(fill);
+      col.append(item('span','sr-count',String(day.count)),track,item('span','sr-day',i===6?'Hoy':dow.format(day.date).replace('.','')));
+      chart.append(col);
+    }
+    panel.replaceChildren(reportHeader('Ritmo de hábitos','bar_chart','habits','Ver hábitos'),summary,chart);
+  }
+  function refreshInsights() {
+    const projects = document.getElementById('studioProjects'), week = document.getElementById('studioWeek');
+    if (projects) projectReport(projects);
+    if (week) weeklyReport(week);
+  }
+  function bindCortex() {
+    const wide = matchMedia('(min-width:901px)');
+    function position() {
+      const fab = document.querySelector('.px-peek'), layer = document.querySelector('.px-layer');
+      const dock = document.getElementById('novaFloatingDock');
+      if (!fab || !layer || !dock) return;
+      const parent = wide.matches && document.documentElement.dataset.studio ? dock : layer;
+      if (parent !== fab.parentElement) parent.append(fab);
+    }
+    wide.addEventListener('change', position);
+    window.addEventListener('nova-layout', position);
+    window.addEventListener('novapixel-ready', position);
+    position();
+  }
   function organize(content) {
     if (!document.documentElement.dataset.studio) return;
     const head = item('header', 'studio-heading');
@@ -5929,6 +6083,13 @@ const NovaStudio = (() => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(); }
         });
       });
+    }
+    for (const [widget, id] of [['#projectsList', 'studioProjects'], ['#dashHabits', 'studioWeek']]) {
+      if (content.querySelector(widget)) {
+        const panel = item('section', 'studio-report');
+        panel.id = id;
+        content.append(panel);
+      }
     }
     const nav = item('nav','studio-switch');
     nav.setAttribute('aria-label', 'Paneles del dashboard');
@@ -6006,6 +6167,7 @@ const NovaStudio = (() => {
     lit = next;
   }
   function bind() {
+    bindCortex();
     const ct = document.getElementById('content');
     ct.addEventListener('pointermove', e => {
       if (!document.documentElement.dataset.studio || reduced.matches || e.pointerType === 'touch') return;
@@ -6032,7 +6194,7 @@ const NovaStudio = (() => {
     }, {passive:true});
   }
   document.addEventListener('DOMContentLoaded', bind, {once:true});
-  return {organize, setMode};
+  return {organize, setMode, refreshInsights};
 })();
 
 const applyTheme = classicTheme => {
@@ -7193,7 +7355,7 @@ const renderRings = () => {
   } else apply();
 };
 
-const updateStats=()=>{ const el=document.getElementById('statTasks'); if(el) el.textContent=state.projects.reduce((a,p)=>a+(p.tasks?.filter(t=>!t.done).length||0),0); if (typeof renderRings === 'function') renderRings(); };
+const updateStats=()=>{ const el=document.getElementById('statTasks'); if(el) el.textContent=state.projects.reduce((a,p)=>a+(p.tasks?.filter(t=>!t.done).length||0),0); if (typeof renderRings === 'function') renderRings(); NovaStudio.refreshInsights(); };
 
 // ── SWIPE CON COLOR: derecha = completar (jade), izquierda = borrar (carmesí) ──
 const attachSwipe = (el, { onRight, onLeft, rightLabel = '✓ Hecho', leftLabel = 'Borrar 🗑' } = {}) => {
@@ -11117,7 +11279,7 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js"></script>
+<script src="pixel.js?bento=2"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';
