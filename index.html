@@ -3434,6 +3434,19 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 </style>
 <link rel="stylesheet" href="pixel.css">
 <style id="studio-style">
+
+html[data-studio] .ring-bar{stroke:var(--ink);stroke-width:6;filter:none}
+html[data-studio] .ring-track{stroke:var(--rule);stroke-width:6}
+html[data-studio] .focus-count:not(.urgent){background:var(--raised);color:var(--secondary)}
+html[data-studio] .cal-day.today{background:var(--ink);color:var(--paper);box-shadow:none}
+html[data-studio] #content :is(.studio-tile,.stat-card).studio-lit::before{
+  content:'';display:block;position:absolute;inset:0;height:auto;pointer-events:none;
+  padding:1px;border-radius:inherit;z-index:5;
+  background:radial-gradient(180px circle at var(--sx) var(--sy),rgba(var(--rgb),.8),transparent);
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}
+
 /* Studio uses the same navigation, editors, widgets and collection cards as Classic. */
 html[data-studio="light"] {
   --paper:#fff; --panel:#fcfcfc; --raised:#f3f3f3; --rule:#dedede;
