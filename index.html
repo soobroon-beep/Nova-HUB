@@ -3607,6 +3607,7 @@ html[data-studio] #content:has(:is(#notesFullList,#projFullList,#habitsListFull,
 html[data-studio] #content :is(.cal-section-card,.projects-card:not(.colored),.bf-pending,.set-block){border-color:var(--rule)!important;background:var(--panel)!important;box-shadow:none!important}
 html[data-studio] .set-block{border-radius:12px}
 html[data-studio] .studio-choice{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+html:not([data-studio="agenda"]) .agenda-tone{display:none!important}
 .studio-choice select{font:inherit;max-width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text)}
 @media(min-width:1100px){
   html[data-studio] #content:has(>#diaryListWrap){
@@ -6230,6 +6231,8 @@ const NovaStudio = (() => {
     applyTheme(pref.classic);
     const select = document.getElementById('studioChoice');
     if (select) select.value = pref.mode;
+    const tone = document.getElementById('agendaTone');
+    if (tone) tone.value = pref.classic;
     if (previousMode !== pref.mode) {
       window.dispatchEvent(new Event('nova-layout'));
       window.dispatchEvent(new Event('resize'));
@@ -8949,6 +8952,9 @@ const renderSettingsView=()=>{
     <div class="settings-section"><h3>Tema de la aplicación</h3>
       <div class="settings-row studio-choice"><label class="settings-label" for="studioChoice">Tema de NovaHub</label>
         <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Gris oscuro</option><option value="agenda">Agenda · Semanal</option></select>
+      </div>
+      <div class="settings-row studio-choice agenda-tone"><label class="settings-label" for="agendaTone">Apariencia de Agenda</label>
+        <select id="agendaTone"><option value="light">Clara</option><option value="dark">Oscura</option></select>
       </div><p class="appearance-help">Con tu sesión iniciada, el tema se sincroniza en tus dispositivos.</p>
     </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
@@ -9032,7 +9038,13 @@ const renderSettingsView=()=>{
   </div>`;
   const studioChoice = document.getElementById('studioChoice');
   studioChoice.value = document.documentElement.dataset.studio || 'classic';
-  studioChoice.addEventListener('change', () => NovaStudio.setMode(studioChoice.value));
+  studioChoice.addEventListener('change', () => {
+    const currentTone = document.documentElement.dataset.theme;
+    NovaStudio.setMode(studioChoice.value, studioChoice.value === 'agenda' ? currentTone : state.theme);
+  });
+  const agendaTone = document.getElementById('agendaTone');
+  agendaTone.value = state.theme;
+  agendaTone.addEventListener('change', () => NovaStudio.setMode('agenda', agendaTone.value));
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
