@@ -6018,11 +6018,11 @@ const NovaStudio = (() => {
   function weeklyReport(panel) {
     const habits = state.habits || [];
     // Use the same day keys used when a habit is checked elsewhere in NovaHub.
-    const today = new Date(), dow = new Intl.DateTimeFormat('es-MX',{weekday:'short',timeZone:'UTC'});
-    const label = new Intl.DateTimeFormat('es-MX',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'});
+    const today = new Date(), dow = new Intl.DateTimeFormat('es-MX',{weekday:'short'});
+    const label = new Intl.DateTimeFormat('es-MX',{weekday:'long',day:'numeric',month:'short'});
     const days = Array.from({length:7}, (_, i) => {
       const date = new Date(today);
-      date.setUTCDate(date.getUTCDate() - 6 + i);
+      date.setDate(date.getDate() - 6 + i);
       const key = date.toISOString().slice(0,10);
       return {date, count:habits.reduce((n,h) => n + Number((h.logs || []).includes(key)), 0)};
     });
