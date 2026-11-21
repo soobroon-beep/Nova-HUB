@@ -3834,7 +3834,7 @@ try {
 <div class="toast" id="toast"></div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="noteModal">
+<div class="modal-overlay" inert id="noteModal">
   <div class="modal note-editor-modal">
     <div class="ne-head">
       <button type="button" class="ne-x" id="noteCancel" aria-label="Cerrar"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
@@ -3889,7 +3889,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="eventModal">
+<div class="modal-overlay" inert id="eventModal">
   <div class="modal">
     <h3 id="evModalTitle">📅 Nuevo Evento</h3>
     <input type="hidden" id="evId"/>
@@ -3909,7 +3909,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="projModal">
+<div class="modal-overlay" inert id="projModal">
   <div class="modal">
     <h3 id="projModalTitle">🚀 Nuevo Proyecto</h3>
     <input type="hidden" id="projId"/>
@@ -3968,19 +3968,19 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="stackModal">
+<div class="modal-overlay" inert id="stackModal">
   <div class="modal" id="stackBox"></div>
 </div>
 
-<div class="modal-overlay" id="projDetailModal">
+<div class="modal-overlay" inert id="projDetailModal">
   <div class="modal" id="projDetailBox"></div>
 </div>
 
-<div class="modal-overlay" id="noteDetailModal">
+<div class="modal-overlay" inert id="noteDetailModal">
   <div class="modal" id="noteDetailBox"></div>
 </div>
 
-<div class="modal-overlay" id="habitModal">
+<div class="modal-overlay" inert id="habitModal">
   <div class="modal">
     <h3 id="habitModalTitle">🔥 Nuevo Hábito</h3>
     <input type="hidden" id="habitId"/>
@@ -3992,7 +3992,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="blockModal">
+<div class="modal-overlay" inert id="blockModal">
   <div class="modal">
     <h3 id="blockModalTitle">⏳ Nuevo Bloque de Horario</h3>
     <input type="hidden" id="blockId"/>
@@ -4024,7 +4024,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="reminderModal">
+<div class="modal-overlay" inert id="reminderModal">
   <div class="modal">
     <h3 id="remModalTitle">⏰ Nuevo Recordatorio</h3>
     <input type="hidden" id="remId"/>
@@ -4045,7 +4045,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="quickAddResultModal">
+<div class="modal-overlay" inert id="quickAddResultModal">
   <div class="modal">
     <h3>✨ La IA detectó esto</h3>
     <div class="qa-reasoning" id="qaReasoning"></div>
@@ -4078,7 +4078,7 @@ try {
   </div>
 </div>
 
-<div class="modal-overlay" id="authSetupModal">
+<div class="modal-overlay" inert id="authSetupModal">
   <div class="modal">
     <h3 id="authSetupTitle">⚙️ Configuración requerida</h3>
     <p id="authSetupMsg" style="font-size:.85rem;line-height:1.6;color:var(--text2);white-space:pre-line"></p>
@@ -6713,6 +6713,8 @@ const _prepareCardExpand = (overlay) => {
 };
 const openModal=id=>{
   const m=document.getElementById(id); if(!m) return;
+  if (!m.classList.contains('open')) m._returnFocus = document.activeElement?.closest('button,[role="button"]');
+  m.inert = false;
   const del = id==='eventModal' ? ['evDelete','evId'] : id==='blockModal' ? ['blockDelete','blockId'] : null;
   if(del){ const b=document.getElementById(del[0]); if(b) b.style.display = document.getElementById(del[1])?.value ? '' : 'none'; }
   _prepareCardExpand(m);
@@ -6744,6 +6746,12 @@ const closeModal=id=>{
   if(id==='noteModal'||id==='projModal') window._newIntoStack=null;   // «+ aquí» de una pila se cancela al cerrar sin guardar
   if(id==='noteModal'){const nm=document.querySelector('#noteModal .note-editor-modal');if(nm)setTimeout(()=>{if(!nm.closest('.modal-overlay')?.classList.contains('open')){nm.classList.remove('ne-compact');nm.style.height='';}},200);}
   const m=document.getElementById(id); if(!m) return;
+  if (m.contains(document.activeElement)) {
+    document.activeElement.blur();
+    if (m._returnFocus?.isConnected && !m.contains(m._returnFocus)) m._returnFocus.focus({preventScroll:true});
+  }
+  m._returnFocus = null;
+  m.inert = true;
   const modal=m.querySelector('.modal');
   // Editor de notas: se encoge y se desvanece con suavidad
   if(id==='noteModal' && modal && m.classList.contains('open') && modal.animate && !_reduceMotion()){
@@ -11391,7 +11399,7 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js?bento=4"></script>
+<script src="pixel.js?bento=5"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';
