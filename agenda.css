@@ -69,9 +69,10 @@ html[data-studio="agenda"] .ag-fold-body .stat-card .label {max-width:100%;margi
 html[data-studio="agenda"] .ag-fold-body .stat-card .value {font-size:1.6rem}
 html[data-studio="agenda"] #tabbar .tb-item.active{color:var(--ag-accent)}
 @media(min-width:901px){
+  html[data-studio="agenda"],html[data-studio="agenda"] body {overflow:hidden}
   html[data-studio="agenda"] #appShell {padding-left:0;padding-top:56px}
   html[data-studio="agenda"] #novaFloatingDock {
-    right:0!important;bottom:auto!important;width:100%;min-height:56px;height:56px;overflow-x:auto;overflow-y:hidden;flex-direction:row;
+    right:0!important;bottom:auto!important;width:100%;min-height:56px!important;height:56px;overflow-x:auto;overflow-y:hidden;flex-direction:row;
     align-items:center;justify-content:center;justify-content:safe center;padding:0 clamp(10px,1.8vw,28px)!important;
     border:0;border-bottom:1px solid var(--rule);gap:3px!important;
   }
