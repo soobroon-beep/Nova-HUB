@@ -159,7 +159,6 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .focus-tag{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--bg);color:var(--text3);white-space:nowrap}
 .focus-empty{text-align:center;padding:28px 10px;color:var(--text2)}
 .focus-empty .emoji{font-size:2rem;margin-bottom:8px}
-.streak-pill{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:700;color:var(--text);cursor:default}
 
 /* CALENDAR */
 .cal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:22px}
@@ -857,7 +856,7 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 @keyframes checkPop{0%{transform:scale(1)}35%{transform:scale(1.35)}60%{transform:scale(.9)}100%{transform:scale(1)}}
 .hb-check.just-checked{animation:checkPop .38s cubic-bezier(.34,1.56,.64,1)}
 
-/* ── PULIDO VISUAL: confeti de hito de racha ── */
+/* Confeti de celebración */
 .confetti-burst{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:9999}
 .confetti-piece{position:absolute;width:7px;height:7px;border-radius:2px;opacity:0;animation:confettiFly .9s ease-out forwards}
 @keyframes confettiFly{
@@ -3454,7 +3453,7 @@ html[data-studio="light"] {
   --lift:0 8px 18px -16px #0005; color-scheme:light;
 }
 html[data-studio="dark"] {
-  --paper:#000; --panel:#111; --raised:#202020; --rule:#333;
+  --paper:#191a1c; --panel:#222326; --raised:#2c2e31; --rule:#424447;
   --ink:#fafafa; --secondary:#ccc; --quiet:#aaa; --rgb:250,250,250;
   --lift:0 1px 0 #ffffff09 inset; color-scheme:dark;
 }
@@ -3686,6 +3685,59 @@ html[data-studio] #studioWeek{--report:var(--sr-b)}
  .sr-header{gap:6px}
  .sr-header .sr-link{min-height:40px}
 }
+
+/* Navegación y movimiento compartidos */
+#avatarEl{padding:0;font-family:inherit;cursor:pointer}
+#avatarEl:focus-visible,#acctPop button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#sidebar .nav-item[data-view="settings"],#quickAddTrigger[hidden],#quickAddWrap:has(#quickAddCard[style*="none"]){display:none!important}
+#acctPop button[data-ap="settings"],#acctPop button[data-ap="sections"]{text-align:start;color:var(--text);background:transparent;display:block}
+#acctPop button:is(:hover,:focus-visible)[data-ap="settings"],#acctPop button:is(:hover,:focus-visible)[data-ap="sections"]{background:var(--bg3)}
+#acctPop .ap-who{border-top:1px solid var(--border);padding:12px 8px 0;margin-top:5px}
+html[data-studio] #acctPop{background:var(--panel)!important;color:var(--ink);border:1px solid var(--rule);box-shadow:0 12px 32px #0002}
+.appearance-help{margin:8px 0 0;font-size:.8rem;color:var(--text2);line-height:1.45}
+.pd-task .pd-text{transition:color .15s ease}
+#pdProg .progress-fill{transition:width .2s ease-out}
+@keyframes nova-note-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference){
+ #noteModal.modal-overlay.open .modal.note-editor-modal{animation:nova-note-in .2s cubic-bezier(.22,.75,.25,1) both}
+ #noteModal.open :is(.ne-head,.ne-title,.ne-tools,.ne-body,.ne-foot){animation:none}
+ #content.view-anim[data-dir]{animation-duration:.22s}
+ #tabSheet{transition:visibility 0s linear .16s}
+ #tabSheet.open{transition-delay:0s}
+ #tabSheet#tabSheet button{transition:opacity .14s ease-out,transform .16s ease-out;transition-delay:0s}
+}
+@media(min-width:901px) and (prefers-reduced-motion:no-preference){
+ @supports (transition-behavior:allow-discrete){
+  #novaCreateMenu{opacity:0;transform:translateY(5px);transition:opacity .15s,transform .15s,display .15s allow-discrete}
+  #novaCreateMenu:not([hidden]){opacity:1;transform:none}
+  @starting-style{#novaCreateMenu:not([hidden]){opacity:0;transform:translateY(5px)}}
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #acctPop,#novaCreateMenu,#tabSheet,#tabSheet button,#tabSheetScrim,#moreDrawer,#tabbar,.tb-plus,.pd-text,#pdProg .progress-fill,.sw-item.sw-anim,.modal-overlay,.modal-overlay .modal,#content.view-anim{animation:none!important;transition:none!important}
+}
+html[data-studio] .field:has(>#projMotionPicker){display:none}
+html[data-studio] :is(.proj-full-card,.project-item)>.nova-card-fx{display:none!important}
+html[data-studio] #content :is(.proj-full-card.colored,.project-item[data-nova-motion]),
+html[data-studio] .stack-modal :is(.proj-full-card.colored,.project-item[data-nova-motion]){
+ background:var(--card-bg)!important;color:var(--solid-fg)!important;border:1px solid color-mix(in srgb,var(--card-bg) 85%,var(--solid-fg))!important;
+ box-shadow:none!important;backdrop-filter:none!important;text-shadow:none!important;
+}
+html[data-studio] :is(.proj-full-card,.project-item):not(.reorder-grab,.stack-ready):hover{transform:none!important}
+html[data-studio] .proj-full-card .proj-icon-badge{background:var(--solid-chip)!important;color:var(--solid-fg)!important;border:0!important;box-shadow:none!important;animation:none!important}
+html[data-studio] .proj-full-card .proj-card-pending{background:transparent!important;color:var(--solid-fg2)!important;border:0!important;padding-inline:0}
+html[data-studio] .proj-full-card .proj-notif{background:var(--solid-fg)!important;color:var(--card-bg)!important;border:0!important;box-shadow:none!important;animation:none!important}
+@media(min-width:901px){
+ html[data-studio] #novaFloatingDock>.px-peek{margin-block:auto;align-self:center;justify-content:center;flex-direction:column;width:min(100%,144px);height:114px;gap:5px;padding:7px;border:0;text-align:center}
+ html[data-studio] #novaFloatingDock>.px-peek .px-peek-in,
+ html[data-studio] #novaFloatingDock>.px-peek .nph{width:80px;height:74px}
+ html[data-studio] #novaFloatingDock>.px-peek:after{font-size:.78rem;font-weight:650;letter-spacing:.02em}
+}
+@media(max-width:900px){
+ html .px-layer>.px-peek{width:64px;height:60px}
+ html .px-layer>.px-peek .nph{width:64px;height:60px}
+ body.kb-open .px-layer>.px-peek{opacity:0;pointer-events:none}
+}
 </style>
 <script>
 try {
@@ -3719,7 +3771,6 @@ try {
   <div class="nav-item" data-view="briefing"><span class="nav-icon">☀️</span> Briefing diario</div>
   <div class="nav-item" data-view="relax"><span class="nav-icon">🌿</span> Zona Relax</div>
   <div class="nav-item" data-view="apps"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">apps</span></span> Apps</div>
-  <div class="nav-item" data-view="ai"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span></span> IA Asistente</div>
   <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span> Ajustes</div>
   <div class="sidebar-bottom">
     <div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:12px;cursor:pointer" id="levelPanel" title="Completa tareas para ganar XP">
@@ -3748,8 +3799,7 @@ try {
       <p id="dateText"></p>
     </div>
     <div class="topbar-right">
-      <div class="streak-pill" id="streakPill" title="Racha de días activos en NOVA HUB"></div>
-      <div class="avatar" id="avatarEl">V</div>
+      <button type="button" class="avatar" id="avatarEl" aria-label="Perfil y ajustes" aria-expanded="false" aria-controls="acctPop">V</button>
     </div>
   </header>
   <div id="content"></div>
@@ -3763,8 +3813,7 @@ try {
 
 <!-- BARRA INFERIOR FLOTANTE (móvil/tablet): atajos + botón central (+) -->
 <div id="tabSheetScrim"></div>
-<div id="tabSheet" aria-hidden="true">
-  <button type="button" data-qc="ai"><span class="em">✦</span>IA rápida</button>
+<div id="tabSheet" inert aria-hidden="true">
   <button type="button" data-qc="note"><span class="em">🗒️</span>Nueva nota</button>
   <button type="button" data-qc="project"><span class="em">🚀</span>Nuevo proyecto</button>
   <button type="button" data-qc="reminder"><span class="em">⏰</span>Recordatorio</button>
@@ -3947,7 +3996,7 @@ try {
   <div class="modal">
     <h3 id="blockModalTitle">⏳ Nuevo Bloque de Horario</h3>
     <input type="hidden" id="blockId"/>
-    <div class="field"><label>Título</label><input id="blockTitle" placeholder="Trabajo profundo..."/></div>
+    <div class="field"><label>Título</label><input id="blockTitle" placeholder="Nombre del bloque"/></div>
     <div style="display:flex;gap:10px">
       <div class="field" style="flex:1"><label>Inicio</label><input id="blockStart" type="time" value="09:00"/></div>
       <div class="field" style="flex:1"><label>Fin</label><input id="blockEnd" type="time" value="10:00"/></div>
@@ -4209,9 +4258,9 @@ const updateNovaOpacity=(value,persist=true)=>{
 };
 document.addEventListener('input',e=>{if(e.target.matches?.('[data-nova-bg-range]'))updateNovaOpacity(e.target.value)});
 
-const DEFAULT_DASH_WIDGETS = { focus:true, briefing:true, daySummary:true, activity:true, stats:true, notes:true, habits:true, diary:true, ai:true, calendar:true, reminders:true, projects:true };
+const DEFAULT_DASH_WIDGETS = { focus:true, briefing:true, daySummary:true, activity:true, stats:true, notes:true, habits:true, diary:true, calendar:true, reminders:true, projects:true };
 state.settings.dashboardWidgets = { ...DEFAULT_DASH_WIDGETS, ...(state.settings.dashboardWidgets || {}) };
-const WIDGET_LABELS = { focus:{icon:'🎯',label:'Enfoque de Hoy (pendientes)'}, briefing:{icon:'☀️',label:'Briefing diario (8:30)'}, daySummary:{icon:'✨',label:'Resumen del Día (IA)'}, activity:{icon:'🕓',label:'Actividad Reciente'}, stats:{icon:'📊',label:'Tarjetas de estadísticas'}, notes:{icon:'🗒️',label:'Notas recientes'}, habits:{icon:'🔥',label:'Seguimiento de hábitos'}, diary:{icon:'📖',label:'Diario emocional'}, ai:{icon:'✦',label:'Tarjeta de IA Asistente'}, calendar:{icon:'📅',label:'Calendario'}, reminders:{icon:'⏰',label:'Recordatorios'}, projects:{icon:'🚀',label:'Proyectos'} };
+const WIDGET_LABELS = { focus:{icon:'🎯',label:'Enfoque de Hoy (pendientes)'}, briefing:{icon:'☀️',label:'Briefing diario (8:30)'}, daySummary:{icon:'✨',label:'Resumen del Día (IA)'}, activity:{icon:'🕓',label:'Actividad Reciente'}, stats:{icon:'📊',label:'Tarjetas de estadísticas'}, notes:{icon:'🗒️',label:'Notas recientes'}, habits:{icon:'🔥',label:'Seguimiento de hábitos'}, diary:{icon:'📖',label:'Diario emocional'}, calendar:{icon:'📅',label:'Calendario'}, reminders:{icon:'⏰',label:'Recordatorios'}, projects:{icon:'🚀',label:'Proyectos'} };
 
 const updateXPUI = () => {
   const levelDisplay = document.getElementById('userLevelDisplay');
@@ -4230,24 +4279,6 @@ const updateXPUI = () => {
   xpBar.style.width = pct + '%';
 };
 
-// ── RACHA DE DÍAS ACTIVOS: refuerza el hábito de entrar todos los días ──
-const updateStreak = () => {
-  const todayStr = new Date().toISOString().split('T')[0];
-  if (state.settings.lastOpenDate === todayStr) return;
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-  const yStr = yesterday.toISOString().split('T')[0];
-  state.settings.streak = (state.settings.lastOpenDate === yStr) ? (state.settings.streak||0) + 1 : 1;
-  state.settings.lastOpenDate = todayStr;
-  save();
-};
-const renderStreakPill = () => {
-  const el = document.getElementById('streakPill'); if(!el) return;
-  const streak = state.settings.streak || 1;
-  el.innerHTML = `<span>🔥</span><span>${streak} ${streak===1?'día':'días'}</span>`;
-};
-
-// ── PULIDO VISUAL: confeti de hito (racha) ──
-const HABIT_MILESTONES = [3,7,14,30,60,100,200,365];
 // Paleta dorada (con toques de carmesí, jade y marfil de tu identidad)
 const GOLD_CONFETTI = ['#FFD700','#FFD700','#FFC83D','#FFE88A','#F5F0E8','#DC143C','#00A86B'];
 const _reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4442,6 +4473,7 @@ const schedulePush = () => {
 
 let _quotaWarned = false;
 const save = () => {
+  if (state.routines.some(isDemoRoutine)) state.routines = state.routines.filter(r => !isDemoRoutine(r));
   // Cada clave se guarda por separado: si una falla (almacenamiento lleno) las demás se guardan igual
   // y SIEMPRE se programa la subida a la nube, que es la copia que cuenta.
   const put = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {
@@ -4890,7 +4922,16 @@ const restoreFromTrash = trashId => {
   }
   state.trash.splice(idx, 1);
   save(); updateStats();
-  if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') renderSettingsView();
+  if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') {
+    const row = Array.from(document.querySelectorAll('.trash-restore-btn')).find(b => b.dataset.trashid === trashId)?.closest('.trash-item');
+    const refresh = () => {
+      if (document.querySelector('.nav-item.active')?.dataset.view === 'settings') softRender(renderSettingsView);
+    };
+    if (row && !_reduceMotion() && row.animate) {
+      row.inert = true;
+      row.animate([{opacity:1, transform:'translateX(0)'},{opacity:0, transform:'translateX(12px)'}],{duration:140, easing:'ease-out'}).finished.then(refresh,refresh);
+    } else refresh();
+  }
   toast('♻️ Restaurado');
 };
 const deleteFromTrashForever = trashId => {
@@ -4912,7 +4953,11 @@ const emptyTrash = () => {
 // ══════════════════════════════════════════════
 const DATA_KEYS = ['notes','events','projects','habits','routines','reminders','diary','trash'];
 // Los datos de ejemplo (ids 1-6 creados por seed()) no cuentan como datos reales.
-const _isSeedItem = x => !!x && Number(x.id) >= 1 && Number(x.id) <= 6 && /ejemplo|inicio|Bienvenido|Trabajo profundo|Leer 20/i.test(JSON.stringify(x));
+function isDemoRoutine(r) {
+  if (!r || Number(r.id) !== 6 || r.title !== 'Trabajo profundo' || r.start !== '09:00' || r.end !== '12:00' || r.color !== 'var(--accent)') return false;
+  return JSON.stringify(r.repeatDays) === '[1,2,3,4,5]' && Object.keys(r).every(k => ['id','title','start','end','color','repeatDays'].includes(k));
+}
+const _isSeedItem = x => !!x && Number(x.id) >= 1 && ((Number(x.id) <= 5 && /ejemplo|inicio|Bienvenido|Leer 20/i.test(JSON.stringify(x))) || isDemoRoutine(x));
 const realCounts = src => {
   const c = {};
   DATA_KEYS.forEach(k => { c[k] = Array.isArray(src?.[k]) ? src[k].filter(x => !_isSeedItem(x)).length : 0; });
@@ -4994,6 +5039,7 @@ const mergeStates = (local, remote, baseMaps, localOrder = true) => {
   out.trash = Array.isArray(remote.trash) ? mergeArray('trash', loc.trash, remote.trash, baseMaps && baseMaps.trash, cx) : loc.trash;
   out.trash.forEach(t => { const kk = _TRASH_TYPE_KEY[t && t.type]; if (kk && t.data && t.data.id != null) cx.trashed.add(kk + ':' + t.data.id); });
   DATA_KEYS.filter(k => k !== 'trash').forEach(k => { out[k] = Array.isArray(remote[k]) ? mergeArray(k, loc[k], remote[k], baseMaps && baseMaps[k], cx) : loc[k]; });
+  out.routines = out.routines.filter(r => !isDemoRoutine(r));
   return { merged: out, conflicts: cx.conflicts };
 };
 // "Base": hashes de la última versión de la nube que ESTE dispositivo vio (por cuenta). Persiste entre sesiones.
@@ -5367,14 +5413,24 @@ const fb = {
         const snap = await tx.get(ref);
         const cloud = snap.exists() ? snap.data() : {};
         const { merged, conflicts } = mergeStates(localSnap, cloud, baseAtStart);
-        const payload = { ...merged, settings: settingsSnap, _at: Date.now(), _uid: uid, _deviceId: DEVICE_ID };
+        const appearance = latestAppearance(settingsSnap.appearance, cloud.settings?.appearance);
+        const settings = { ...settingsSnap };
+        if (appearance) settings.appearance = appearance;
+        const payload = { ...merged, settings, _at: Date.now(), _uid: uid, _deviceId: DEVICE_ID };
         if (this._forceNext) payload._force = { at: Date.now(), by: DEVICE_ID };   // «Guardar y actualizar todo»: los demás dispositivos se refrescan
         // Firestore guarda todo en UN documento con tope de 1 MiB: si no cabe, NO se intenta (y se avisa claro).
         const size = new Blob([JSON.stringify(payload)]).size;
         if (size > 1000 * 1024) { const e = new Error('too-big'); e.code = 'too-big'; e.size = size; throw e; }
         tx.set(ref, payload, { merge: true });
-        return { merged, conflicts, size };
+        return { merged, conflicts, size, appearance };
       });
+      if (this.uid !== uid) return;
+      const chosen = latestAppearance(state.settings.appearance, out.appearance);
+      if (chosen && _stable(chosen) !== _stable(state.settings.appearance)) {
+        state.settings.appearance = chosen;
+        localStorage.setItem('nn_settings', JSON.stringify(state.settings));
+        if (NovaStudio.applyPreference(chosen) && document.querySelector('#sidebar .active')?.dataset.view === 'dashboard') renderDashboard();
+      }
       this.lastSize = out.size;
       if (this.lastSize > 900 * 1024 && !this._sizeWarned) {
         this._sizeWarned = true;
@@ -5440,6 +5496,8 @@ const fb = {
       if (owner && owner !== this.uid) {
         if (sumCounts(realCounts(state)) > 0) saveSafetyCopy('datos de otra cuenta');
         DATA_KEYS.forEach(k => { state[k] = []; try { localStorage.setItem('nn_' + k, '[]'); } catch (e) {} });
+        state.settings.appearance = {mode:'classic', classic:'dark', at:0, by:''};
+        NovaStudio.applyPreference(state.settings.appearance);
         ['username','photoURL','anthropicApiKey'].forEach(k => { delete state.settings[k]; });
         try { localStorage.setItem('nn_settings', JSON.stringify(state.settings)); localStorage.removeItem(UNSYNCED_KEY); localStorage.removeItem(CLOUD_BASE_KEY); } catch (e) {}
         _baseMem = null; _pushPending = false; _dirtyBeforeReady = false;
@@ -5658,6 +5716,8 @@ function rerenderView(v) {
 // Aplica datos recibidos de Firestore al state local y re-renderiza
 function applyRemoteData(data) {
   let changed = false;
+  const hasDemo = Array.isArray(data.routines) && data.routines.some(isDemoRoutine);
+  if (hasDemo) data = {...data, routines:data.routines.filter(r => !isDemoRoutine(r))};
   // Con la "base" (última versión de la nube que este dispositivo vio) se fusiona SIEMPRE elemento por elemento:
   // lo que cambiaste aquí se conserva, lo nuevo/cambiado en otros dispositivos entra, y solo se quita lo que
   // alguien borró a propósito (estaba en la base sin cambios, o está en la papelera).
@@ -5687,6 +5747,8 @@ function applyRemoteData(data) {
     });
   }
   setCloudBase(fb.uid, data);
+  const appearance = latestAppearance(foreign ? null : state.settings.appearance, data.settings?.appearance);
+  if (hasDemo || (appearance && _stable(appearance) !== _stable(data.settings?.appearance || null))) schedulePush();
   // Briefing de las 8:30 (lo escribe el servidor de avisos en users/{uid}.briefings)
   if (Array.isArray(data.briefings)) {
     const mergedB = mergeBriefings(data.briefings, state.briefingHistory || []);
@@ -5701,6 +5763,10 @@ function applyRemoteData(data) {
     // preservar API key local si la nube no la tiene
     const localKey = state.settings.anthropicApiKey || '';
     state.settings = keepLocal ? { ...data.settings, ...state.settings } : { ...state.settings, ...data.settings };
+    if (appearance) {
+      state.settings.appearance = appearance;
+      NovaStudio.applyPreference(appearance);
+    }
     if (localKey && !state.settings.anthropicApiKey) state.settings.anthropicApiKey = localKey;
     localStorage.setItem('nn_settings', JSON.stringify(state.settings));
     if (data.settings.username) applyUsername(data.settings.username);
@@ -5963,6 +6029,15 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
   }
 }
 // Presentation only. Existing widget elements keep their IDs, handlers and content.
+// A preference written deliberately wins over a cached, pre-sync theme.
+function latestAppearance(first, second) {
+  const valid = p => p && ['classic','light','dark'].includes(p.mode) &&
+    ['light','dark'].includes(p.classic) && Number.isSafeInteger(p.at) && p.at >= 0 && typeof p.by === 'string';
+  if (!valid(first)) return valid(second) ? second : null;
+  if (!valid(second)) return first;
+  if (first.at !== second.at) return first.at > second.at ? first : second;
+  return first.by > second.by ? first : second;
+}
 const NovaStudio = (() => {
   let group = 'Hoy';
   const groups = [
@@ -6067,7 +6142,6 @@ const NovaStudio = (() => {
     if (!document.documentElement.dataset.studio) return;
     const head = item('header', 'studio-heading');
     head.append(item('h1', '', 'Panel de hoy'), content.querySelector('#quickAddWrap'));
-    head.querySelector('.qa-trigger').append(item('span', 'studio-qa-label', 'Agregar con IA'));
     const strip = content.querySelector('.stats-row');
     if (strip) {
       const destinations = ['projects', 'projects', 'notes', 'habits'];
@@ -6136,17 +6210,32 @@ const NovaStudio = (() => {
       show(boards.some(board => board.dataset.group === group) ? group : boards[0].dataset.group);
     }
   }
-  function setMode(value) {
+  function applyPreference(pref) {
     const root = document.documentElement;
-    if (value === 'light' || value === 'dark') root.dataset.studio = value;
-    else delete root.dataset.studio;
-    try { localStorage.setItem('nova.studio.mode', root.dataset.studio || 'classic'); } catch (_) {}
-    applyTheme(state.theme);
-    window.dispatchEvent(new Event('nova-layout'));
-    window.dispatchEvent(new Event('resize'));
+    const previousMode = root.dataset.studio || 'classic';
+    if (pref.mode === 'classic') delete root.dataset.studio;
+    else root.dataset.studio = pref.mode;
+    state.theme = pref.classic;
+    localStorage.setItem('nova.studio.mode', pref.mode);
+    applyTheme(pref.classic);
+    const select = document.getElementById('studioChoice');
+    if (select) select.value = pref.mode;
+    if (previousMode !== pref.mode) {
+      window.dispatchEvent(new Event('nova-layout'));
+      window.dispatchEvent(new Event('resize'));
+    }
+    return previousMode !== pref.mode;
+  }
+  function setMode(mode, classic = state.theme) {
+    const pref = {mode, classic, at:Math.max(Date.now(), (state.settings.appearance?.at || 0) + 1), by:DEVICE_ID};
+    state.settings.appearance = pref;
+    const changed = applyPreference(pref);
+    localStorage.setItem('nn_settings', JSON.stringify(state.settings));
+    schedulePush();
+    if (changed && document.querySelector('#sidebar .active')?.dataset.view === 'dashboard') renderDashboard();
   }
   // Scoped to the current view. Never steals focus or handles a card's click action.
-  const target = '.studio-tile,.stats-row .stat-card,.note-card,.proj-full-card,.set-group';
+  const target = '.studio-tile,.stats-row .stat-card,.note-card,.set-group';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let frame = 0, point, lit = new Set();
   function reset() {
@@ -6158,7 +6247,7 @@ const NovaStudio = (() => {
     frame = 0;
     const next = new Set();
     const { x, y } = point;
-    for (const card of document.querySelectorAll('#content :is(' + target + ')')) {
+    for (const card of point.card ? [point.card] : []) {
       const r = card.getBoundingClientRect();
       if (!r.width || x < r.left-100 || x > r.right+100 || y < r.top-100 || y > r.bottom+100) continue;
       card.style.setProperty('--sx', (x-r.left)+'px');
@@ -6173,7 +6262,7 @@ const NovaStudio = (() => {
     const ct = document.getElementById('content');
     ct.addEventListener('pointermove', e => {
       if (!document.documentElement.dataset.studio || reduced.matches || e.pointerType === 'touch') return;
-      point = {x:e.clientX, y:e.clientY};
+      point = {x:e.clientX, y:e.clientY, card:e.target.closest(target)};
       if (!frame) frame = requestAnimationFrame(illuminate);
     }, {passive:true});
     ct.addEventListener('pointerleave', reset);
@@ -6196,7 +6285,7 @@ const NovaStudio = (() => {
     }, {passive:true});
   }
   document.addEventListener('DOMContentLoaded', bind, {once:true});
-  return {organize, setMode, refreshInsights};
+  return {organize, setMode, applyPreference, refreshInsights};
 })();
 
 const applyTheme = classicTheme => {
@@ -6206,7 +6295,10 @@ const applyTheme = classicTheme => {
   document.getElementById('themeLabel').textContent = t === 'dark' ? 'Modo Claro' : 'Modo Oscuro';
   localStorage.setItem('nn_theme', classicTheme);
 };
-applyTheme(state.theme); applyAccent(state.settings.accentColor || '#7c6af7'); applyAvatarPhoto(state.settings.photoURL);
+state.settings.appearance = latestAppearance(state.settings.appearance, null) ||
+  {mode:document.documentElement.dataset.studio || 'classic', classic:state.theme, at:0, by:''};
+NovaStudio.applyPreference(state.settings.appearance);
+applyAccent(state.settings.accentColor || '#7c6af7'); applyAvatarPhoto(state.settings.photoURL);
 applyAppIcon(state.settings.appIcon || 'nova');
 document.getElementById('themeToggle').addEventListener('click', () => {
   if (document.documentElement.dataset.studio) {
@@ -6215,7 +6307,7 @@ document.getElementById('themeToggle').addEventListener('click', () => {
     if (select) select.value = document.documentElement.dataset.studio;
     return;
   }
-  state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); });
+  NovaStudio.setMode('classic', state.theme === 'dark' ? 'light' : 'dark'); });
 
 function applyAvatarPhoto(url) {
   const el = document.getElementById('avatarEl');
@@ -6650,14 +6742,14 @@ document.getElementById('blockDelete')?.addEventListener('click',()=>{
 });
 const closeModal=id=>{
   if(id==='noteModal'||id==='projModal') window._newIntoStack=null;   // «+ aquí» de una pila se cancela al cerrar sin guardar
-  if(id==='noteModal'){const nm=document.querySelector('#noteModal .note-editor-modal');if(nm)setTimeout(()=>{nm.classList.remove('ne-compact');nm.style.height='';},400);}
+  if(id==='noteModal'){const nm=document.querySelector('#noteModal .note-editor-modal');if(nm)setTimeout(()=>{if(!nm.closest('.modal-overlay')?.classList.contains('open')){nm.classList.remove('ne-compact');nm.style.height='';}},200);}
   const m=document.getElementById(id); if(!m) return;
   const modal=m.querySelector('.modal');
   // Editor de notas: se encoge y se desvanece con suavidad
   if(id==='noteModal' && modal && m.classList.contains('open') && modal.animate && !_reduceMotion()){
     modal.classList.add('ne-closing');
-    modal.animate([{opacity:1,transform:'translateY(0) scale(1)',filter:'blur(0)'},{opacity:0,transform:'translateY(36px) scale(.92)',filter:'blur(6px)'}],{duration:260,easing:'cubic-bezier(.4,0,.7,.2)'}).onfinish=()=>modal.classList.remove('ne-closing');
-    m.style.transition='opacity .26s ease'; m.classList.remove('open'); return;
+    modal.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(12px)'}],{duration:160,easing:'ease-in'}).onfinish=()=>modal.classList.remove('ne-closing');
+    m.style.transition='opacity .16s ease'; m.classList.remove('open'); return;
   }
   // Si se abrió desde una tarjeta, se encoge de vuelta hacia ella
   if(modal && m.classList.contains('open') && modal.classList.contains('expand-from-card') && modal.animate && !_reduceMotion()){
@@ -6674,14 +6766,22 @@ const closeModal=id=>{
 //  y el toque caía en el fondo → se cerraba y se perdía lo escrito.)
 (function(){
   const vv = window.visualViewport;
+  let viewportFrame = 0, previousHeight, previousTop;
   const setVV = () => {
-    const r = document.documentElement.style;
-    r.setProperty('--vvh', (vv ? vv.height : innerHeight) + 'px');
-    r.setProperty('--vvt', (vv ? vv.offsetTop : 0) + 'px');
+    viewportFrame = 0;
+    const height = Math.round(vv ? vv.height : innerHeight), top = Math.round(vv ? vv.offsetTop : 0);
+    const style = document.documentElement.style;
+    if (previousHeight !== height) style.setProperty('--vvh', height + 'px');
+    if (previousTop !== top) style.setProperty('--vvt', top + 'px');
+    previousHeight = height; previousTop = top;
+  };
+  const queueViewport = () => {
     window._vvChangeAt = Date.now();
+    if (!viewportFrame) viewportFrame = requestAnimationFrame(setVV);
   };
   setVV();
-  if (vv) { vv.addEventListener('resize', setVV); vv.addEventListener('scroll', setVV); }
+  (vv || window).addEventListener('resize', queueViewport, {passive:true});
+  vv?.addEventListener('scroll', queueViewport, {passive:true});
   const isField = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]),textarea,select,[contenteditable="true"]');
   document.querySelectorAll('.modal-overlay').forEach(m => {
     let downBg = false, typing = false;
@@ -6966,7 +7066,7 @@ const DOCK_META = {
   dashboard: { s:'Dashboard', f:'Dashboard', i:'⊞', p:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
   settings:  { s:'Ajustes',    f:'Ajustes',        i:'⚙️', p:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z' }
 };
-const DOCK_DEFAULT = ['calendar','notes','projects','reminders','diary','habits','settings'];
+const DOCK_DEFAULT = ['dashboard','calendar','notes','projects','reminders','diary','habits'];
 const DOCK_COLORS = [
   { id: 'app',     name: 'Color de la app', c: 'var(--accent)' },
   { id: '#DC143C', name: 'Carmesí',         c: '#DC143C' },
@@ -7009,7 +7109,7 @@ const getDockTabs = () => DOCK_DEFAULT;
   // Arma las pestañas de la barra según Ajustes: mitad a la izquierda del (+), mitad a la derecha, y "Más" al final
   const renderDock = () => {
     bar.innerHTML = getDockTabs().map(v => { const m = DOCK_META[v];
-      return `<button type="button" class="tb-item" data-tab="${v}">${v==='projects'?'<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>':`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg>`}<span>${m.s}</span></button>`; }).join('');
+      return `<button type="button" class="tb-item" data-tab="${v}" aria-label="${m.f}">${v==='projects'?'<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>':`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${m.p}"/></svg>`}<span>${m.s}</span></button>`; }).join('');
     syncActive(); syncFab();
   };
   // Color del botón (+): "app" = sigue el color de la app; si no, el elegido
@@ -7031,6 +7131,7 @@ const getDockTabs = () => DOCK_DEFAULT;
     bar.querySelectorAll('[data-tab]').forEach(b => {
       const t = b.dataset.tab;
       b.classList.toggle('active', t === cur);
+      if (t === cur) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
     });
     syncFab();
   };
@@ -7161,13 +7262,16 @@ const getDockTabs = () => DOCK_DEFAULT;
     grab.addEventListener('pointerup', end); grab.addEventListener('pointercancel', end);
   })();
 
+  sheet.inert = true;
   const openSheet = () => {
+    sheet.inert = false;
     closeDrawer();
     if (fab && fab.classList.contains('menu-open')) fab.click();
     sheet.classList.add('open'); scrim.classList.add('open'); plus.classList.add('open');
     plus.setAttribute('aria-expanded','true'); sheet.setAttribute('aria-hidden','false');
   };
   const closeSheet = () => {
+    sheet.inert = true;
     sheet.classList.remove('open'); scrim.classList.remove('open'); plus.classList.remove('open');
     plus.setAttribute('aria-expanded','false'); sheet.setAttribute('aria-hidden','true');
   };
@@ -7194,28 +7298,36 @@ const getDockTabs = () => DOCK_DEFAULT;
 
   // Avatar: iniciar o cerrar sesión (según haya sesión abierta o no)
   const av = document.getElementById('avatarEl');
-  const pop = document.createElement('div'); pop.id = 'acctPop'; pop.setAttribute('role','menu'); document.body.appendChild(pop);
-  const closePop = () => pop.classList.remove('open');
+  const pop = document.createElement('div'); pop.id = 'acctPop'; pop.setAttribute('aria-label','Perfil'); document.body.appendChild(pop);
+  pop.inert = true;
+  const closePop = () => { pop.inert = true; pop.classList.remove('open'); av.setAttribute('aria-expanded','false'); };
   const openPop = () => {
     closeSheet(); closeDrawer();
     const on = !!(fb && fb.enabled && fb.uid);
     pop.innerHTML = on
       ? `<div class="ap-who"><small>Sesión iniciada</small><b>${(fb.email || state.settings.username || 'Cuenta de Google').replace(/[<>&]/g,'')}</b></div><button type="button" data-ap="out" class="ap-out">Cerrar sesión</button>`
       : `<div class="ap-who"><small>Sin sesión</small><b>Tus datos solo están en este dispositivo</b></div><button type="button" data-ap="in" class="ap-in">Iniciar sesión con Google</button>`;
-    pop.classList.add('open');
+    pop.insertAdjacentHTML('afterbegin','<button type="button" data-ap="settings">Ajustes</button><button type="button" data-ap="sections">Todas las secciones</button>');
+    pop.inert = false; pop.classList.add('open');
+    av.setAttribute('aria-expanded','true');
   };
   av?.setAttribute('role','button');
   av?.addEventListener('click', e => { e.stopPropagation(); pop.classList.contains('open') ? closePop() : openPop(); });
   pop.addEventListener('click', async e => {
     const b = e.target.closest('[data-ap]'); if (!b) return;
     closePop();
-    if (b.dataset.ap === 'out') await fb.logout(); else await fb.login();
+    if (b.dataset.ap === 'settings') navTo('settings');
+    else if (b.dataset.ap === 'sections') openDrawer();
+    else if (b.dataset.ap === 'out') await fb.logout();
+    else await fb.login();
   });
   document.addEventListener('click', e => { if (!e.target.closest('#acctPop')) closePop(); });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && pop.classList.contains('open')) { closePop(); av.focus(); }
+  });
 
   // Crear algo nuevo: mismos formularios que ya usa la app
   const actions = {
-    ai(){ navTo('dashboard'); setTimeout(() => document.getElementById('quickAddTrigger')?.click(), 420); },
     note(){
       document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
       document.getElementById('noteId').value = '';
@@ -7264,8 +7376,8 @@ const getDockTabs = () => DOCK_DEFAULT;
     const hide = d > 0 && y > 140; bar.classList.toggle('tb-hide', hide); plus.classList.toggle('low', hide);
     lastY = y;
   }, { passive:true });
-  const isField = el => el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && !/checkbox|radio|button|range|file/.test(el.type || '');
-  document.addEventListener('focusin', e => { if (isField(e.target)) document.body.classList.add('kb-open'); });
+  const isField = el => el && (el.isContentEditable || (/^(INPUT|TEXTAREA)$/.test(el.tagName) && !/checkbox|radio|button|range|file|color/.test(el.type || '')));
+  document.addEventListener('focusin', e => { if (matchMedia('(max-width:900px), (pointer:coarse)').matches && isField(e.target)) document.body.classList.add('kb-open'); });
   document.addEventListener('focusout', () => setTimeout(() => { if (!isField(document.activeElement)) document.body.classList.remove('kb-open'); }, 120));
 
   // Háptico suave en cualquier control tocable
@@ -7417,19 +7529,24 @@ const attachSwipe = (el, { onRight, onLeft, rightLabel = '✓ Hecho', leftLabel 
     if (Math.abs(dx) >= T() && ((dir > 0 && onRight) || (dir < 0 && onLeft))) {
       haptic('warn');
       el.classList.add('sw-anim'); el.style.transform = `translateX(${dir * (w + 20)}px)`; el.style.opacity = '0';
-      setTimeout(() => { (dir > 0 ? onRight : onLeft)(); }, 200);
-      setTimeout(() => { if (el.isConnected) reset(); }, 700);   // por si la acción no vuelve a pintar la lista
+      setTimeout(() => {
+        (dir > 0 ? onRight : onLeft)();
+        if (el.isConnected) reset();
+      }, _reduceMotion() ? 0 : 170);
     } else reset();
   };
   el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
+  el.addEventListener('pointercancel', e => {
+    if (!tracking || e.pointerId !== pid) return;
+    tracking = false; dragging = false; el.classList.remove('sw-drag'); reset();
+  });
 };
 
 const getDashboardHTML=()=>{
   const W = state.settings.dashboardWidgets || DEFAULT_DASH_WIDGETS;
   return `
 <div class="quickadd-wrap" id="quickAddWrap">
-  <button class="qa-trigger" id="quickAddTrigger" type="button" title="Agregar con IA"><span class="material-symbols-outlined">auto_awesome</span></button>
+  <button hidden class="qa-trigger" id="quickAddTrigger" type="button" title="Agregar con IA"><span class="material-symbols-outlined">auto_awesome</span></button>
   <div class="quickadd-card" id="quickAddCard" style="display:none">
     <textarea id="quickAddInput" rows="1" placeholder="Escribe o dicta: nota, recordatorio, tarea o evento…"></textarea>
     <button class="qa-icon-btn qa-mic-btn" id="quickAddMicBtn" type="button" title="Dictar por voz"><span class="material-symbols-outlined">mic</span></button>
@@ -7447,14 +7564,13 @@ ${W.activity ? `<div class="projects-card" style="padding:0;overflow:hidden;marg
     ${W.notes ? `<div class="notes-section"><div class="sec-header"><div class="sec-title"><span>🗒️</span> Notas Recientes</div><div class="sec-action" id="addNoteBtn">+ Nueva nota</div></div><div class="notes-masonry" id="notesMasonry"></div></div>` : ''}
     ${W.habits ? `<div class="projects-card" id="dashHabits" style="padding:0; overflow:hidden;"></div>` : ''}
     ${W.diary ? `<div class="projects-card" id="dashDiary"><div class="sec-header" style="padding: 22px 22px 0 22px;"><div class="sec-title"><span>📖</span> Diario Emocional</div><div class="sec-action" id="dashDiaryNav" style="cursor:pointer">Ir al Diario</div></div><div id="dashDiaryContent"></div></div>` : ''}
-    ${W.ai ? `<div class="ai-card"><div class="ai-icon">✦</div><div class="ai-text"><h3>IA Asistente</h3><p>Desglosa proyectos en tareas, resume notas, optimiza tu día. Tu copiloto personal está listo.</p><button class="ai-btn" data-view="ai">Abrir Asistente</button></div></div>` : ''}
   </div>
   <div style="display:flex;flex-direction:column;gap:24px">
     ${W.calendar ? `<div class="cal-card"><div class="sec-header"><div class="sec-title"><span>📅</span> Calendario</div><div style="display:flex;gap:14px"><div class="sec-action" id="addBlockBtnDash">+ Horario</div><div class="sec-action" id="addEventBtn">+ Evento</div></div></div><div class="cal-header"><div class="cal-month" id="calMonth"></div><div class="cal-nav"><button id="calPrev">‹</button><button id="calNext">›</button></div></div><div class="cal-days-header"><div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div></div><div class="cal-grid" id="calGrid"></div><div class="events-list" id="eventsList"></div></div>` : ''}
     ${W.reminders ? `<div class="projects-card" id="dashReminders"><div class="sec-header"><div class="sec-title"><span>⏰</span> Recordatorios</div><div class="sec-action" id="addReminderBtnDash">+ Recordatorio</div></div><div id="dashRemindersList"></div></div>` : ''}
     ${W.projects ? `<div class="projects-card"><div class="sec-header"><div class="sec-title"><span>🚀</span> Proyectos</div><div class="sec-action" id="addProjectBtn">+ Proyecto</div></div><div id="projectsList"></div></div>` : ''}
   </div>
-</div>${(!W.notes && !W.habits && !W.diary && !W.ai && !W.calendar && !W.reminders && !W.projects && !W.activity && !W.focus) ? '<div style="text-align:center;padding:60px;color:var(--text3)">Activaste todos los widgets como ocultos. Ve a Ajustes → Widgets del Dashboard para mostrar al menos uno.</div>' : ''}`;
+</div>${(!W.notes && !W.habits && !W.diary && !W.calendar && !W.reminders && !W.projects && !W.activity && !W.focus) ? '<div style="text-align:center;padding:60px;color:var(--text3)">Activaste todos los widgets como ocultos. Ve a Ajustes → Widgets del Dashboard para mostrar al menos uno.</div>' : ''}`;
 };
 // ── ENFOQUE DE HOY: junta tareas abiertas, hábitos sin marcar y recordatorios vencidos/de hoy en una sola lista accionable ──
 const getFocusItems = () => {
@@ -7739,7 +7855,7 @@ const renderDashboard=()=>{
     setBlockDayPills(null);
     openModal('blockModal');
   });
-  document.querySelectorAll('[data-view]').forEach(el=>{ if(!el.classList.contains('nav-item')) el.addEventListener('click',()=>{ if(el.dataset.view==='ai') renderAIView(); }); });
+
   document.getElementById('dashDiaryNav')?.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelector('.nav-item[data-view="diary"]')?.classList.add('active');
@@ -8808,9 +8924,9 @@ const renderSettingsView=()=>{
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>Tema de la aplicación</h3>
-      <div class="settings-row studio-choice"><label class="settings-label" for="studioChoice">Diseño en este dispositivo</label>
-        <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Negro</option></select>
-      </div>
+      <div class="settings-row studio-choice"><label class="settings-label" for="studioChoice">Tema de NovaHub</label>
+        <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Gris oscuro</option></select>
+      </div><p class="appearance-help">Con tu sesión iniciada, el tema se sincroniza en tus dispositivos.</p>
     </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
     <div class="settings-section"><h3>🌌 Apariencia del fondo</h3>${novaBackgroundSliderMarkup()}</div>
@@ -8828,7 +8944,7 @@ const renderSettingsView=()=>{
       `).join('')}
     </div>
     <div class="settings-section"><h3>🧭 Barra inferior</h3>
-      <div class="settings-sub" style="margin-bottom:12px">La barra tiene Calendario, Notas, Proyectos, Avisos, Diario, Hábitos y Ajustes. El botón (+) flotante crea lo de la sección donde estás. Dashboard: toca tu saludo. Todas las secciones y el resumen: toca Ajustes en la barra. Iniciar o cerrar sesión: toca tu avatar.</div>
+      <div class="settings-sub" style="margin-bottom:12px">El Dashboard está al inicio de la barra. El botón (+) crea un elemento en la sección abierta. Toca tu perfil para abrir Ajustes, ver todas las secciones o administrar tu sesión.</div>
       <div class="settings-label" style="margin:4px 0 10px">Color del botón (+)</div>
       <div class="dock-colors" id="dockColors">${DOCK_COLORS.map(c => `<button type="button" class="dock-sw${((state.settings.dockColor||'app')===c.id)?' on':''}" data-dc="${c.id}" title="${c.name}" aria-label="${c.name}" style="background:${c.c}"></button>`).join('')}</div>
     </div>
@@ -8851,7 +8967,7 @@ const renderSettingsView=()=>{
     <div class="settings-section"><h3>☁️ Nube (Firebase)</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${fb.enabled?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${fb.enabled?('Conectado como '+state.settings.username):'Sin conexión'}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">${fb.enabled?'Sincronización en tiempo real activa — todo se comparte al instante con tus otros dispositivos.':'Inicia sesión con la misma cuenta de Google en todos tus dispositivos para sincronizar automáticamente.'}</div>${fb.enabled?'<div id="syncMeta" style="font-size:.72rem;color:var(--text3);margin-top:4px">'+syncMetaText()+'</div>':''}</div></div>
     <div style="display:flex;gap:10px;margin-top:14px">${!fb.enabled ? '<button class="btn btn-primary btn-sm" id="fbLoginBtn">🔑 Iniciar sesión Google</button>' : '<button class="btn btn-ghost btn-sm" id="fbLogoutBtn">Cerrar sesión</button><button class="btn btn-ghost btn-sm" id="fbPushBtn">Forzar subida</button><button class="btn btn-ghost btn-sm" id="fbPullBtn">Forzar descarga</button>'}</div>${fb.enabled ? fbDiagHtml() : ''}</div>
     <div class="settings-section"><h3>📅 Google Calendar</h3><div class="firebase-status-card" style="margin-bottom:16px"><div class="sync-dot ${gcal.status==='ok'?'connected':''}"></div><div><div style="font-weight:600;font-size:.85rem">${gcal.statusText()}</div><div style="font-size:.75rem;color:var(--text2);margin-top:2px">Tus eventos de Google Calendar (solo lectura) aparecen en el Dashboard, el resumen del día y el Calendario. No se modifica nada en tu Google Calendar.</div></div></div><div style="display:flex;gap:10px;margin-top:14px">${fb.enabled ? `<button class="btn btn-primary btn-sm" id="gcalConnectBtn">${gcal.status==='off'?'Conectar calendario':'Reconectar'}</button>${gcal.status==='off'?'':'<button class="btn btn-ghost btn-sm" id="gcalSyncBtn">↻ Actualizar</button><button class="btn btn-ghost btn-sm" id="gcalOffBtn">Desconectar</button>'}` : '<button class="btn btn-primary btn-sm" id="fbLoginBtn2">🔑 Iniciar sesión con Google</button>'}</div></div>
-    <div class="settings-section"><h3>🤖 IA Asistente</h3>
+    <div class="settings-section"><h3>🤖 Cortex e inteligencia artificial</h3>
       <div class="settings-row" style="border-bottom:none">
         <div><div class="settings-label">IA gratuita · modelos abiertos</div><div class="settings-sub">Toda la app (chat, Agregar con IA, Resumen del día, Briefing y Cortex) usa modelos open source como DeepSeek, Mistral y Qwen. No necesitas claves ni cuentas.</div></div>
         <span style="font-size:.78rem;color:var(--green);flex-shrink:0;margin-left:10px">✓ Activa</span>
@@ -9164,7 +9280,16 @@ const renderProjectDetail = () => {
   root.querySelectorAll('.pd-check').forEach(c => c.addEventListener('change', () => {
     const t = p.tasks[Number(c.dataset.idx)]; if (!t) return;
     t.done = c.checked; save();
-    renderProjectDetail(); refreshProjectsBehind();
+    const row = c.closest('.pd-task');
+    row.classList.toggle('done', t.done);
+    const label = row.parentElement.querySelector('.sw-r span');
+    if (label) label.textContent = t.done ? '↩ Reabrir' : '✓ Hecho';
+    const meter = box.querySelector('#pdProg');
+    const next = document.createElement('div');
+    next.innerHTML = pdProgressHTML(p);
+    meter.querySelector('.progress-fill').style.width = next.querySelector('.progress-fill').style.width;
+    meter.querySelector('.pd-progress-txt').replaceChildren(...next.querySelector('.pd-progress-txt').children);
+    refreshProjectsBehind();
     if (c.checked) { addXP(10); celebrateIfProjectDone(p); }
   }));
 
@@ -9209,10 +9334,8 @@ const renderProjectDetail = () => {
       rightLabel: row.classList.contains('done') ? '↩ Reabrir' : '✓ Hecho',
       leftLabel: 'Borrar 🗑',
       onRight: () => {
-        const t = p.tasks[idx]; if (!t) return;
-        t.done = !t.done; save();
-        renderProjectDetail(); refreshProjectsBehind();
-        if (t.done) { addXP(10); celebrateIfProjectDone(p); }
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', {bubbles:true}));
       },
       onLeft: () => {
         const t = p.tasks[idx]; if (!t) return;
@@ -10249,18 +10372,11 @@ const renderHabitsView=()=>{
   if(!state.habits.length) hList.innerHTML='<div style="color:var(--text3);font-size:.85rem;padding:24px;text-align:center;">No has añadido hábitos todavía.</div>';
   else {
     state.habits.forEach(h=>{
-      let streak = 0; let currDate = new Date(today);
-      while(true) {
-        if((h.logs||[]).includes(currDate.toISOString().split('T')[0])) { streak++; currDate.setDate(currDate.getDate()-1); }
-        else break;
-      }
-      
       const el=document.createElement('div'); el.className='habit-row';
       el.innerHTML=`
         <div class="habit-row-info">
            <div style="font-weight:700; font-size:1.05rem; margin-bottom:4px; color:var(--text)">${h.name}</div>
            <div style="font-size:0.75rem; color:var(--text3); display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-             <span><span style="color:var(--orange)">🔥</span> Racha actual: <strong style="color:var(--text)">${streak} días</strong></span>
              <span><span style="color:var(--green)">✓</span> Total: <strong style="color:var(--text)">${(h.logs||[]).length} completados</strong></span>
            </div>
            <button class="heatmap-toggle" data-hid="${h.id}">
@@ -10296,15 +10412,7 @@ const renderHabitsView=()=>{
           else {
             h.logs.push(dStr); addXP(10);
             btn.classList.add('just-checked');
-            // Racha nueva tras el check de hoy
-            let newStreak = 0, cd = new Date();
-            while (h.logs.includes(cd.toISOString().split('T')[0])) { newStreak++; cd.setDate(cd.getDate() - 1); }
-            if (HABIT_MILESTONES.includes(newStreak)) {
-              const r = btn.getBoundingClientRect();
-              fireConfetti(r.left + r.width / 2, r.top + r.height / 2);
-              haptic('success');
-              toast(`🔥 ¡${newStreak} días de racha en "${h.name}"!`);
-            }
+            haptic('success');
           }
           save(); renderHabitsView(); updateStats();
         });
@@ -10323,21 +10431,20 @@ const renderHabitsView=()=>{
 };
 
 const seed=()=>{
-  if(!state.notes.length&&!state.projects.length&&!state.habits.length){
+  if (DATA_KEYS.every(k => !state[k]?.length && localStorage.getItem('nn_' + k) === null)) {
     state.notes=[{id:1,title:'Bienvenido a NOVA HUB',body:'Ecosistema personal de productividad. Esto es un ejemplo de nota, puedes eliminarla cuando quieras haciendo clic en el icono de papelera al abrir la vista de Notas.',color:'var(--accent)',tags:['ejemplo'],pinned:true,createdAt:new Date().toISOString()}];
     state.projects=[{id:2,name:'Ejemplo de Proyecto',desc:'Puedes agregar múltiples tareas y ver el progreso.',status:'active',tasks:[{title:'Primer paso',done:true},{title:'Segundo paso',done:false}]}];
     state.habits=[{id:3,name:'Leer 20 páginas al día',logs:[]}];
     state.reminders=[{id:4,title:'Revisar agenda semanal',desc:'Planifica la próxima semana',datetime:new Date(Date.now()+86400000).toISOString().slice(0,16),notified:false,tags:['ejemplo']}];
     state.diary=[{id:5,date:new Date().toISOString().split('T')[0],content:'**Día 1 usando Nova Hub**\n\nHoy empecé a utilizar mi nuevo ecosistema digital. Se ve genial.',mood:'good',tags:['inicio']}];
-    state.routines=[{id:6,title:'Trabajo profundo',start:'09:00',end:'12:00',color:'var(--accent)',repeatDays:[1,2,3,4,5]}];
+    // El horario comienza con los bloques que la persona haya creado.
     save();
   }
 };
+if (state.routines.some(isDemoRoutine)) save();
 seed();
 purgeTrash();
 updateXPUI();
-updateStreak();
-renderStreakPill();
 renderDashboard();
 autoConnectFirebase();
 initNotifications();
@@ -10388,7 +10495,7 @@ initNotifications();
 // Elegant Flowing Gradient Background
 (function initElegantBg() {
   const canvas = document.getElementById('psBg');
-  if(!canvas) return;
+  if(!canvas || !canvas.getClientRects().length) return;
   const ctx = canvas.getContext('2d');
   let w, h, time = 0, lastFrame = 0;
 
@@ -10805,7 +10912,7 @@ initNotifications();
   const shell=document.getElementById('appShell');
   const sidebar=document.getElementById('sidebar');
   if(!shell||!sidebar||document.getElementById('novaFloatingDock'))return;
-  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','apps','ai','settings'];
+  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','apps'];
   const dock=document.createElement('nav');
   dock.id='novaFloatingDock';
   dock.setAttribute('aria-label','Navegación flotante de Nova Hub');
@@ -11057,6 +11164,9 @@ initNotifications();
  const render=now=>{
   if(document.hidden || document.documentElement.dataset.studio){raf=0;return}
   if(now-last<28){raf=requestAnimationFrame(render);return}
+  if(document.body.classList.contains('kb-open') || document.querySelector('.modal-overlay.open,#tabSheet.open,#acctPop.open,#moreDrawer.open')){
+   last=now;raf=requestAnimationFrame(render);return
+  }
   last=now;tick++;
   ctx.globalCompositeOperation='source-over';
   ctx.filter='none';ctx.globalAlpha=1;ctx.fillStyle='#000000';
@@ -11084,7 +11194,7 @@ initNotifications();
    ctx.restore();ctx.save();ctx.globalCompositeOperation='lighter';
    ctx.filter='none';ctx.drawImage(canvas,0,0);ctx.restore();
   }
-  raf=requestAnimationFrame(render);
+  raf=reduce.matches ? 0 : requestAnimationFrame(render);
  };
  window.addEventListener('nova-layout', () => {
    if (!document.documentElement.dataset.studio && !raf && !document.hidden) raf = requestAnimationFrame(render);
@@ -11163,11 +11273,11 @@ if ('serviceWorker' in navigator) {
     '#content [style*="font-size:2.5rem"]',
     '#content .widget .label','#content .weather-icon',
     '#content .ai-card .ai-icon','#content .ai-avatar.bot',
-    '#content .nova-bg-heading > span','#streakPill span',
+    '#content .nova-bg-heading > span',
     '#content .focus-body-meta .focus-tag','#content .mood-picker .mood-btn',
     '#content .routine-hero-icon','#content .routine-section-hero span',
     '#content .md-tile .md-ico','#moreDrawer .md-ico',
-    '#content .streak-pill','#streakPill','#toast',
+    '#toast',
     '#content .wg-bl-title','#content .nova-mobile-event-title',
     '#content .focus-body-meta .focus-tag','#content .briefing-section-icon',
     '#content .weather-symbol','#content .weather-glyph',
@@ -11281,7 +11391,7 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js?bento=3"></script>
+<script src="pixel.js?bento=4"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';

@@ -67,7 +67,7 @@
   const AW = () => layer.clientWidth || innerWidth, AH = () => layer.clientHeight || innerHeight;
   const tabbar = () => { // la barra inferior: #tabbar en el celular, #novaFloatingDock en la PC (la que esté visible)
     if (document.body.classList.contains('kb-open')) return null;
-    for (const id of ['tabbar', 'novaFloatingDock']) { const t = document.getElementById(id); if (!t || t.classList.contains('tb-hide')) continue; const cs = getComputedStyle(t); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .2) continue; const r = t.getBoundingClientRect(); if (r.height && r.top < AH() - 10) return r; }
+    for (const id of ['tabbar', 'novaFloatingDock']) { const t = document.getElementById(id); if (!t || (id === 'novaFloatingDock' && document.documentElement.dataset.studio) || t.classList.contains('tb-hide')) continue; const cs = getComputedStyle(t); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .2) continue; const r = t.getBoundingClientRect(); if (r.height && r.top < AH() - 10) return r; }
     return null; };
   const bottomGap = () => { const t = tabbar(); return t ? AH() - t.top + 8 : 0; };
   const createBtn = () => { // el botón (+) de crear en la PC (junto a la barra inferior flotante)
@@ -87,6 +87,7 @@
   }
   function placePeek() { // escondido: sobre la barra inferior (celular) o abajo a la derecha, junto al menú (PC)
     // Se ve la cabeza COMPLETA (ya no se recorta) y siempre por encima de la barra inferior
+    if (fab.parentElement?.id === 'novaFloatingDock') return;
     const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 56, t = tabbar(), c = createBtn();
     if (c) { fab.style.left = (c.right + 12) + 'px'; fab.style.top = Math.max(6, c.top - hgt * .45) + 'px'; } // PC: junto al (+), un poco más arriba
     else if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt - 8) + 'px'; }
@@ -179,11 +180,11 @@
     [/papelera|borrad/, 'Papelera', 'settings', SET('papelera'), 'Lo borrado se queda 5 días y lo puedes restaurar.'],
     [/google calendar|conectar (el )?calendario|calendar/, 'Google Calendar', 'settings', SET('google calendar'), 'Conecta tu calendario (incluye 🔥Tatuajes🔥).'],
     [/nube|sincroniz|iniciar sesion|cerrar sesion|cuenta de google|firebase/, 'Nube y cuenta', 'settings', SET('nube'), 'Tu sesión de Google: todo se guarda en tu cuenta.'],
-    [/clave|api key|proveedor de ia/, 'IA Asistente (clave)', 'settings', SET('ia asistente'), 'Opcional: tu propia clave. Sin clave también funciono.'],
+    [/clave|api key|proveedor de ia/, 'Clave de Cortex', 'settings', SET('cortex e inteligencia artificial'), 'Opcional: tu propia clave. Sin clave también funciono.'],
     [/nombre|perfil|username/, 'Perfil', 'settings', SET('perfil'), 'Cómo te llamo.'],
     [/briefing/, 'Briefing diario', 'briefing', null, 'Tu briefing de la mañana: clima de Orizaba, noticias, IA y una idea de tatuaje.'],
     [/diario/, 'Diario', 'diary', null, 'Tus entradas del día con tu estado de ánimo.'],
-    [/habito/, 'Hábitos', 'habits', null, 'Tus hábitos y rachas.'],
+    [/habito/, 'Hábitos', 'habits', null, 'Tus hábitos de hoy.'],
     [/recordatorio/, 'Recordatorios', 'reminders', null, 'Tus avisos con fecha y hora.'],
     [/calendario|horario|rutina/, 'Calendario y Horario', 'calendar', null, 'Eventos, bloques de horario y tus citas.'],
     [/proyecto|tarea/, 'Proyectos', 'projects', null, 'Tus proyectos y sus tareas.'],
@@ -215,7 +216,7 @@
       .map(e => ({titulo: e.title, fecha: e.date, hora: e.start || undefined, fin: e.end || undefined, tatuaje: H().isTattoo(e) || undefined, google: !!e.google || undefined}));
     const dow = now.getDay(), routines = (d.routines || []).filter(r => (r.repeatDays || []).map(Number).includes(dow)).map(r => `${r.start || ''}-${r.end || ''} ${r.title}`).slice(0, 12);
     const isoToday = now.toISOString().split('T')[0];
-    const habits = (d.habits || []).slice(0, 20).map(h => { const logs = h.logs || []; let s = 0; const c = new Date(); if (!logs.includes(c.toISOString().split('T')[0])) c.setDate(c.getDate() - 1); while (logs.includes(c.toISOString().split('T')[0])) { s++; c.setDate(c.getDate() - 1); } return {nombre: h.name, hechoHoy: logs.includes(isoToday), racha: s}; });
+    const habits = (d.habits || []).slice(0, 20).map(h => ({nombre:h.name, hechoHoy:(h.logs || []).includes(isoToday)}));
     const diary = (d.diary || []).slice(-4).map(e => ({fecha: e.id ? ymd(new Date(+e.id)) : '', animo: e.mood, texto: cut(e.content, 220)}));
     return {ahora: `${today} ${p2(now.getHours())}:${p2(now.getMinutes())} (${DIAS[dow]})`, seccionAbierta: NAMES[section()] || section(), notas: notes, proyectos: projects, recordatorios: remOut, eventosProximos14dias: evs, horarioDeHoy: routines, habitos: habits, diarioReciente: diary};
   }
@@ -368,7 +369,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     }).finally(() => { av.classList.remove('loading'); loading = null; });
     return loading;
   }
-  const GREET = {dashboard: 'Te digo qué tienes hoy, te ayudo a priorizar o anoto lo que se te ocurra.', notes: 'Puedo anotar ideas, resumir tus notas o buscar algo en ellas.', projects: 'Te digo qué sigue, divido un proyecto en tareas o agrego pendientes.', reminders: 'Dime «recuérdame…» y yo lo agendo.', calendar: 'Reviso tus eventos y citas de tatuaje, o agendo algo nuevo.', diary: 'Puedo escribir en tu diario o contarte cómo ha ido tu semana.', habits: 'Te digo cómo vas con tus rachas o marco un hábito.', settings: 'Pregúntame dónde se configura cualquier cosa.'};
+  const GREET = {dashboard: 'Te digo qué tienes hoy, te ayudo a priorizar o anoto lo que se te ocurra.', notes: 'Puedo anotar ideas, resumir tus notas o buscar algo en ellas.', projects: 'Te digo qué sigue, divido un proyecto en tareas o agrego pendientes.', reminders: 'Dime «recuérdame…» y yo lo agendo.', calendar: 'Reviso tus eventos y citas de tatuaje, o agendo algo nuevo.', diary: 'Puedo escribir en tu diario o contarte cómo ha ido tu semana.', habits: 'Reviso tus hábitos de hoy o marco uno contigo.', settings: 'Pregúntame dónde se configura cualquier cosa.'};
   let showP = null; // si ya va saliendo, quien lo llame espera a que termine (evita dos salidas a la vez)
   function show(greet) { return showP || (showP = showNow(greet).finally(() => { showP = null; })); }
   async function showNow(greet) {
