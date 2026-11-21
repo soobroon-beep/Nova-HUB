@@ -3433,6 +3433,61 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 @media(prefers-reduced-motion:reduce){.stk-grid > .note-card,.stk-grid > .proj-full-card,.stack-card,.stk-hint{animation:none!important}}
 </style>
 <link rel="stylesheet" href="pixel.css">
+<style>
+/* Dashboard minimalista: los widgets conservan sus nodos, eventos y colores. */
+html[data-layout="bento"] {
+  --bg:#171b1a; --bg2:#202523; --bg3:#2a302d; --border:#39413c;
+  --text:#f0f4ef; --text2:#c1c9c2; --text3:#a0aba2; --card-r:14px;
+  background:var(--bg)!important;
+}
+html[data-layout="bento"][data-theme="light"] {
+  --bg:#f2f4f0; --bg2:#fff; --bg3:#e8ede7; --border:#d5ddd4;
+  --text:#1d2821; --text2:#46554a; --text3:#5b695f;
+}
+html[data-layout="bento"] :is(#novaVortexBg,#psBgWrap,#novaTexture){display:none!important}
+html[data-layout="bento"] :is(body,#appShell,#main){background:var(--bg)!important}
+html[data-layout="bento"] :is(#sidebar,#topbar,#novaFloatingDock,#mobileTabBar){
+  background:var(--bg2)!important;border-color:var(--border)!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+}
+html[data-layout="bento"] #content{width:100%;max-width:1420px;margin-inline:auto;gap:14px}
+html[data-layout="bento"] #content :is(.stat-card,.projects-card,.cal-card,.notes-section,.rings-card,.focus-card,.ai-card,.set-hero,.set-group,#daySummaryCard){
+  background:var(--bg2)!important;border:1px solid var(--border)!important;
+  border-radius:var(--card-r)!important;box-shadow:none!important;backdrop-filter:none!important;
+}
+html[data-layout="bento"] #content :is(.note-card,.proj-full-card,.diary-card,.reminder-card){
+  border-radius:12px!important;box-shadow:none!important;
+}
+html[data-layout="bento"] .sec-title{letter-spacing:-.02em;font-weight:650}
+html[data-layout="bento"] .dash-grid{gap:14px}
+html[data-layout="bento"] .dash-grid>div{gap:14px!important;min-width:0}
+html[data-layout="bento"] #layoutChoice{font:inherit;color:var(--text);background:var(--bg3)}
+@media(min-width:901px){
+  html[data-layout="bento"] #content:has(>.dash-grid){
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px!important;align-content:start;align-items:start;
+    padding:clamp(18px,2.2vw,34px) clamp(18px,3vw,48px) 100px!important;
+  }
+  html[data-layout="bento"] #content:has(>.dash-grid)>*{grid-column:span 2;min-width:0;margin-block:0!important}
+  html[data-layout="bento"] #content:has(>.dash-grid)>:is(.stats-row,.quickadd-wrap,.dash-grid){grid-column:1/-1}
+  html[data-layout="bento"] #content .dash-grid,
+  html[data-layout="bento"] #content .dash-grid>div{display:contents}
+  html[data-layout="bento"] .dash-grid>div>*{grid-column:span 2;min-width:0}
+  html[data-layout="bento"] #novaFloatingDock{gap:3px!important;padding:6px 10px!important;min-height:0!important;border-radius:14px!important}
+  html[data-layout="bento"] #novaFloatingDock .nova-dock-item{width:40px!important;height:40px!important;flex-basis:40px!important;color:var(--text2)!important}
+  html[data-layout="bento"] #novaFloatingDock .nova-dock-item.active{background:var(--bg3)!important;color:var(--text)!important}
+  html[data-layout="bento"] #novaFloatingDock .nova-dock-item.active:before{bottom:1px;box-shadow:none}
+}
+@media(max-width:900px){
+  html[data-layout="bento"] .dash-grid{grid-template-columns:minmax(0,1fr)}
+  html[data-layout="bento"] .stats-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+}
+</style>
+<script>
+try {
+  if (localStorage.getItem('nova.layout') === 'bento') document.documentElement.dataset.layout = 'bento';
+} catch (_) {}
+</script>
 </head>
 <body>
 
@@ -8301,6 +8356,11 @@ const renderSettingsView=()=>{
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px"><div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px"><span>⚙️</span> Ajustes</div></div>
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
+    <div class="settings-section"><h3>Tema de la aplicación</h3>
+      <div class="settings-row"><label for="layoutChoice" class="settings-label">Diseño en este dispositivo</label>
+        <select class="btn" id="layoutChoice"><option value="classic">Clásico</option><option value="bento">Dashboard minimalista</option></select>
+      </div>
+    </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
     <div class="settings-section"><h3>🌌 Apariencia del fondo</h3>${novaBackgroundSliderMarkup()}</div>
     <div class="settings-section"><h3>🖼️ Icono de la app</h3>
@@ -8380,6 +8440,14 @@ const renderSettingsView=()=>{
       </div>
     </div>
   </div>`;
+  const layoutChoice = document.getElementById('layoutChoice');
+  layoutChoice.value = document.documentElement.dataset.layout || 'classic';
+  layoutChoice.addEventListener('change', () => {
+    if (layoutChoice.value === 'bento') document.documentElement.dataset.layout = 'bento';
+    else delete document.documentElement.dataset.layout;
+    try { localStorage.setItem('nova.layout', layoutChoice.value); } catch (_) {}
+    window.dispatchEvent(new Event('resize'));
+  });
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
@@ -8461,7 +8529,7 @@ const renderSettingsView=()=>{
 //    así todos los botones siguen funcionando igual) ──
 const SET_GROUPS = [
   { id: 'cuenta',  icon: 'account_circle', title: 'Cuenta y nube',       match: ['Perfil', 'Nube', 'Google Calendar'] },
-  { id: 'aspecto', icon: 'palette',        title: 'Apariencia',          match: ['Color de acento', 'Apariencia del fondo', 'Icono de la app', 'Barra inferior'] },
+  { id: 'aspecto', icon: 'palette',        title: 'Apariencia',          match: ['Tema de la aplicación', 'Color de acento', 'Apariencia del fondo', 'Icono de la app', 'Barra inferior'] },
   { id: 'inicio',  icon: 'dashboard',      title: 'Pantalla de inicio',  match: ['Widgets'] },
   { id: 'avisos',  icon: 'notifications',  title: 'Notificaciones',      match: ['Notificaciones'] },
   { id: 'ia',      icon: 'auto_awesome',   title: 'Inteligencia artificial', match: ['IA', 'Cortex', 'Asistente'] },
