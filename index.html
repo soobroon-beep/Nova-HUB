@@ -3618,6 +3618,8 @@ html[data-studio] .studio-choice{display:flex;gap:8px;align-items:center;flex-wr
   html[data-studio] .settings-wrap>details[open]{grid-column:1/-1}
 }
 
+.px-flat{position:absolute;inset:8%;display:grid;place-items:center;pointer-events:none}
+.px-flat svg{width:100%;height:auto}
 /* A closed quick-create sheet must have neither a paint box nor focus targets. */
 html[data-studio] #tabSheet:not(.open){visibility:hidden;background:transparent!important}
 html[data-studio] #tabSheet.open{background:transparent!important}
@@ -11279,7 +11281,7 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js?bento=2"></script>
+<script src="pixel.js?bento=3"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';

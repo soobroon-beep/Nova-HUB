@@ -344,11 +344,28 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     if (sec !== lastSec) { lastSec = sec; if (open) { if (!busy) { setChips(); const h = home(); flyTo(h.x, h.y, 500); } } else maybeTip(sec); } }, 1000);
 
   /* ── abrir / cerrar ── */
+  // Keep the assistant available on Bento devices without a 3D graphics context.
   async function ensureModel() {
-    if (M) return M; if (loading) return loading;
+    if (M) return M;
+    if (av.querySelector('.px-flat') && document.documentElement.dataset.studio) return null;
+    if (loading) return loading;
     av.classList.add('loading');
-    loading = import('./pixel-model.js').then(mod => { M = mod.create(cv); try { M.setColor(accent()); } catch {} av.classList.remove('loading'); return M; })
-      .catch(e => { av.classList.remove('loading'); loading = null; throw e; });
+    loading = import('./pixel-model.js').then(mod => {
+      M = mod.create(cv);
+      av.querySelector('.px-flat')?.remove();
+      try { M.setColor(accent()); } catch {}
+      return M;
+    }).catch(error => {
+      if (!document.documentElement.dataset.studio) throw error;
+      if (!av.querySelector('.px-flat')) {
+        const flat = document.createElement('span');
+        flat.className = 'px-flat';
+        flat.setAttribute('aria-hidden','true');
+        flat.innerHTML = headSVG('eyes');
+        av.append(flat);
+      }
+      return null;
+    }).finally(() => { av.classList.remove('loading'); loading = null; });
     return loading;
   }
   const GREET = {dashboard: 'Te digo qué tienes hoy, te ayudo a priorizar o anoto lo que se te ocurra.', notes: 'Puedo anotar ideas, resumir tus notas o buscar algo en ellas.', projects: 'Te digo qué sigue, divido un proyecto en tareas o agrego pendientes.', reminders: 'Dime «recuérdame…» y yo lo agendo.', calendar: 'Reviso tus eventos y citas de tatuaje, o agendo algo nuevo.', diary: 'Puedo escribir en tu diario o contarte cómo ha ido tu semana.', habits: 'Te digo cómo vas con tus rachas o marco un hábito.', settings: 'Pregúntame dónde se configura cualquier cosa.'};
@@ -357,7 +374,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   async function showNow(greet) {
     if (open) return; open = true; ls.open = true; store(); fab.classList.add('on'); fab.setAttribute('aria-label', 'Cortex está activo');
     const s = AV(), pk = peekSpot(); place(pk.x - s.w / 2, pk.y + 30); av.hidden = false; fab.classList.add('out');
-    try { await ensureModel(); M.pause(false); } catch { av.hidden = true; open = false; fab.classList.remove('on', 'out'); try { H().toast('⚠️ No se pudo cargar a Cortex. Revisa tu conexión.'); } catch {} return; }
+    try { await ensureModel(); M?.pause(false); } catch { av.hidden = true; open = false; fab.classList.remove('on', 'out'); try { H().toast('⚠️ No se pudo cargar a Cortex. Revisa tu conexión.'); } catch {} return; }
     mood('excited', 'fly'); const h = home(); await flyTo(h.x, h.y, greet ? 1000 : 500);
     setChips(); const name = CFG().nombre || H().user();
     if (greet) { mood('happy', 'wave'); say(`¡Hola${name ? ', ' + name : ''}! Soy Cortex. ${GREET[section()] || GREET.dashboard}`); setTimeout(() => { if (!busy) mood('neutral', 'idle'); }, 2400); }
