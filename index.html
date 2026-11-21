@@ -3433,59 +3433,182 @@ html[data-theme] .routine-section .routine-block-item .routine-block-dot{
 @media(prefers-reduced-motion:reduce){.stk-grid > .note-card,.stk-grid > .proj-full-card,.stack-card,.stk-hint{animation:none!important}}
 </style>
 <link rel="stylesheet" href="pixel.css">
-<style>
-/* Dashboard minimalista: los widgets conservan sus nodos, eventos y colores. */
-html[data-layout="bento"] {
-  --bg:#171b1a; --bg2:#202523; --bg3:#2a302d; --border:#39413c;
-  --text:#f0f4ef; --text2:#c1c9c2; --text3:#a0aba2; --card-r:14px;
-  background:var(--bg)!important;
+<style id="studio-style">
+/* Studio uses the same navigation, editors, widgets and collection cards as Classic. */
+html[data-studio="light"] {
+  --paper:#fff; --panel:#fcfcfc; --raised:#f3f3f3; --rule:#dedede;
+  --ink:#141414; --secondary:#484848; --quiet:#666; --rgb:18,18,18;
+  --lift:0 8px 18px -16px #0005; color-scheme:light;
 }
-html[data-layout="bento"][data-theme="light"] {
-  --bg:#f2f4f0; --bg2:#fff; --bg3:#e8ede7; --border:#d5ddd4;
-  --text:#1d2821; --text2:#46554a; --text3:#5b695f;
+html[data-studio="dark"] {
+  --paper:#000; --panel:#111; --raised:#202020; --rule:#333;
+  --ink:#fafafa; --secondary:#ccc; --quiet:#aaa; --rgb:250,250,250;
+  --lift:0 1px 0 #ffffff09 inset; color-scheme:dark;
 }
-html[data-layout="bento"] :is(#novaVortexBg,#psBgWrap,#novaTexture){display:none!important}
-html[data-layout="bento"] :is(body,#appShell,#main){background:var(--bg)!important}
-html[data-layout="bento"] :is(#sidebar,#topbar,#novaFloatingDock,#mobileTabBar){
-  background:var(--bg2)!important;border-color:var(--border)!important;
-  box-shadow:none!important;backdrop-filter:none!important;
+html[data-studio] {
+  --bg:var(--paper); --bg2:var(--panel); --bg3:var(--raised);
+  --border:var(--rule); --text:var(--ink); --text2:var(--secondary); --text3:var(--quiet);
+  --card-r:18px; background:var(--paper)!important;
 }
-html[data-layout="bento"] #content{width:100%;max-width:1420px;margin-inline:auto;gap:14px}
-html[data-layout="bento"] #content :is(.stat-card,.projects-card,.cal-card,.notes-section,.rings-card,.focus-card,.ai-card,.set-hero,.set-group,#daySummaryCard){
-  background:var(--bg2)!important;border:1px solid var(--border)!important;
-  border-radius:var(--card-r)!important;box-shadow:none!important;backdrop-filter:none!important;
+html[data-studio] :is(body,#appShell,#main){background:var(--paper)!important;color:var(--ink)}
+html[data-studio] :is(#psBgWrap,#novaTexture,#novaVortexBg){display:none!important}
+html[data-studio] :is(#topbar,#tabbar,#moreDrawer,#novaCreateMenu,#tabSheet,.modal,.set-group,.set-hero){
+  background:var(--paper)!important;color:var(--ink);border-color:var(--rule)!important;
+  backdrop-filter:none!important;box-shadow:none!important;
 }
-html[data-layout="bento"] #content :is(.note-card,.proj-full-card,.diary-card,.reminder-card){
-  border-radius:12px!important;box-shadow:none!important;
+html[data-studio] #topbar{border-bottom:1px solid var(--rule);padding-inline:clamp(16px,3vw,44px)}
+html[data-studio] #greetingText{font-size:1rem;letter-spacing:-.025em;color:var(--ink)!important;-webkit-text-fill-color:currentColor}
+html[data-studio] #dateText{color:var(--quiet)}
+html[data-studio] #content{width:100%;max-width:1440px;margin-inline:auto;gap:18px;min-width:0}
+html[data-studio] :is(.studio-heading,.studio-board,.studio-switch,.stats-row){flex-shrink:0}
+.studio-heading{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.studio-heading h1{font:650 clamp(1.85rem,3.4vw,3.25rem)/1.1 system-ui,sans-serif;letter-spacing:-.065em;margin:0}
+.studio-heading #quickAddWrap{min-width:0;max-width:65%}
+html[data-studio] .qa-trigger{background:var(--ink);color:var(--paper);border-radius:999px;width:auto;padding:0 16px;gap:8px;box-shadow:none;font:600 .83rem system-ui}
+html[data-studio] .stats-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+html[data-studio] #content :is(.studio-tile,.stat-card,.set-group,.set-hero,.widget,.diary-card,.habit-row,.reminder-card:not(.colored),.week-card){
+  position:relative;background:var(--panel)!important;border:1px solid var(--rule)!important;border-radius:18px!important;
+  box-shadow:var(--lift)!important;backdrop-filter:none!important;color:var(--ink);
 }
-html[data-layout="bento"] .sec-title{letter-spacing:-.02em;font-weight:650}
-html[data-layout="bento"] .dash-grid{gap:14px}
-html[data-layout="bento"] .dash-grid>div{gap:14px!important;min-width:0}
-html[data-layout="bento"] #layoutChoice{font:inherit;color:var(--text);background:var(--bg3)}
+html[data-studio] #content .stat-card{
+  display:grid;align-content:end;min-height:146px;padding:20px;cursor:pointer;isolation:isolate;transform:none!important;
+}
+html[data-studio] .stat-card::before,html[data-studio] .stat-card .icon{display:none}
+html[data-studio] .stat-card .label{align-self:start;color:var(--secondary);text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:550;margin-bottom:16px}
+html[data-studio] .stat-card .value{position:relative;z-index:1;font:600 clamp(2rem,3vw,2.9rem)/1 system-ui;letter-spacing:-.075em;color:var(--ink)!important}
+html[data-studio] .stat-card .sub{font-size:.73rem;color:var(--quiet);padding-top:3px}
+.studio-art{position:absolute;right:12px;top:18px;width:60px;height:60px;pointer-events:none;color:var(--quiet);perspective:250px}
+.studio-art i{position:absolute;display:block;border:1px solid var(--rule);background:linear-gradient(150deg,var(--paper),var(--raised));box-shadow:0 4px 6px -4px rgba(var(--rgb),.26);transition:transform .55s cubic-bezier(.2,.9,.25,1.3)}
+.studio-sheets i,.studio-folders i{width:34px;height:40px;left:14px;top:7px;border-radius:5px;transform:translate(-8px,5px) rotate(-17deg)}
+.studio-sheets i:nth-child(2),.studio-folders i:nth-child(2){transform:translate(0,2px) rotate(-3deg)}
+.studio-sheets i:last-child,.studio-folders i:last-child{transform:translate(7px,0) rotate(10deg)}
+.studio-sheets i:after{content:'';position:absolute;inset:9px 6px;background:repeating-linear-gradient(to bottom,var(--quiet) 0 1px,transparent 1px 6px);opacity:.6}
+.studio-folders i{width:39px;height:27px;top:16px;left:9px;border-radius:3px 6px 5px 5px}
+.studio-folders i:before{content:'';position:absolute;top:-5px;left:-1px;width:15px;height:5px;border:1px solid var(--rule);border-bottom:0;background:var(--panel);border-radius:3px 4px 0 0}
+.studio-checklist i{height:12px;width:44px;top:5px;left:5px;border-radius:4px}
+.studio-checklist i:nth-child(2){top:21px;left:10px}.studio-checklist i:nth-child(3){top:37px;left:15px}
+.studio-checklist i:before{content:'';position:absolute;left:4px;top:3px;border:1px solid currentColor;width:4px;height:4px;border-radius:1px}
+.studio-checklist i:after{content:'';position:absolute;left:15px;right:6px;top:5px;border-top:1px solid currentColor;opacity:.6}
+.studio-steps i{width:35px;height:35px;left:3px;top:15px;border:3px solid var(--rule);border-top-color:var(--quiet);border-radius:50%;background:none;transform:rotate(-40deg)}
+.studio-steps i:nth-child(2){left:14px;top:10px}.studio-steps i:nth-child(3){left:25px;top:5px}
+.studio-switch{width:fit-content;max-width:100%;display:flex;gap:3px;background:var(--raised);border:1px solid var(--rule);border-radius:999px;padding:4px}
+.studio-switch button{font:550 .86rem/1 system-ui;color:var(--secondary);background:transparent;border:0;border-radius:999px;padding:11px 18px;cursor:pointer}
+.studio-switch button[aria-pressed="true"]{color:var(--paper);background:var(--ink)}
+.studio-board{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start;gap:14px}
+.studio-board[hidden]{display:none}.studio-column{display:grid;min-width:0;gap:14px}
+.studio-column:only-child{grid-column:1/-1}
+html[data-studio] .studio-tile{min-width:0;margin:0!important}
+html[data-studio] .studio-tile.notes-section{padding:20px}
+html[data-studio] :is(.bf-pending,.focus-item,.set-block,.ai-icon){background:var(--raised)!important;border-color:var(--rule)!important;color:var(--text)}
+html[data-studio] .studio-tile :is(.sec-title,.focus-title,.rings-title){font-weight:650;letter-spacing:-.035em;color:var(--ink)}
+html[data-studio] :is(.sec-action,.bf-prev){color:var(--secondary);font-weight:600}
+html[data-studio] :is(.sec-action,.bf-prev):hover{color:var(--ink);text-decoration:underline}
+html[data-studio] #content :is(.note-card,.proj-full-card,.reminder-card.colored,.stk-card){
+  border-radius:15px!important;box-shadow:none!important;
+}
+html[data-studio] #content :is(.note-card:not(.colored),.proj-full-card:not(.colored)){background:var(--panel)!important;border:1px solid var(--rule)!important}
+html[data-studio] :is(.btn-primary,.ai-btn){background:var(--ink)!important;color:var(--paper)!important;box-shadow:none!important;border-radius:999px}
+html[data-studio] .nova-create-action{color:var(--ink)}
+html[data-studio] .set-group{overflow:hidden}
+html[data-studio] .set-gi{background:var(--raised);color:var(--ink)}
+html[data-studio] .settings-wrap{width:100%;max-width:960px}
+html[data-studio] #content:has(>.settings-wrap)>.set-hero{max-width:960px;width:100%}
+html[data-studio] :is(.studio-tile,.stat-card,.note-card,.proj-full-card,.set-group).studio-lit:after{
+  content:'';pointer-events:none;position:absolute;inset:0;z-index:5;border-radius:inherit;
+  background:radial-gradient(300px circle at var(--sx) var(--sy),rgba(var(--rgb),.085),transparent 72%);
+}
+html[data-studio] #content .studio-lit{border-color:color-mix(in srgb,var(--rule) 55%,var(--ink))!important}
+.studio-wave-mask{position:fixed;pointer-events:none;overflow:hidden;z-index:90}
+.studio-wave{position:absolute;border-radius:50%;background:radial-gradient(circle,transparent 54%,rgba(var(--rgb),.14) 67%,rgba(var(--rgb),.42) 70%,transparent 71%)}
+@keyframes studio-arrive{from{opacity:0;translate:0 12px;scale:.985}to{opacity:1;translate:0 0;scale:1}}
+@media(prefers-reduced-motion:no-preference){
+  html[data-studio] .stats-row .stat-card,.studio-column>.studio-tile{animation:studio-arrive .48s cubic-bezier(.2,.78,.25,1) backwards!important}
+  html[data-studio] .stats-row .stat-card:nth-child(2),.studio-column:nth-child(2)>.studio-tile{animation-delay:55ms!important}
+  html[data-studio] .stats-row .stat-card:nth-child(3),.studio-column>.studio-tile:nth-child(2){animation-delay:100ms!important}
+  html[data-studio] .stats-row .stat-card:nth-child(4){animation-delay:145ms!important}
+  .stat-card:is(:hover,:focus-visible) .studio-sheets i:last-child,.stat-card:is(:hover,:focus-visible) .studio-folders i:last-child{transform:translate(11px,-5px) rotate(18deg)}
+  .stat-card:is(:hover,:focus-visible) .studio-checklist i{transform:translateX(-5px)}
+  .stat-card:is(:hover,:focus-visible) .studio-checklist i:nth-child(2){transform:translateX(4px)}
+  .stat-card:is(:hover,:focus-visible) .studio-steps i{transform:rotate(120deg)}
+}
 @media(min-width:901px){
-  html[data-layout="bento"] #content:has(>.dash-grid){
-    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:14px!important;align-content:start;align-items:start;
-    padding:clamp(18px,2.2vw,34px) clamp(18px,3vw,48px) 100px!important;
+  html[data-studio]{--studio-rail:clamp(166px,15vw,218px)}
+  html[data-studio] #appShell{padding-left:var(--studio-rail)}
+  html[data-studio] #content{padding:clamp(20px,2.6vw,38px) clamp(20px,3vw,44px) 48px!important}
+  html[data-studio] #novaFloatingDock{
+    top:0!important;left:0!important;bottom:0!important;transform:none!important;max-width:none!important;
+    width:var(--studio-rail);height:100dvh;overflow-y:auto;overflow-x:hidden;align-items:stretch;flex-direction:column;
+    justify-content:flex-start;gap:2px!important;border:0;border-right:1px solid var(--rule);border-radius:0!important;
+    padding:24px 10px!important;background:var(--panel)!important;box-shadow:none;backdrop-filter:none;
   }
-  html[data-layout="bento"] #content:has(>.dash-grid)>*{grid-column:span 2;min-width:0;margin-block:0!important}
-  html[data-layout="bento"] #content:has(>.dash-grid)>:is(.stats-row,.quickadd-wrap,.dash-grid){grid-column:1/-1}
-  html[data-layout="bento"] #content .dash-grid,
-  html[data-layout="bento"] #content .dash-grid>div{display:contents}
-  html[data-layout="bento"] .dash-grid>div>*{grid-column:span 2;min-width:0}
-  html[data-layout="bento"] #novaFloatingDock{gap:3px!important;padding:6px 10px!important;min-height:0!important;border-radius:14px!important}
-  html[data-layout="bento"] #novaFloatingDock .nova-dock-item{width:40px!important;height:40px!important;flex-basis:40px!important;color:var(--text2)!important}
-  html[data-layout="bento"] #novaFloatingDock .nova-dock-item.active{background:var(--bg3)!important;color:var(--text)!important}
-  html[data-layout="bento"] #novaFloatingDock .nova-dock-item.active:before{bottom:1px;box-shadow:none}
+  html[data-studio] #novaFloatingDock:before{content:'Nova Hub';position:static;display:block;flex:none;padding:3px 12px 26px;color:var(--ink);font:670 1.35rem/1 system-ui;letter-spacing:-.07em;background:none}
+  html[data-studio] #novaFloatingDock .nova-dock-item{
+    width:100%!important;height:39px!important;flex:0 0 39px!important;display:flex;align-items:center;justify-content:flex-start;
+    padding:0 10px;gap:10px;transform:none!important;will-change:auto;color:var(--secondary)!important;border-radius:8px!important;
+  }
+  html[data-studio] #novaFloatingDock .nova-dock-item:after{
+    content:attr(data-tip);position:static;opacity:1;transform:none;box-shadow:none;background:none;border:0;
+    padding:0;color:inherit;font:550 .8rem/1.2 system-ui;white-space:normal;text-align:left;
+  }
+  html[data-studio] #novaFloatingDock .nova-dock-item:before{display:none}
+  html[data-studio] #novaFloatingDock .nova-dock-item:is(.active,:hover,:focus-visible){background:var(--raised)!important;color:var(--ink)!important}
+  html[data-studio] #novaFloatingDock .nova-dock-item svg{width:17px!important;height:17px!important;flex:none}
+  html[data-studio] #novaFloatingDock .material-symbols-outlined{font-size:18px!important}
+  html[data-studio] #novaFloatingDock .nova-dock-separator{width:calc(100% - 20px);height:1px!important;margin:10px 0!important;background:var(--rule)}
+  html[data-studio] #topbar{padding-right:calc(clamp(20px,3vw,44px) + 112px)}
+  html[data-studio] #novaCreateFab{
+    left:auto!important;right:clamp(20px,3vw,44px)!important;top:15px!important;bottom:auto!important;width:94px!important;height:38px!important;
+    display:flex!important;justify-content:center;gap:5px;border-radius:999px!important;background:var(--ink)!important;color:var(--paper)!important;box-shadow:none!important;
+  }
+  html[data-studio] #novaCreateFab:after{content:'Crear';font:600 .85rem system-ui}
+  html[data-studio] #novaCreateFab .material-symbols-outlined{font-size:19px!important}
+  html[data-studio] #novaCreateMenu:not([hidden]){left:auto!important;right:clamp(20px,3vw,44px)!important;top:61px!important;border:1px solid var(--rule)!important}
 }
+@media(max-width:1100px){.studio-art{scale:.77;transform-origin:top right}.studio-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){
-  html[data-layout="bento"] .dash-grid{grid-template-columns:minmax(0,1fr)}
-  html[data-layout="bento"] .stats-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  html[data-studio] #tabbar{width:100%;max-width:none;bottom:0;border-radius:0;border-width:1px 0 0;height:calc(60px + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px)}
+  html[data-studio] #tabbar .tb-item{color:var(--quiet);text-shadow:none}
+  html[data-studio] #tabbar .tb-item.active{color:var(--ink)}
+  html[data-studio] #tabbar .tb-item.active:after{box-shadow:none;background:var(--ink)}
+  html[data-studio] #tbPlus{bottom:calc(74px + env(safe-area-inset-bottom,0px));box-shadow:var(--lift);border-radius:15px}
+}
+@media(max-width:700px){
+  .studio-board{grid-template-columns:minmax(0,1fr)}
+  html[data-studio] .stats-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}
+  html[data-studio] #content .stat-card{min-height:120px;padding:14px}
+  .studio-heading{gap:10px}.studio-heading h1{font-size:clamp(1.65rem,6vw,2.2rem)}
+  .studio-heading #quickAddWrap:has(.quickadd-card:not([style*="none"])){max-width:100%;flex:1}
+  .studio-heading:has(.quickadd-card:not([style*="none"])) h1{display:none}
+  html[data-studio] .qa-trigger{padding:0 12px;min-height:40px}
+  .studio-art{top:11px;right:8px;scale:.66}
+  .studio-switch button{padding:10px 15px}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-studio] :is(.studio-art i,.studio-tile,.stat-card,.studio-switch button){animation:none!important;transition:none!important}
+}
+html[data-studio] #content:has(:is(#notesFullList,#projFullList,#habitsListFull,#remindersListWrap,#diaryListWrap,#weekCard)) > div:first-child > div:first-child{
+  font:650 clamp(1.45rem,2.7vw,2.6rem)/1.15 system-ui!important;letter-spacing:-.055em
+}
+html[data-studio] #content:has(:is(#notesFullList,#projFullList,#habitsListFull,#remindersListWrap,#diaryListWrap,#weekCard)) > div:first-child > div:first-child > span:first-child{display:none}
+html[data-studio] #content :is(.cal-section-card,.projects-card:not(.colored),.bf-pending,.set-block){border-color:var(--rule)!important;background:var(--panel)!important;box-shadow:none!important}
+html[data-studio] .set-block{border-radius:12px}
+html[data-studio] .studio-choice{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.studio-choice select{font:inherit;max-width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text)}
+@media(min-width:1100px){
+  html[data-studio] #content:has(>#diaryListWrap){
+    display:grid;align-content:start;align-items:start;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;
+  }
+  html[data-studio] #content:has(>#diaryListWrap)>:first-child{grid-column:1/-1}
+  html[data-studio] #content:has(>#diaryListWrap)>.diary-card{grid-column:1;margin:0!important}
+  html[data-studio] #diaryListWrap{grid-column:2;grid-row:2/span 2}
+  html[data-studio] .settings-wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  html[data-studio] .settings-wrap>details[open]{grid-column:1/-1}
 }
 </style>
 <script>
 try {
-  if (localStorage.getItem('nova.layout') === 'bento') document.documentElement.dataset.layout = 'bento';
+  const mode = localStorage.getItem('nova.studio.mode');
+  if (mode === 'light' || mode === 'dark') document.documentElement.dataset.studio = mode;
 } catch (_) {}
 </script>
 </head>
@@ -5757,15 +5880,165 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
     if (hex) applyAccent(hex);
   }
 }
-const applyTheme = t => {
+// Presentation only. Existing widget elements keep their IDs, handlers and content.
+const NovaStudio = (() => {
+  let group = 'Hoy';
+  const groups = [
+    ['Hoy', [['#focusCard', '#dashReminders'], ['#ringsCard', '.cal-card']]],
+    ['Mi trabajo', [['.notes-section', '#dashDiary'], ['#projectsList', '#dashHabits']]],
+    ['Actividad', [['#dailyBriefingCard', '#daySummaryCard'], ['#dashActivityList', '.ai-card']]]
+  ];
+  const item = (tag, cls, text) => {
+    const el = document.createElement(tag);
+    el.className = cls;
+    if (text) el.textContent = text;
+    return el;
+  };
+  function organize(content) {
+    if (!document.documentElement.dataset.studio) return;
+    const head = item('header', 'studio-heading');
+    head.append(item('h1', '', 'Panel de hoy'), content.querySelector('#quickAddWrap'));
+    head.querySelector('.qa-trigger').append(item('span', 'studio-qa-label', 'Agregar con IA'));
+    const strip = content.querySelector('.stats-row');
+    if (strip) {
+      const destinations = ['projects', 'projects', 'notes', 'habits'];
+      const motifs = ['checklist', 'folders', 'sheets', 'steps'];
+      [...strip.children].forEach((card, i) => {
+        const art = item('span', 'studio-art studio-' + motifs[i]);
+        art.setAttribute('aria-hidden', 'true');
+        for (let k = 0; k < 3; k++) art.append(item('i', ''));
+        card.append(art);
+        card.tabIndex = 0;
+        card.setAttribute('role','button');
+        const navigate = () => document.querySelector('#sidebar [data-view="' + destinations[i] + '"]')?.click();
+        card.addEventListener('click', navigate);
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(); }
+        });
+      });
+    }
+    const nav = item('nav','studio-switch');
+    nav.setAttribute('aria-label', 'Paneles del dashboard');
+    const boards = [], buttons = [];
+    function show(name) {
+      group = name;
+      boards.forEach(board => { board.hidden = board.dataset.group !== group; });
+      buttons.forEach(button => button.setAttribute('aria-pressed', String(button.textContent === group)));
+      window.dispatchEvent(new Event('resize'));
+    }
+    for (const [name, columns] of groups) {
+      const board = item('section', 'studio-board');
+      board.dataset.group = name;
+      board.setAttribute('aria-label', name);
+      for (const selectors of columns) {
+        const col = item('div', 'studio-column');
+        for (const selector of selectors) {
+          let node = content.querySelector(selector);
+          if (!node) continue;
+          if (selector === '#projectsList' || selector === '#dashActivityList') node = node.parentElement;
+          node.classList.add('studio-tile');
+          col.append(node);
+        }
+        if (col.childElementCount) board.append(col);
+      }
+      if (!board.childElementCount) continue;
+      const button = item('button', '', name);
+      button.type = 'button';
+      button.addEventListener('click', () => show(name));
+      buttons.push(button); boards.push(board); nav.append(button);
+    }
+    content.querySelector('.dash-grid')?.remove();
+    if (boards.length) {
+      // The original empty message ignores some widgets (e.g. stats-only).
+      // Only keep it if no tab has content.
+      content.querySelector(':scope > div[style*="text-align:center"]')?.remove();
+    }
+    content.prepend(head);
+    if (strip) head.after(strip);
+    if (boards.length) {
+      content.append(nav, ...boards);
+      show(boards.some(board => board.dataset.group === group) ? group : boards[0].dataset.group);
+    }
+  }
+  function setMode(value) {
+    const root = document.documentElement;
+    if (value === 'light' || value === 'dark') root.dataset.studio = value;
+    else delete root.dataset.studio;
+    try { localStorage.setItem('nova.studio.mode', root.dataset.studio || 'classic'); } catch (_) {}
+    applyTheme(state.theme);
+    window.dispatchEvent(new Event('nova-layout'));
+    window.dispatchEvent(new Event('resize'));
+  }
+  // Scoped to the current view. Never steals focus or handles a card's click action.
+  const target = '.studio-tile,.stats-row .stat-card,.note-card,.proj-full-card,.set-group';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let frame = 0, point, lit = new Set();
+  function reset() {
+    cancelAnimationFrame(frame); frame = 0;
+    for (const card of lit) card.classList.remove('studio-lit');
+    lit.clear();
+  }
+  function illuminate() {
+    frame = 0;
+    const next = new Set();
+    const { x, y } = point;
+    for (const card of document.querySelectorAll('#content :is(' + target + ')')) {
+      const r = card.getBoundingClientRect();
+      if (!r.width || x < r.left-100 || x > r.right+100 || y < r.top-100 || y > r.bottom+100) continue;
+      card.style.setProperty('--sx', (x-r.left)+'px');
+      card.style.setProperty('--sy', (y-r.top)+'px');
+      card.classList.add('studio-lit'); next.add(card);
+    }
+    for (const card of lit) if (!next.has(card)) card.classList.remove('studio-lit');
+    lit = next;
+  }
+  function bind() {
+    const ct = document.getElementById('content');
+    ct.addEventListener('pointermove', e => {
+      if (!document.documentElement.dataset.studio || reduced.matches || e.pointerType === 'touch') return;
+      point = {x:e.clientX, y:e.clientY};
+      if (!frame) frame = requestAnimationFrame(illuminate);
+    }, {passive:true});
+    ct.addEventListener('pointerleave', reset);
+    ct.addEventListener('scroll', reset, {passive:true});
+    window.addEventListener('nova-layout', reset);
+    ct.addEventListener('pointerdown', e => {
+      if (!document.documentElement.dataset.studio || reduced.matches || e.button !== 0) return;
+      const tile = e.target.closest(target);
+      if (!tile) return;
+      // Fixed overlay survives navigation or replacement of a clicked widget.
+      const r = tile.getBoundingClientRect();
+      const clip = item('span','studio-wave-mask');
+      clip.setAttribute('aria-hidden','true');
+      Object.assign(clip.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',borderRadius:getComputedStyle(tile).borderRadius});
+      const wave = item('span','studio-wave');
+      const size = Math.hypot(r.width,r.height)*2;
+      Object.assign(wave.style,{left:(e.clientX-r.left)+'px',top:(e.clientY-r.top)+'px',width:size+'px',height:size+'px'});
+      clip.append(wave); document.body.append(clip);
+      wave.animate([{transform:'translate(-50%,-50%) scale(.01)',opacity:.5},{transform:'translate(-50%,-50%) scale(1)',opacity:0}],{duration:580,easing:'ease-out'}).finished.finally(()=>clip.remove());
+    }, {passive:true});
+  }
+  document.addEventListener('DOMContentLoaded', bind, {once:true});
+  return {organize, setMode};
+})();
+
+const applyTheme = classicTheme => {
+  const t = document.documentElement.dataset.studio || classicTheme;
   document.documentElement.setAttribute('data-theme', t);
   document.getElementById('themeIcon').textContent  = t === 'dark' ? '☀️' : '🌙';
   document.getElementById('themeLabel').textContent = t === 'dark' ? 'Modo Claro' : 'Modo Oscuro';
-  localStorage.setItem('nn_theme', t);
+  localStorage.setItem('nn_theme', classicTheme);
 };
 applyTheme(state.theme); applyAccent(state.settings.accentColor || '#7c6af7'); applyAvatarPhoto(state.settings.photoURL);
 applyAppIcon(state.settings.appIcon || 'nova');
-document.getElementById('themeToggle').addEventListener('click', () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); });
+document.getElementById('themeToggle').addEventListener('click', () => {
+  if (document.documentElement.dataset.studio) {
+    NovaStudio.setMode(document.documentElement.dataset.studio === 'light' ? 'dark' : 'light');
+    const select = document.getElementById('studioChoice');
+    if (select) select.value = document.documentElement.dataset.studio;
+    return;
+  }
+  state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(state.theme); });
 
 function applyAvatarPhoto(url) {
   const el = document.getElementById('avatarEl');
@@ -7249,6 +7522,7 @@ const setupQuickAdd = () => {
 
 const renderDashboard=()=>{
   document.getElementById('content').innerHTML = getDashboardHTML();
+  NovaStudio.organize(document.getElementById('content'));
   setupQuickAdd();
   document.getElementById('addNoteBtn')?.addEventListener('click',()=>{
     document.getElementById('noteModalTitle').textContent = '🗒️ Nueva Nota';
@@ -8357,8 +8631,8 @@ const renderSettingsView=()=>{
   <div class="settings-wrap">
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>Tema de la aplicación</h3>
-      <div class="settings-row"><label for="layoutChoice" class="settings-label">Diseño en este dispositivo</label>
-        <select class="btn" id="layoutChoice"><option value="classic">Clásico</option><option value="bento">Dashboard minimalista</option></select>
+      <div class="settings-row studio-choice"><label class="settings-label" for="studioChoice">Diseño en este dispositivo</label>
+        <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Negro</option></select>
       </div>
     </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
@@ -8440,14 +8714,9 @@ const renderSettingsView=()=>{
       </div>
     </div>
   </div>`;
-  const layoutChoice = document.getElementById('layoutChoice');
-  layoutChoice.value = document.documentElement.dataset.layout || 'classic';
-  layoutChoice.addEventListener('change', () => {
-    if (layoutChoice.value === 'bento') document.documentElement.dataset.layout = 'bento';
-    else delete document.documentElement.dataset.layout;
-    try { localStorage.setItem('nova.layout', layoutChoice.value); } catch (_) {}
-    window.dispatchEvent(new Event('resize'));
-  });
+  const studioChoice = document.getElementById('studioChoice');
+  studioChoice.value = document.documentElement.dataset.studio || 'classic';
+  studioChoice.addEventListener('change', () => NovaStudio.setMode(studioChoice.value));
   document.getElementById('saveUsername').addEventListener('click',()=>{ state.settings.username=document.getElementById('sUsername').value.trim(); save(); applyUsername(state.settings.username); toast('✅ Guardado'); });
   document.getElementById('accentSwatches').addEventListener('click',e=>{ const sw=e.target.closest('.accent-swatch'); if(sw){ applyAccent(sw.dataset.hex); renderSettingsView(); save(); toast('🎨 Color actualizado'); } });
   document.getElementById('appIconGrid')?.addEventListener('click',async e=>{
@@ -10023,6 +10292,7 @@ initNotifications();
 
   function draw(now) {
     requestAnimationFrame(draw);
+    if (document.documentElement.dataset.studio) return;
 
     const mobile = w <= 900;
     const frameInterval = mobile ? 1000 / 20 : 1000 / 60; // limita fps, más en móvil
@@ -10378,7 +10648,7 @@ initNotifications();
     const btn=event.target.closest('.nova-dock-item');if(!btn)return;
     const key=btn.dataset.dock;
     pop.hidden=true;
-    if(key==='settings'){
+    if(key==='settings' && !document.documentElement.dataset.studio){
       // Open the original full dashboard drawer (summary, all navigation tiles, level, sync and theme).
       // This is the same drawer already used on mobile/tablet, now shared with desktop.
       if(window.openNovaAllSectionsDrawer) window.openNovaAllSectionsDrawer();
@@ -10410,7 +10680,7 @@ initNotifications();
   const reset=()=>all.forEach(btn=>{btn.style.setProperty('--dock-scale','1');btn.style.setProperty('--dock-rise','0px');});
   const motionOK=window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
   dock.addEventListener('pointermove',e=>{
-    if(!motionOK||e.pointerType!=='mouse')return;
+    if(!motionOK||e.pointerType!=='mouse'||document.documentElement.dataset.studio)return;
     all.forEach(btn=>{
       const center=btn.offsetLeft+btn.offsetWidth/2;
       const d=Math.abs(e.clientX-dock.getBoundingClientRect().left-center);
@@ -10608,7 +10878,7 @@ initNotifications();
   if(reduce.matches){ctx.fillStyle='#000';ctx.fillRect(0,0,width,height)}
  };
  const render=now=>{
-  if(document.hidden){raf=0;return}
+  if(document.hidden || document.documentElement.dataset.studio){raf=0;return}
   if(now-last<28){raf=requestAnimationFrame(render);return}
   last=now;tick++;
   ctx.globalCompositeOperation='source-over';
@@ -10639,6 +10909,9 @@ initNotifications();
   }
   raf=requestAnimationFrame(render);
  };
+ window.addEventListener('nova-layout', () => {
+   if (!document.documentElement.dataset.studio && !raf && !document.hidden) raf = requestAnimationFrame(render);
+ });
  resize();window.addEventListener('resize',resize,{passive:true});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!raf){last=0;raf=requestAnimationFrame(render)}});
  reduce.addEventListener?.('change',()=>{last=0;if(!raf)raf=requestAnimationFrame(render)});
