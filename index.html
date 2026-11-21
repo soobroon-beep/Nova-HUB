@@ -3753,9 +3753,11 @@ html[data-studio] .proj-full-card .proj-notif{background:var(--solid-fg)!importa
 <script>
 try {
   const mode = localStorage.getItem('nova.studio.mode');
-  if (mode === 'light' || mode === 'dark') document.documentElement.dataset.studio = mode;
+  if (['light', 'dark', 'agenda'].includes(mode)) document.documentElement.dataset.studio = mode;
+  if (mode === 'agenda') document.documentElement.dataset.theme = localStorage.getItem('nn_theme') === 'light' ? 'light' : 'dark';
 } catch (_) {}
 </script>
+<link rel="stylesheet" href="agenda.css?v=1">
 </head>
 <body>
 
@@ -4099,6 +4101,7 @@ try {
   </div>
 </div>
 
+<script src="agenda.js?v=1"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -6042,7 +6045,7 @@ async function applyAppIcon(id, { applyColor = false } = {}) {
 // Presentation only. Existing widget elements keep their IDs, handlers and content.
 // A preference written deliberately wins over a cached, pre-sync theme.
 function latestAppearance(first, second) {
-  const valid = p => p && ['classic','light','dark'].includes(p.mode) &&
+  const valid = p => p && ['classic','light','dark','agenda'].includes(p.mode) &&
     ['light','dark'].includes(p.classic) && Number.isSafeInteger(p.at) && p.at >= 0 && typeof p.by === 'string';
   if (!valid(first)) return valid(second) ? second : null;
   if (!valid(second)) return first;
@@ -6096,7 +6099,15 @@ const NovaStudio = (() => {
       const label = item('span','sr-name',project.name || 'Proyecto');
       const ratio = item('span','sr-ratio',count ? done+'/'+count : 'Sin tareas');
       const arrow = item('span','sr-arrow'); arrow.setAttribute('aria-hidden','true');
-      button.append(dot,label,ratio,arrow);
+      if (document.documentElement.dataset.studio === 'agenda' && count) {
+        const meter = item('span','ag-progress');
+        meter.setAttribute('aria-hidden','true');
+        const fill = item('i','');
+        fill.style.width = (done * 100 / count) + '%';
+        fill.style.backgroundColor = project.color || 'var(--ag-accent)';
+        meter.append(fill);
+        button.append(dot,label,ratio,arrow,meter);
+      } else button.append(dot,label,ratio,arrow);
       button.addEventListener('click', () => openProjectDetail(project.id));
       list.append(button);
     }
@@ -6138,6 +6149,7 @@ const NovaStudio = (() => {
   }
   function organize(content) {
     if (!document.documentElement.dataset.studio) return;
+    if (document.documentElement.dataset.studio === 'agenda') return NovaAgenda.organize(content);
     const head = item('header', 'studio-heading');
     head.append(item('h1', '', 'Panel de hoy'), content.querySelector('#quickAddWrap'));
     const strip = content.querySelector('.stats-row');
@@ -6286,7 +6298,8 @@ const NovaStudio = (() => {
 })();
 
 const applyTheme = classicTheme => {
-  const t = document.documentElement.dataset.studio || classicTheme;
+  const mode = document.documentElement.dataset.studio;
+  const t = mode === 'agenda' ? classicTheme : mode || classicTheme;
   document.documentElement.setAttribute('data-theme', t);
   document.getElementById('themeIcon').textContent  = t === 'dark' ? '☀️' : '🌙';
   document.getElementById('themeLabel').textContent = t === 'dark' ? 'Modo Claro' : 'Modo Oscuro';
@@ -6298,6 +6311,10 @@ NovaStudio.applyPreference(state.settings.appearance);
 applyAccent(state.settings.accentColor || '#7c6af7'); applyAvatarPhoto(state.settings.photoURL);
 applyAppIcon(state.settings.appIcon || 'nova');
 document.getElementById('themeToggle').addEventListener('click', () => {
+  if (document.documentElement.dataset.studio === 'agenda') {
+    NovaStudio.setMode('agenda', state.theme === 'dark' ? 'light' : 'dark');
+    return;
+  }
   if (document.documentElement.dataset.studio) {
     NovaStudio.setMode(document.documentElement.dataset.studio === 'light' ? 'dark' : 'light');
     const select = document.getElementById('studioChoice');
@@ -6342,6 +6359,7 @@ const toast = msg => { const el = document.getElementById('toast'); el.textConte
 // ══════════════════════════════════════════════
 const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const renderCalendar = () => {
+  if (document.getElementById('agendaSchedule')) NovaAgenda.refreshDay();
   const d=state.calDate, y=d.getFullYear(), m=d.getMonth(), calMonthEl = document.getElementById('calMonth');
   if (!calMonthEl) return; calMonthEl.textContent = `${months[m]} ${y}`;
   const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), prevDays=new Date(y,m,0).getDate(), grid=document.getElementById('calGrid');
@@ -8930,7 +8948,7 @@ const renderSettingsView=()=>{
     <div class="settings-section"><h3>👤 Perfil</h3><div class="settings-row"><div><div class="settings-label">Nombre</div></div><input id="sUsername" class="settings-input" value="${state.settings.username||'Víctor'}"/></div><div class="settings-row"><button class="btn btn-primary btn-sm" id="saveUsername">Guardar</button></div></div>
     <div class="settings-section"><h3>Tema de la aplicación</h3>
       <div class="settings-row studio-choice"><label class="settings-label" for="studioChoice">Tema de NovaHub</label>
-        <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Gris oscuro</option></select>
+        <select id="studioChoice"><option value="classic">Clásico</option><option value="light">Bento · Blanco</option><option value="dark">Bento · Gris oscuro</option><option value="agenda">Agenda · Semanal</option></select>
       </div><p class="appearance-help">Con tu sesión iniciada, el tema se sincroniza en tus dispositivos.</p>
     </div>
     <div class="settings-section"><h3>🎨 Color de acento</h3><div class="settings-row"><div></div><div class="accent-swatches" id="accentSwatches">${ACCENT_PRESETS.map(p=>`<div class="accent-swatch${state.settings.accentColor===p.h?' active':''}" data-hex="${p.h}" style="background:${p.h};--swatch-color:${p.h}"></div>`).join('')}</div></div></div>
@@ -10706,7 +10724,9 @@ initNotifications();
   'use strict';
 
   // ── 1. RIPPLE EFFECT ──
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   function createRipple(el, e) {
+    if (reducedMotion.matches) return;
     const rect = el.getBoundingClientRect();
     const size = Math.max(rect.width, rect.height) * 1.6;
     const x = (e.clientX - rect.left) - size / 2;
@@ -10720,16 +10740,11 @@ initNotifications();
     ripple.addEventListener('animationend', () => ripple.remove());
   }
 
-  function attachRipples(root) {
-    const sels = ['.btn','.fab','.nav-item','.cal-nav button','.day-pill','.mood-btn','.ai-chip','.ai-btn','.qa-trigger','.tb-btn','.theme-toggle','.icon-pick','.accent-swatch'];
-    sels.forEach(sel => {
-      root.querySelectorAll(sel).forEach(el => {
-        if (el._rippleBound) return;
-        el._rippleBound = true;
-        el.addEventListener('pointerdown', (e) => createRipple(el, e));
-      });
-    });
-  }
+  const rippleSelector = '.btn,.fab,.nav-item,.cal-nav button,.day-pill,.mood-btn,.ai-chip,.ai-btn,.qa-trigger,.tb-btn,.theme-toggle,.icon-pick,.accent-swatch';
+  document.addEventListener('pointerdown', e => {
+    const control = e.target.closest?.(rippleSelector);
+    if (control) createRipple(control, e);
+  }, {passive:true});
 
   // ── 2. NAV RIPPLE ──
   function attachNavRipple() {
@@ -10737,6 +10752,7 @@ initNotifications();
       if (item._navRipple) return;
       item._navRipple = true;
       item.addEventListener('pointerdown', (e) => {
+        if (reducedMotion.matches) return;
         const r = item.getBoundingClientRect();
         const rEl = document.createElement('span');
         rEl.className = 'nav-ripple';
@@ -10747,44 +10763,6 @@ initNotifications();
       });
     });
   }
-
-  // ── 3. PARALLAX BACKGROUND ──
-  (function initParallax() {
-    const canvas = document.getElementById('psBg');
-    if (!canvas) return;
-    let tx = 0, ty = 0, cx = 0, cy = 0;
-    const str = 20;
-    document.addEventListener('mousemove', (e) => {
-      const mx = window.innerWidth / 2, my = window.innerHeight / 2;
-      tx = ((e.clientX - mx) / mx) * str;
-      ty = ((e.clientY - my) / my) * str;
-    }, { passive: true });
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', (e) => {
-        if (e.beta === null) return;
-        tx = Math.max(-str, Math.min(str, (e.gamma||0) * 0.5));
-        ty = Math.max(-str, Math.min(str, ((e.beta||0) - 30) * 0.4));
-      }, { passive: true });
-    }
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    const SCALE = 1.06;
-    let lastTf = '';
-    function anim() {
-      cx = lerp(cx, tx, 0.05);
-      cy = lerp(cy, ty, 0.05);
-      // El canvas escalado solo sobra (SCALE-1)/2 por lado. Si el desplazamiento
-      // del parallax supera ese margen, se asoma el borde (franja blanca en
-      // pantallas angostas como el celular). Limitamos al margen real.
-      const maxX = Math.max(0, ((SCALE - 1) / 2) * canvas.clientWidth - 1);
-      const maxY = Math.max(0, ((SCALE - 1) / 2) * canvas.clientHeight - 1);
-      const px = Math.max(-maxX, Math.min(maxX, cx));
-      const py = Math.max(-maxY, Math.min(maxY, cy));
-      const tf = 'translate('+px.toFixed(2)+'px,'+py.toFixed(2)+'px) scale('+SCALE+')';
-      if (tf !== lastTf) { canvas.style.transform = tf; lastTf = tf; }
-      requestAnimationFrame(anim);
-    }
-    anim();
-  })();
 
   // ── 4. SCROLL ENTRANCE ──
   // IMPORTANTE: antes las tarjetas fuera de pantalla quedaban con la animación
@@ -10806,7 +10784,10 @@ initNotifications();
   }, { threshold: 0, rootMargin: '0px 0px 140px 0px' });
 
   function observeCards(root) {
-    const els = [...root.querySelectorAll(ENTER_SEL)].filter(el => !el._enterBound);
+    if (reducedMotion.matches) return;
+    const candidates = [...root.querySelectorAll(ENTER_SEL)];
+    if (root.matches?.(ENTER_SEL)) candidates.unshift(root);
+    const els = candidates.filter(el => !el._enterBound);
     if (!els.length) return;
     const vh = window.innerHeight;
     // 1) leer todo   2) escribir todo  → evita forzar layout una vez por tarjeta
@@ -10825,40 +10806,31 @@ initNotifications();
   // La transición de vista la hace #content.view-anim (CSS). Se quitó el
   // fundido manual que competía con ella y dejaba el contenido en blanco ~220ms.
 
-  // ── 6. MODAL RE-ANIMATE ──
-  const modalObs = new MutationObserver((mutations) => {
-    mutations.forEach(m => {
-      if (!m.target.classList.contains('open')) return;
-      const modal = m.target.querySelector('.modal');
-      if (!modal) return;
-      modal.style.animation = 'none';
-      void modal.offsetWidth;
-      modal.style.animation = '';
-    });
-  });
-  document.querySelectorAll('.modal-overlay').forEach(ov => {
-    modalObs.observe(ov, { attributeFilter: ['class'] });
-  });
-
-  // ── 7. CONTENT MUTATION — re-attach ──
-  let _moQueued = false;
-  const contentObs = new MutationObserver(() => {
-    if (_moQueued) return;               // muchas mutaciones → un solo trabajo por frame
-    _moQueued = true;
-    requestAnimationFrame(() => {
-      _moQueued = false;
-      const root = document.getElementById('content');
-      if (!root) return;
-      attachRipples(root);
-      observeCards(root);
-      attachNavRipple();
-    });
-  });
+  // Observar las tarjetas nuevas en un solo lote por fotograma.
   const mainCt = document.getElementById('content');
-  if (mainCt) contentObs.observe(mainCt, { childList: true, subtree: true });
+  const added = new Set();
+  let cardFrame = 0;
+  function inspectAdded() {
+    cardFrame = 0;
+    for (const node of added) {
+      if (!node.isConnected) continue;
+      let parent = node.parentElement;
+      while (parent && !added.has(parent)) parent = parent.parentElement;
+      if (!parent) observeCards(node);
+    }
+    added.clear();
+  }
+  if (mainCt) new MutationObserver(records => {
+    if (reducedMotion.matches) return;
+    for (const record of records) for (const node of record.addedNodes) {
+      if (node.nodeType === 1 && (node.childElementCount || node.matches(ENTER_SEL))) added.add(node);
+    }
+    if (added.size && !cardFrame) cardFrame = requestAnimationFrame(inspectAdded);
+  }).observe(mainCt, {childList:true, subtree:true});
 
   // ── 8. TILT ON STAT CARDS ──
   document.addEventListener('mousemove', (e) => {
+    if (document.documentElement.dataset.studio || reducedMotion.matches) return;
     const card = e.target.closest('.stat-card');
     if (!card) return;
     const r = card.getBoundingClientRect();
@@ -10876,9 +10848,9 @@ initNotifications();
 
   // ── 9. INITIAL ──
   function init() {
-    attachRipples(document);
     attachNavRipple();
     observeCards(document);
+    if (reducedMotion.matches) return;
     // Stagger sidebar items
     document.querySelectorAll('.nav-item').forEach((item, i) => {
       item.style.opacity = '0';
@@ -10966,19 +10938,31 @@ initNotifications();
   document.addEventListener('keydown',e=>{if(e.key==='Escape')pop.hidden=true});
   new MutationObserver(sync).observe(sidebar,{subtree:true,attributes:true,attributeFilter:['class']});
   sync();
-  const reset=()=>all.forEach(btn=>{btn.style.setProperty('--dock-scale','1');btn.style.setProperty('--dock-rise','0px');});
-  const motionOK=window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
-  dock.addEventListener('pointermove',e=>{
-    if(!motionOK||e.pointerType!=='mouse'||document.documentElement.dataset.studio)return;
-    all.forEach(btn=>{
-      const center=btn.offsetLeft+btn.offsetWidth/2;
-      const d=Math.abs(e.clientX-dock.getBoundingClientRect().left-center);
-      const intensity=Math.max(0,1-d/180);
+  let dockFrame = 0, pointerX = 0;
+  const motion = matchMedia('(prefers-reduced-motion: no-preference)');
+  function reset(){
+    cancelAnimationFrame(dockFrame);dockFrame=0;
+    for (const btn of all) {
+      btn.style.setProperty('--dock-scale','1');btn.style.setProperty('--dock-rise','0px');
+    }
+  }
+  function magnify(){
+    dockFrame=0;
+    const x=pointerX-dock.getBoundingClientRect().left;
+    const centers=all.map(btn=>btn.offsetLeft+btn.offsetWidth/2);
+    all.forEach((btn,i)=>{
+      const intensity=Math.max(0,1-Math.abs(x-centers[i])/180);
       const falloff=intensity*intensity*(3-2*intensity);
       btn.style.setProperty('--dock-scale',(1+falloff*.82).toFixed(3));
       btn.style.setProperty('--dock-rise',(falloff*22).toFixed(1)+'px');
     });
-  });
+  }
+  dock.addEventListener('pointermove',e=>{
+    if(!motion.matches||e.pointerType!=='mouse'||document.documentElement.dataset.studio)return;
+    pointerX=e.clientX;
+    if(!dockFrame)dockFrame=requestAnimationFrame(magnify);
+  }, {passive:true});
+  motion.addEventListener?.('change',reset);
   dock.addEventListener('pointerleave',reset);
   window.addEventListener('blur',reset);
 })();
@@ -11133,8 +11117,8 @@ initNotifications();
    corner(x3,y3,z3,perm[ii+1+perm[jj+1+perm[kk+1]]])
   );
  };
- const count=700, stride=9;
- let particles=new Float32Array(count*stride);
+ const stride=9;
+ let particles;
  let width=0,height=0,tick=0,raf=0,last=0;
  const tau=2*Math.PI;
  const rand=n=>n*Math.random();
@@ -11158,7 +11142,10 @@ initNotifications();
   return v*v*(3-2*v);
  };
  const resize=()=>{
-  width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
+  const w=Math.max(1,innerWidth), h=Math.max(1,innerHeight);
+  if(width===w && height===h)return;
+  width=w;height=h;
+  const count=Math.max(280,Math.min(700,Math.round(width*height/1300)));
   /* 1x para evitar pasadas de desenfoque 4K; misma composición que el original. */
   canvas.width=width;canvas.height=height;
   particles=new Float32Array(count*stride);
@@ -11167,11 +11154,8 @@ initNotifications();
   if(reduce.matches){ctx.fillStyle='#000';ctx.fillRect(0,0,width,height)}
  };
  const render=now=>{
-  if(document.hidden || document.documentElement.dataset.studio){raf=0;return}
-  if(now-last<28){raf=requestAnimationFrame(render);return}
-  if(document.body.classList.contains('kb-open') || document.querySelector('.modal-overlay.open,#tabSheet.open,#acctPop.open,#moreDrawer.open')){
-   last=now;raf=requestAnimationFrame(render);return
-  }
+  raf=0;
+  if(now-last<28 && !reduce.matches){raf=requestAnimationFrame(render);return}
   last=now;tick++;
   ctx.globalCompositeOperation='source-over';
   ctx.filter='none';ctx.globalAlpha=1;ctx.fillStyle='#000000';
@@ -11201,13 +11185,32 @@ initNotifications();
   }
   raf=reduce.matches ? 0 : requestAnimationFrame(render);
  };
- window.addEventListener('nova-layout', () => {
-   if (!document.documentElement.dataset.studio && !raf && !document.hidden) raf = requestAnimationFrame(render);
- });
- resize();window.addEventListener('resize',resize,{passive:true});
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!raf){last=0;raf=requestAnimationFrame(render)}});
- reduce.addEventListener?.('change',()=>{last=0;if(!raf)raf=requestAnimationFrame(render)});
- raf=requestAnimationFrame(render);
+ let scrollTimer=0;
+ const surfaces=[...document.querySelectorAll('.modal-overlay,#tabSheet,#acctPop,#moreDrawer,#novaCreateMenu')];
+ function syncPlayback(){
+  const suspended=document.hidden || document.documentElement.dataset.studio || scrollTimer ||
+    document.body.classList.contains('kb-open') || surfaces.some(el=>el.id==='novaCreateMenu' ? !el.hidden : el.classList.contains('open'));
+  if(suspended || reduce.matches){
+   cancelAnimationFrame(raf);raf=0;
+   if(!suspended && reduce.matches){resize();ctx.fillStyle='#000';ctx.fillRect(0,0,width,height)}
+   return;
+  }
+  resize();
+  if(!raf)raf=requestAnimationFrame(render);
+ }
+ const surfaceObserver=new MutationObserver(syncPlayback);
+ for(const el of surfaces)surfaceObserver.observe(el,{attributes:true,attributeFilter:['class','hidden']});
+ surfaceObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+ document.getElementById('content')?.addEventListener('scroll',()=>{
+  if(document.documentElement.dataset.studio || reduce.matches)return;
+  cancelAnimationFrame(raf);raf=0;clearTimeout(scrollTimer);
+  scrollTimer=setTimeout(()=>{scrollTimer=0;syncPlayback()},150);
+ },{passive:true});
+ window.addEventListener('nova-layout',syncPlayback);
+ window.addEventListener('resize',syncPlayback,{passive:true});
+ document.addEventListener('visibilitychange',syncPlayback);
+ reduce.addEventListener?.('change',syncPlayback);
+ syncPlayback();
 })();
 
 if ('serviceWorker' in navigator) {
