@@ -1,11 +1,11 @@
-const CACHE_NAME = 'nova-hub-v54';
+const CACHE_NAME = 'nova-hub-v55';
 
 // Rutas relativas: funcionan sin importar si el sitio vive en la raíz
 // del dominio o en una subcarpeta (como github.io/Nova-HUB/).
 const ASSETS = [
   './',
   './index.html',
-  './agenda.css?v=1',
+  './agenda.css?v=2',
   './agenda.js?v=1',
   './manifest.json',
   './icon-48.png',
