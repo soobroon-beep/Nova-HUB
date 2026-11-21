@@ -3460,7 +3460,9 @@ html[data-studio="dark"] {
 html[data-studio] {
   --bg:var(--paper); --bg2:var(--panel); --bg3:var(--raised);
   --border:var(--rule); --text:var(--ink); --text2:var(--secondary); --text3:var(--quiet);
-  --card-r:18px; background:var(--paper)!important;
+  --card-r:clamp(20px,2vw,26px);
+  --widget-edge:color-mix(in srgb,var(--rule) 60%,var(--panel));
+  background:var(--paper)!important;
 }
 html[data-studio] :is(body,#appShell,#main){background:var(--paper)!important;color:var(--ink)}
 html[data-studio] :is(#psBgWrap,#novaTexture,#novaVortexBg){display:none!important}
@@ -3479,14 +3481,14 @@ html[data-studio] :is(.studio-heading,.studio-board,.studio-switch,.stats-row){f
 html[data-studio] .qa-trigger{background:var(--ink);color:var(--paper);border-radius:999px;width:auto;padding:0 16px;gap:8px;box-shadow:none;font:600 .83rem system-ui}
 html[data-studio] .stats-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 html[data-studio] #content :is(.studio-tile,.stat-card,.set-group,.set-hero,.widget,.diary-card,.habit-row,.reminder-card:not(.colored),.week-card){
-  position:relative;background:var(--panel)!important;border:1px solid var(--rule)!important;border-radius:18px!important;
+  position:relative;background:var(--panel)!important;border:1px solid var(--widget-edge)!important;border-radius:var(--card-r)!important;
   box-shadow:var(--lift)!important;backdrop-filter:none!important;color:var(--ink);
 }
 html[data-studio] #content .stat-card{
-  display:grid;align-content:end;min-height:146px;padding:20px;cursor:pointer;isolation:isolate;transform:none!important;
+  display:grid;grid-template-rows:1fr auto auto;align-content:stretch;min-height:146px;padding:20px;cursor:pointer;isolation:isolate;transform:none!important;
 }
 html[data-studio] .stat-card::before,html[data-studio] .stat-card .icon{display:none}
-html[data-studio] .stat-card .label{align-self:start;color:var(--secondary);text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:550;margin-bottom:16px}
+html[data-studio] .stat-card .label{align-self:start;max-width:calc(100% - 42px);color:var(--secondary);text-transform:none;letter-spacing:0;font-size:.88rem;font-weight:550;margin-bottom:16px}
 html[data-studio] .stat-card .value{position:relative;z-index:1;font:600 clamp(2rem,3vw,2.9rem)/1 system-ui;letter-spacing:-.075em;color:var(--ink)!important}
 html[data-studio] .stat-card .sub{font-size:.73rem;color:var(--quiet);padding-top:3px}
 .studio-art{position:absolute;right:12px;top:18px;width:60px;height:60px;pointer-events:none;color:var(--quiet);perspective:250px}
@@ -3516,7 +3518,7 @@ html[data-studio] .studio-tile :is(.sec-title,.focus-title,.rings-title){font-we
 html[data-studio] :is(.sec-action,.bf-prev){color:var(--secondary);font-weight:600}
 html[data-studio] :is(.sec-action,.bf-prev):hover{color:var(--ink);text-decoration:underline}
 html[data-studio] #content :is(.note-card,.proj-full-card,.reminder-card.colored,.stk-card){
-  border-radius:15px!important;box-shadow:none!important;
+  border-radius:19px!important;box-shadow:none!important;
 }
 html[data-studio] #content :is(.note-card:not(.colored),.proj-full-card:not(.colored)){background:var(--panel)!important;border:1px solid var(--rule)!important}
 html[data-studio] :is(.btn-primary,.ai-btn){background:var(--ink)!important;color:var(--paper)!important;box-shadow:none!important;border-radius:999px}
@@ -3640,44 +3642,59 @@ html[data-studio] .studio-report{
 }
 html[data-studio] #studioWeek{--report:var(--sr-b)}
 .sr-header{display:flex;align-items:center;gap:9px}
-.sr-header h2{font:650 clamp(.94rem,1.28vw,1.15rem)/1.2 system-ui;letter-spacing:-.04em;color:var(--ink);margin:0}
+.sr-header h2{min-width:0;text-wrap:balance;font:650 clamp(.94rem,1.28vw,1.15rem)/1.2 system-ui;letter-spacing:-.04em;color:var(--ink);margin:0}
 .sr-icon{color:var(--report);background:color-mix(in srgb,var(--report) 12%,var(--panel));border-radius:9px;font-size:18px!important;padding:6px}
-.sr-link{margin-left:auto;border:0;cursor:pointer;background:transparent;color:var(--quiet);font:550 .75rem system-ui;text-decoration:underline;text-underline-offset:3px;min-height:34px}
+.sr-link{flex:none;margin-left:auto;border:0;border-radius:999px;padding:5px 9px;cursor:pointer;background:var(--raised);color:var(--secondary);font:550 .75rem system-ui;min-height:32px}
+.sr-link:focus-visible,.sr-project:focus-visible{outline:2px solid var(--report);outline-offset:2px}
 .sr-link:hover{color:var(--ink)}
 .sr-summary{display:flex;align-items:center;gap:14px;margin:16px 0 12px}
 .sr-number{font:620 clamp(2rem,3.3vw,3.25rem)/1 system-ui;letter-spacing:-.07em;color:var(--ink);font-variant-numeric:tabular-nums}
 .sr-caption{max-width:21ch;color:var(--secondary);font:450 .8rem/1.4 system-ui}
-.sr-meter{height:10px;background:var(--raised);border-radius:4px;position:relative;overflow:hidden}
-.sr-meter:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 2px),var(--panel) calc(5% - 2px) 5%)}
-.sr-meter i{display:block;height:100%;background:var(--report);transform-origin:left}
+/* The number stays readable when the ring is empty or motion is reduced. */
+@property --sr-sweep{syntax:'<angle>';inherits:false;initial-value:0deg}
+.sr-ring{
+  --diameter:clamp(78px,7.6vw,102px);--stroke:8px;
+  position:relative;display:grid;place-items:center;flex:none;width:var(--diameter);height:var(--diameter);
+}
+.sr-ring::before{
+  content:'';position:absolute;inset:0;border-radius:50%;--sr-sweep:var(--progress);
+  background:conic-gradient(var(--report) var(--sr-sweep),var(--raised) 0);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - var(--stroke) - .5px),#000 calc(100% - var(--stroke) + .5px));
+  mask:radial-gradient(closest-side,transparent calc(100% - var(--stroke) - .5px),#000 calc(100% - var(--stroke) + .5px));
+}
+.sr-ring .sr-number{font-size:clamp(1.35rem,2.2vw,1.85rem);letter-spacing:-.055em}
+#studioProjects .sr-summary{gap:clamp(14px,2vw,24px)}
+#studioProjects .sr-caption{max-width:23ch;font-size:.85rem}
 .sr-projects:not(:empty){margin-top:13px}
-.sr-project{background:transparent;width:100%;display:flex;gap:9px;align-items:center;border:0;border-top:1px solid var(--rule);cursor:pointer;color:var(--ink);padding:9px 2px;font:550 .83rem system-ui;text-align:left}
+.sr-project{background:transparent;width:100%;display:flex;gap:9px;align-items:center;border:0;border-top:1px solid var(--widget-edge);cursor:pointer;color:var(--ink);padding:9px 2px;font:550 .83rem system-ui;text-align:left}
 .sr-project:hover .sr-name{text-decoration:underline;text-underline-offset:3px}
 .sr-dot{width:8px;height:8px;flex:none;border-radius:50%;box-shadow:0 0 0 1px var(--rule)}
 .sr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sr-ratio{margin-left:auto;white-space:nowrap;color:var(--quiet);font-size:.76rem;font-variant-numeric:tabular-nums}
-.sr-arrow{color:var(--quiet)}
-.sr-week{margin:4px 0 0;list-style:none;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-.sr-week li{display:grid;justify-items:center;gap:4px;min-width:0;font:500 .69rem/1.2 system-ui;color:var(--quiet)}
+.sr-arrow{flex:none;width:6px;height:6px;margin-inline:3px;border-top:1.5px solid var(--quiet);border-right:1.5px solid var(--quiet);transform:rotate(45deg)}
+.sr-week{--plot-height:52px;position:relative;isolation:isolate;margin:6px 0 0;list-style:none;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.sr-week::before{content:'';position:absolute;z-index:-1;top:calc(.75rem + 5px);width:100%;height:var(--plot-height);
+  background:repeating-linear-gradient(to top,var(--widget-edge) 0 1px,transparent 1px 50%)}
+.sr-week li{display:grid;grid-template-rows:.75rem var(--plot-height) auto;justify-items:center;gap:5px;min-width:0;font:500 .69rem/1.2 system-ui;color:var(--quiet)}
 .sr-week .sr-today{color:var(--report);font-weight:700}
-.sr-track{height:46px;width:min(24px,72%);display:flex;align-items:flex-end;background:color-mix(in srgb,var(--report) 9%,var(--raised));border-radius:4px;overflow:hidden}
-.sr-track i{display:block;width:100%;background:color-mix(in srgb,var(--report) 68%,var(--panel));border-radius:4px;transform-origin:bottom}
+.sr-track{height:100%;width:min(18px,66%);display:flex;align-items:flex-end}
+.sr-track i{display:block;width:100%;background:color-mix(in srgb,var(--report) 72%,var(--panel));border-radius:6px 6px 2px 2px;transform-origin:bottom}
 .sr-today .sr-track i{background:var(--report)}
 .sr-count{color:var(--secondary);font-variant-numeric:tabular-nums}
-@keyframes sr-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes sr-draw{from{--sr-sweep:0deg}to{--sr-sweep:var(--progress)}}
 @keyframes sr-rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @media(prefers-reduced-motion:no-preference){
- .sr-meter i{animation:sr-fill .75s cubic-bezier(.2,.75,.2,1) both}
+ .sr-ring::before{animation:sr-draw .75s cubic-bezier(.2,.75,.2,1) both}
  .sr-track i{animation:sr-rise .52s var(--sr-delay,0ms) cubic-bezier(.2,.75,.2,1) both}
 }
 @media(min-width:901px){
- html[data-studio] #novaFloatingDock>.px-peek{
-   position:relative;inset:auto!important;display:flex;align-items:center;gap:8px;width:100%;height:56px;flex:none;
-   margin-top:8px;padding:6px 10px;border-top:1px solid var(--rule);border-radius:0;color:var(--ink);text-align:left;
+ #topbar .topbar-right>.px-peek{
+   position:relative;inset:auto!important;flex:0 0 68px;display:grid;place-items:center;
+   width:68px;height:50px;margin:0;padding:0;border:0;border-radius:18px;
  }
- html[data-studio] #novaFloatingDock>.px-peek:after{content:'Cortex';font:600 .86rem system-ui}
- html[data-studio] #novaFloatingDock>.px-peek .px-peek-in{position:static;display:grid;place-items:center;width:36px}
- html[data-studio] #novaFloatingDock>.px-peek .nph{width:36px;height:36px}
+ #topbar .topbar-right>.px-peek .px-peek-in{position:static;display:grid;place-items:center}
+ #topbar .topbar-right>.px-peek .nph{width:66px;height:53px}
+ #topbar .topbar-right>.px-peek:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
  html[data-studio] .px-layer:has(.px-av:not([hidden])){z-index:99}
 }
 @media(max-width:700px){
@@ -3727,12 +3744,6 @@ html[data-studio] :is(.proj-full-card,.project-item):not(.reorder-grab,.stack-re
 html[data-studio] .proj-full-card .proj-icon-badge{background:var(--solid-chip)!important;color:var(--solid-fg)!important;border:0!important;box-shadow:none!important;animation:none!important}
 html[data-studio] .proj-full-card .proj-card-pending{background:transparent!important;color:var(--solid-fg2)!important;border:0!important;padding-inline:0}
 html[data-studio] .proj-full-card .proj-notif{background:var(--solid-fg)!important;color:var(--card-bg)!important;border:0!important;box-shadow:none!important;animation:none!important}
-@media(min-width:901px){
- html[data-studio] #novaFloatingDock>.px-peek{margin-block:auto;align-self:center;justify-content:center;flex-direction:column;width:min(100%,144px);height:114px;gap:5px;padding:7px;border:0;text-align:center}
- html[data-studio] #novaFloatingDock>.px-peek .px-peek-in,
- html[data-studio] #novaFloatingDock>.px-peek .nph{width:80px;height:74px}
- html[data-studio] #novaFloatingDock>.px-peek:after{font-size:.78rem;font-weight:650;letter-spacing:.02em}
-}
 @media(max-width:900px){
  html .px-layer>.px-peek{width:64px;height:60px}
  html .px-layer>.px-peek .nph{width:64px;height:60px}
@@ -6071,11 +6082,12 @@ const NovaStudio = (() => {
     const done = rows.reduce((n, row) => n + row.done, 0);
     const pct = total ? Math.round(done * 100 / total) : 0;
     const summary = item('div','sr-summary');
-    summary.append(item('strong','sr-number',total ? pct+'%' : '—'),
+    const ring = item('div','sr-ring');
+    ring.style.setProperty('--progress', (total ? done / total * 360 : 0) + 'deg');
+    ring.append(item('strong','sr-number',total ? pct+'%' : '—'));
+    summary.append(ring,
       item('span','sr-caption', total ? done+' de '+total+' tareas completadas en proyectos activos' :
         (active.length ? 'Agrega tareas para medir tu avance.' : 'Tus proyectos activos aparecerán aquí.')));
-    const bar = item('div','sr-meter'); bar.setAttribute('aria-hidden','true');
-    const fill = item('i',''); fill.style.width = pct+'%'; bar.append(fill);
     const list = item('div','sr-projects');
     for (const {project, count, done} of rows.slice(0,3)) {
       const button = item('button','sr-project');
@@ -6083,12 +6095,12 @@ const NovaStudio = (() => {
       const dot = item('i','sr-dot'); dot.style.backgroundColor = project.color || 'var(--accent)';
       const label = item('span','sr-name',project.name || 'Proyecto');
       const ratio = item('span','sr-ratio',count ? done+'/'+count : 'Sin tareas');
-      const arrow = item('span','sr-arrow','↗'); arrow.setAttribute('aria-hidden','true');
+      const arrow = item('span','sr-arrow'); arrow.setAttribute('aria-hidden','true');
       button.append(dot,label,ratio,arrow);
       button.addEventListener('click', () => openProjectDetail(project.id));
       list.append(button);
     }
-    panel.replaceChildren(reportHeader('Avance de proyectos','timeline','projects','Ver proyectos'), summary, bar, list);
+    panel.replaceChildren(reportHeader('Avance de proyectos','timeline','projects','Ver proyectos'), summary, list);
   }
   function weeklyReport(panel) {
     const habits = state.habits || [];
@@ -6123,20 +6135,6 @@ const NovaStudio = (() => {
     const projects = document.getElementById('studioProjects'), week = document.getElementById('studioWeek');
     if (projects) projectReport(projects);
     if (week) weeklyReport(week);
-  }
-  function bindCortex() {
-    const wide = matchMedia('(min-width:901px)');
-    function position() {
-      const fab = document.querySelector('.px-peek'), layer = document.querySelector('.px-layer');
-      const dock = document.getElementById('novaFloatingDock');
-      if (!fab || !layer || !dock) return;
-      const parent = wide.matches && document.documentElement.dataset.studio ? dock : layer;
-      if (parent !== fab.parentElement) parent.append(fab);
-    }
-    wide.addEventListener('change', position);
-    window.addEventListener('nova-layout', position);
-    window.addEventListener('novapixel-ready', position);
-    position();
   }
   function organize(content) {
     if (!document.documentElement.dataset.studio) return;
@@ -6258,7 +6256,6 @@ const NovaStudio = (() => {
     lit = next;
   }
   function bind() {
-    bindCortex();
     const ct = document.getElementById('content');
     ct.addEventListener('pointermove', e => {
       if (!document.documentElement.dataset.studio || reduced.matches || e.pointerType === 'touch') return;
@@ -11399,7 +11396,7 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js?bento=5"></script>
+<script src="pixel.js?bento=6"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';

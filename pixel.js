@@ -49,6 +49,7 @@
   /* ── DOM ── */
   const layer = document.createElement('div'); layer.className = 'px-layer'; layer.style.setProperty('--px-acc', accent());
   const fab = document.createElement('button'); fab.type = 'button'; fab.className = 'px-peek'; fab.title = 'Cortex · tócalo para que salga'; fab.setAttribute('aria-label', 'Llamar a Cortex');
+  fab.style.setProperty('--px-acc', accent());
   fab.innerHTML = `<span class="px-peek-in">${headSVG('eyes')}</span>`; // escondido: solo se asoman media cabeza y el halo
   const ink = document.createElement('canvas'); ink.className = 'px-ink'; ink.setAttribute('aria-hidden', 'true');
   const av = document.createElement('div'); av.className = 'px-av'; av.hidden = true; av.innerHTML = '<canvas class="px-cv" aria-label="Cortex: arrástralo de lado a lado para girarlo; tócalo para que salude"></canvas><span class="px-spin" aria-hidden="true"></span>';
@@ -74,10 +75,11 @@
     const b = document.getElementById('novaCreateFab'); if (!b || mobile()) return null; const r = b.getBoundingClientRect(); return r.width && r.top < AH() ? r : null; };
   function home() {
     const s = AV(), c = createBtn();
-    const rail = fab.closest('#novaFloatingDock');
-    if (rail) {
-      const r = fab.getBoundingClientRect(), dock = rail.getBoundingClientRect();
-      return {x:clamp(r.left+(r.width-s.w)/2,0,AW()-s.w), y:clamp(r.top,Math.min(dock.top+8,AH()-s.h),AH()-s.h-8)};
+    const header = fab.closest('#topbar');
+    if (header) {
+      const r = fab.getBoundingClientRect();
+      return {x:clamp(r.left + (r.width - s.w) / 2, 6, AW() - s.w - 6),
+              y:clamp(header.getBoundingClientRect().bottom + 8, 6, AH() - bottomGap() - s.h - 8)};
     }
     // PC: descansa flotando abajo a la derecha, pegado al botón (+) de crear
     if (c) return {x: clamp(c.right + 6, 0, AW() - s.w), y: clamp(c.top - s.h + 18, 0, AH() - s.h - 24)}; // más arriba: los pies quedan a la altura del (+), sin cortarse
@@ -85,9 +87,13 @@
     if (mobile()) return {x: 6, y: clamp(AH() - bottomGap() - s.h - 6, 0, AH() - s.h)}; // celular: a la izquierda, sobre la barra (el (+) queda libre a la derecha)
     return {x: AW() - s.w - 36, y: clamp(AH() - Math.max(bottomGap(), 24) - s.h - 4, 0, AH() - s.h)}; // PC: abajo a la derecha, arriba de la barra
   }
-  function placePeek() { // escondido: sobre la barra inferior (celular) o abajo a la derecha, junto al menú (PC)
-    // Se ve la cabeza COMPLETA (ya no se recorta) y siempre por encima de la barra inferior
-    if (fab.parentElement?.id === 'novaFloatingDock') return;
+  function placePeek() { // Junto al perfil en escritorio y sobre el dock en el celular.
+    const profile = document.getElementById('avatarEl');
+    if (!mobile() && profile?.parentElement) {
+      if (fab.nextElementSibling !== profile) profile.before(fab);
+      return;
+    }
+    if (fab.parentElement !== layer) layer.append(fab);
     const w = fab.offsetWidth || 54, hgt = fab.offsetHeight || 56, t = tabbar(), c = createBtn();
     if (c) { fab.style.left = (c.right + 12) + 'px'; fab.style.top = Math.max(6, c.top - hgt * .45) + 'px'; } // PC: junto al (+), un poco más arriba
     else if (t) { fab.style.left = (t.left + 22) + 'px'; fab.style.top = (t.top - hgt - 8) + 'px'; }
@@ -338,7 +344,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   let lastSec = '', lastTip = 0, tipTimer = 0;
   function maybeTip(sec) {
     if (open || busy || CFG().tips === false || !TIPS[sec] || Date.now() - lastTip < 90000) return; const day = new Date().toDateString(); ls.tips = ls.tips || {}; if (ls.tips[sec] === day) return;
-    clearTimeout(tipTimer); tipTimer = setTimeout(() => { if (open || section() !== sec || document.hidden) return; ls.tips[sec] = day; store(); lastTip = Date.now(); placePeek(); tip.textContent = TIPS[sec][0]; tip.dataset.q = TIPS[sec][1]; tip.hidden = false; const r = fab.getBoundingClientRect(); tip.style.left = clamp(r.left + r.width / 2 - 110, 8, AW() - 228) + 'px'; tip.style.top = (r.top - 46) + 'px'; fab.classList.add('peek-up'); setTimeout(() => { tip.hidden = true; fab.classList.remove('peek-up'); }, 6500); }, 3500);
+    clearTimeout(tipTimer); tipTimer = setTimeout(() => { if (open || section() !== sec || document.hidden) return; ls.tips[sec] = day; store(); lastTip = Date.now(); placePeek(); tip.textContent = TIPS[sec][0]; tip.dataset.q = TIPS[sec][1]; tip.hidden = false; const r = fab.getBoundingClientRect(); tip.style.left = clamp(r.left + r.width / 2 - 110, 8, AW() - 228) + 'px'; tip.style.top = (fab.closest('#topbar') ? r.bottom + 6 : r.top - 46) + 'px'; fab.classList.add('peek-up'); setTimeout(() => { tip.hidden = true; fab.classList.remove('peek-up'); }, 6500); }, 3500);
   }
   tip.addEventListener('click', async () => { const q = tip.dataset.q; tip.hidden = true; fab.classList.remove('peek-up'); await show(false); ask(q); });
   setInterval(() => { const sec = section(); const modal = !!document.querySelector('.modal-overlay.open,.modal-overlay.active,.modal-overlay.show'); layer.classList.toggle('px-modal', modal); placePeek();
@@ -503,8 +509,9 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
   function wake() { lastAct = Date.now(); if (M && M.expr === 'sleep') { mood('surprised', 'idle'); setTimeout(() => { if (!busy) mood('neutral', 'idle'); }, 900); } }
   setInterval(() => { if (!M || !open) return; const vis = !document.hidden; M.pause(!vis); if (vis && !busy && Date.now() - lastAct > 90000 && M.expr !== 'sleep') mood('sleep', 'idle'); }, 1000);
   addEventListener('resize', () => { placePeek(); if (!open || busy) return; const h = home(); place(h.x, h.y); });
+  placePeek();
   setTimeout(placePeek, 300);
-  function recolor() { const c = accent(); layer.style.setProperty('--px-acc', c); try { if (M) M.setColor(c); } catch {} }
+  function recolor() { const c = accent(); layer.style.setProperty('--px-acc', c); fab.style.setProperty('--px-acc', c); try { if (M) M.setColor(c); } catch {} }
   new MutationObserver(() => setTimeout(recolor, 50)).observe(document.documentElement, {attributes: true, attributeFilter: ['style', 'data-theme', 'class']});
   addEventListener('nh-pixel-cfg', recolor);
   if (ls.open) setTimeout(() => show(false), 1800);
