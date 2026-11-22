@@ -383,7 +383,6 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
   .stats-row{grid-template-columns:repeat(2,1fr)}
   .dash-grid{grid-template-columns:1fr}
   .cal-layout{grid-template-columns:1fr}
-  #topbar.hide-topbar{max-height:0;padding-top:0;padding-bottom:0;opacity:0;border-color:transparent}
 }
 
 @media(max-width:600px){
@@ -849,8 +848,6 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 @keyframes bounceIn{0%{transform:scale(0)}60%{transform:scale(1.2)}80%{transform:scale(.9)}100%{transform:scale(1)}}
 
 /* ── PULIDO VISUAL: transición de vista ── */
-@keyframes viewFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-#content.view-anim{animation:viewFadeIn .28s cubic-bezier(.22,1,.36,1) both}
 
 /* ── PULIDO VISUAL: pop al marcar check ── */
 @keyframes checkPop{0%{transform:scale(1)}35%{transform:scale(1.35)}60%{transform:scale(.9)}100%{transform:scale(1)}}
@@ -882,10 +879,13 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
 .heatmap-legend{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--text3);padding:0 2px 10px}
 
 /* ── PULIDO DASHBOARD: feed de actividad reciente ── */
-.activity-item{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:var(--trans);border-bottom:1px solid var(--border)}
+.activity-item{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:background-color .15s ease;border-bottom:1px solid var(--border)}
 .activity-item:last-child{border-bottom:none}
-.activity-item:hover{background:var(--bg3)}
-.activity-item:hover .activity-icon{transform:scale(1.1)}
+@media(hover:hover) and (pointer:fine){
+  .activity-item:hover{background:var(--bg3)}
+  .activity-item:hover .activity-icon{transform:scale(1.1)}
+}
+.activity-item:active{background:var(--bg3)}
 .activity-icon{font-size:1.15rem;width:36px;height:36px;flex-shrink:0;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;transition:var(--trans)}
 .activity-body{flex:1;min-width:0}
 .activity-title{font-size:.86rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1518,6 +1518,8 @@ body{font-family:'Roboto','Segoe UI',system-ui,sans-serif;background:transparent
   pointer-events:none;
 }
 
+@media(pointer:coarse), (prefers-reduced-motion:reduce){.ai-card::after{animation:none;display:none}}
+
 /* ── GLOW ON ACTIVE NAV ── */
 .nav-item.active::after{
   content:'';
@@ -1673,7 +1675,6 @@ html{-webkit-tap-highlight-color:transparent}
 .btn:active{transform:scale(.96)}
 
 /* Vista nueva: fundido corto, sin dejar un transform pegado en #content */
-#content.view-anim{animation:viewFadeIn .26s cubic-bezier(.22,1,.36,1) backwards}
 
 /* Re-render suave (fijar, tachar tarea, borrar): sin re-animar todo el listado */
 .no-enter > .note-card,.no-enter > .proj-full-card{animation:none!important}
@@ -1701,7 +1702,6 @@ html{-webkit-tap-highlight-color:transparent}
   }
   [data-theme="light"] #topbar{background:rgba(247,247,252,.9)}
   #topbar.hide-topbar{
-    max-height:160px;padding-top:20px;padding-bottom:20px;
     transform:translateY(-105%);opacity:0;pointer-events:none;
   }
   #content{padding-top:calc(var(--topbar-h,72px) + 14px)!important}
@@ -1948,12 +1948,6 @@ html{-webkit-tap-highlight-color:transparent}
    confeti dorado y barra inferior flotante
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Transición entre pantallas con dirección (adelante entra desde la derecha) ── */
-@keyframes viewSlideFwd{from{opacity:0;transform:translateX(34px) scale(.985)}to{opacity:1;transform:none}}
-@keyframes viewSlideBack{from{opacity:0;transform:translateX(-34px) scale(.985)}to{opacity:1;transform:none}}
-#content.view-anim[data-dir="fwd"]{animation:viewSlideFwd .36s cubic-bezier(.22,1,.36,1) backwards}
-#content.view-anim[data-dir="back"]{animation:viewSlideBack .36s cubic-bezier(.22,1,.36,1) backwards}
-
 /* ── Tarjeta que se expande desde su posición (notas y proyectos) ── */
 @keyframes cardExpand{
   0%{opacity:.35;transform:translate(var(--ex,0px),var(--ey,0px)) scale(var(--esx,.6),var(--esy,.4));border-radius:14px}
@@ -1997,7 +1991,7 @@ html{-webkit-tap-highlight-color:transparent}
     animation:tabbarIn .55s .15s cubic-bezier(.34,1.56,.64,1) backwards;
   }
   @keyframes tabbarIn{from{transform:translate(-50%,120%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-  #tabbar.tb-hide{transform:translate(-50%,calc(100% + 30px));opacity:.0}
+  #tabbar.tb-hide{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
   body.kb-open #tabbar{transform:translate(-50%,calc(100% + 30px));opacity:0;pointer-events:none}
   [data-theme="light"] #tabbar{background:rgba(255,255,255,.46);border-color:rgba(0,0,0,.08);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px rgba(40,40,90,.22)}
@@ -2019,11 +2013,11 @@ html{-webkit-tap-highlight-color:transparent}
   .tb-plus{position:fixed;right:18px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:54;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;color:var(--dock-ink);
     background:var(--dock);box-shadow:0 6px 18px color-mix(in srgb,var(--dock) 40%,transparent),0 2px 6px rgba(0,0,0,.35);
-    transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s,bottom .34s cubic-bezier(.22,1,.36,1);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s,translate .25s cubic-bezier(.22,1,.36,1);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .tb-plus::before{content:'';position:absolute;inset:-8px;border-radius:50%}   /* zona táctil más generosa que el dibujo */
   .tb-plus.open{z-index:58}
-  .tb-plus.low{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+  .tb-plus.low{translate:0 74px}
   .tb-plus.gone{transform:scale(.4);opacity:0;pointer-events:none}
   body.kb-open .tb-plus{opacity:0;pointer-events:none}
   .tb-plus svg{width:36px;height:36px;fill:currentColor;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
@@ -3719,7 +3713,6 @@ html[data-studio] #acctPop{background:var(--panel)!important;color:var(--ink);bo
 @media(prefers-reduced-motion:no-preference){
  #noteModal.modal-overlay.open .modal.note-editor-modal{animation:nova-note-in .2s cubic-bezier(.22,.75,.25,1) both}
  #noteModal.open :is(.ne-head,.ne-title,.ne-tools,.ne-body,.ne-foot){animation:none}
- #content.view-anim[data-dir]{animation-duration:.22s}
  #tabSheet{transition:visibility 0s linear .16s}
  #tabSheet.open{transition-delay:0s}
  #tabSheet#tabSheet button{transition:opacity .14s ease-out,transform .16s ease-out;transition-delay:0s}
@@ -3732,7 +3725,7 @@ html[data-studio] #acctPop{background:var(--panel)!important;color:var(--ink);bo
  }
 }
 @media(prefers-reduced-motion:reduce){
- #acctPop,#novaCreateMenu,#tabSheet,#tabSheet button,#tabSheetScrim,#moreDrawer,#tabbar,.tb-plus,.pd-text,#pdProg .progress-fill,.sw-item.sw-anim,.modal-overlay,.modal-overlay .modal,#content.view-anim{animation:none!important;transition:none!important}
+ #acctPop,#novaCreateMenu,#tabSheet,#tabSheet button,#tabSheetScrim,#moreDrawer,#tabbar,.tb-plus,.pd-text,#pdProg .progress-fill,.sw-item.sw-anim,.modal-overlay,.modal-overlay .modal{animation:none!important;transition:none!important}
 }
 html[data-studio] .field:has(>#projMotionPicker){display:none}
 html[data-studio] :is(.proj-full-card,.project-item)>.nova-card-fx{display:none!important}
@@ -4435,14 +4428,7 @@ const renderDashActivity = () => {
     </div>`;
   }).join('');
   c.querySelectorAll('.activity-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const v = el.dataset.view;
-      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-      document.querySelector(`.nav-item[data-view="${v}"]`)?.classList.add('active');
-      const ct = document.getElementById('content');
-      if (v==='notes'||v==='projects') ct.classList.add('masonry-view'); else ct.classList.remove('masonry-view');
-      rerenderView(v); closeSidebar(); ct.scrollTop = 0;
-    });
+    el.addEventListener('click', () => navigateToView(el.dataset.view));
   });
 };
 
@@ -6280,8 +6266,9 @@ const NovaStudio = (() => {
     ct.addEventListener('pointerleave', reset);
     ct.addEventListener('scroll', reset, {passive:true});
     window.addEventListener('nova-layout', reset);
-    ct.addEventListener('pointerdown', e => {
-      if (!document.documentElement.dataset.studio || reduced.matches || e.button !== 0) return;
+    ct.addEventListener('click', e => {
+      if (!document.documentElement.dataset.studio || reduced.matches ||
+          e.pointerType !== 'mouse' || !matchMedia('(hover:hover) and (pointer:fine)').matches) return;
       const tile = e.target.closest(target);
       if (!tile) return;
       // Fixed overlay survives navigation or replacement of a clicked widget.
@@ -6964,25 +6951,36 @@ document.getElementById('qaSave')?.addEventListener('click',()=>{
 // ══════════════════════════════════════════════
 // NAV & VIEWS (Dashboard, Reminders, Diary, Settings)
 // ══════════════════════════════════════════════
-document.querySelectorAll('.nav-item,[data-view]').forEach(el=>{
-  el.addEventListener('click',()=>{
-    const v=el.dataset.view; if(!v) return;
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.querySelector(`.nav-item[data-view="${v}"]`)?.classList.add('active');
-    // Las vistas masonry (notas/proyectos) necesitan display:block para que CSS columns funcione
-    const ct=document.getElementById('content');
-    if(v==='notes'||v==='projects') ct.classList.add('masonry-view');
-    else ct.classList.remove('masonry-view');
-    rerenderView(v);
-    const order=[...document.querySelectorAll('#sidebar .nav-item[data-view]')].map(n=>n.dataset.view);
-    const idx=order.indexOf(v), prev=window._lastViewIdx ?? idx;
-    ct.dataset.dir = idx>=prev ? 'fwd' : 'back'; window._lastViewIdx = idx;
-    ct.classList.remove('view-anim'); void ct.offsetWidth; ct.classList.add('view-anim');
-    closeSidebar();
-    ct.scrollTop = 0;
-    topbarLastScroll = 0;
-    document.getElementById('topbar').classList.remove('hide-topbar');
-  });
+let viewTransition;
+const viewMotion = matchMedia('(prefers-reduced-motion: reduce)');
+function navigateToView(view) {
+  const nav = document.querySelector(`#sidebar .nav-item[data-view="${view}"]`);
+  if (!nav) return;
+  const active = document.querySelector('#sidebar .nav-item.active');
+  closeSidebar();
+  const content = document.getElementById('content');
+  if (nav === active) {
+    content.scrollTop = 0;
+    content.dispatchEvent(new Event('nova-scroll-reset'));
+    return;
+  }
+  const forward = !active || (active.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING);
+  viewTransition?.cancel();
+  document.querySelectorAll('.nav-item.active').forEach(item => item.classList.remove('active'));
+  nav.classList.add('active');
+  content.classList.toggle('masonry-view', view === 'notes' || view === 'projects');
+  rerenderView(view);
+  content.scrollTop = 0;
+  content.dispatchEvent(new Event('nova-scroll-reset'));
+  if (!viewMotion.matches && content.animate) {
+    viewTransition = content.animate(
+      [{opacity:.7, transform:`translateX(${forward ? 12 : -12}px)`}, {opacity:1, transform:'none'}],
+      {duration:200, easing:'cubic-bezier(.22,1,.36,1)'}
+    );
+  }
+}
+document.querySelectorAll('.nav-item,[data-view]').forEach(el => {
+  el.addEventListener('click', () => navigateToView(el.dataset.view));
 });
 const openSidebar=()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); };
 const closeSidebar=()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); };
@@ -7318,7 +7316,6 @@ const getDockTabs = () => DOCK_DEFAULT;
     closeSheet();
     const t = b.dataset.tab;
     if (t === 'settings') { drawer.classList.contains('open') ? closeDrawer() : openDrawer(); return; }
-    if (b.classList.contains('active') && ct) ct.scrollTo({ top: 0, behavior: 'smooth' });   // tocar la activa = subir al inicio
     navTo(t);
   });
 
@@ -7394,14 +7391,6 @@ const getDockTabs = () => DOCK_DEFAULT;
     setTimeout(() => actions[b.dataset.qc]?.(), 140);
   });
 
-  // La barra se esconde al bajar y reaparece al subir; también cuando aparece el teclado
-  let lastY = 0;
-  ct && ct.addEventListener('scroll', () => {
-    const y = ct.scrollTop, d = y - lastY;
-    if (Math.abs(d) < 10) return;
-    const hide = d > 0 && y > 140; bar.classList.toggle('tb-hide', hide); plus.classList.toggle('low', hide);
-    lastY = y;
-  }, { passive:true });
   const isField = el => el && (el.isContentEditable || (/^(INPUT|TEXTAREA)$/.test(el.tagName) && !/checkbox|radio|button|range|file|color/.test(el.type || '')));
   document.addEventListener('focusin', e => { if (matchMedia('(max-width:900px), (pointer:coarse)').matches && isField(e.target)) document.body.classList.add('kb-open'); });
   document.addEventListener('focusout', () => setTimeout(() => { if (!isField(document.activeElement)) document.body.classList.remove('kb-open'); }, 120));
@@ -7412,42 +7401,51 @@ const getDockTabs = () => DOCK_DEFAULT;
   }, true);
 })();
 
-// ── Topbar auto-hide al hacer scroll (solo en móvil) ──
-let topbarLastScroll = 0;
+// Barras móviles: acumular el movimiento en una dirección y actualizar por fotograma.
 (() => {
   const topbar = document.getElementById('topbar');
-  const contentEl = document.getElementById('content');
-  let baseline = 0, hidden = false;
-  const HIDE_THRESHOLD = 28; // px netos de scroll hacia abajo antes de ocultar
-  const SHOW_THRESHOLD = 28; // px netos de scroll hacia arriba antes de mostrar
-  contentEl.addEventListener('scroll', () => {
-    if (window.innerWidth > 900) { topbar.classList.remove('hide-topbar'); hidden = false; baseline = contentEl.scrollTop; topbarLastScroll = contentEl.scrollTop; return; }
-    const current = contentEl.scrollTop;
-    topbarLastScroll = current;
-    if (current <= 8) {
-      if (hidden) { topbar.classList.remove('hide-topbar'); hidden = false; }
-      baseline = current;
-      return;
-    }
-    // 'baseline' sigue al punto extremo del recorrido actual (el más bajo mientras
-    // la barra está oculta, el más alto mientras está visible). Así la barra
-    // reaparece en cuanto subes ~28px, sin tener que llegar casi hasta arriba.
-    const delta = current - baseline;
-    if (delta > 0) {
-      if (hidden) baseline = current;
-      else if (delta > HIDE_THRESHOLD) { topbar.classList.add('hide-topbar'); hidden = true; baseline = current; }
-    } else if (delta < 0) {
-      if (!hidden) baseline = current;
-      else if (-delta > SHOW_THRESHOLD) { topbar.classList.remove('hide-topbar'); hidden = false; baseline = current; }
-    }
-  }, { passive: true });
-  window.addEventListener('resize', () => { if (window.innerWidth > 900) topbar.classList.remove('hide-topbar'); });
-  // En móvil la barra flota encima y el contenido reserva su alto con --topbar-h;
-  // así ocultarla/mostrarla es solo un transform (sin recalcular el layout al hacer scroll).
-  const setTopbarH = () => document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+  const tabbar = document.getElementById('tabbar');
+  const plus = document.getElementById('tbPlus');
+  const content = document.getElementById('content');
+  const mobile = matchMedia('(max-width:900px)');
+  let last = 0, travel = 0, frame = 0;
+
+  function resetBars() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    last = Math.max(0, content.scrollTop);
+    travel = 0;
+    topbar.classList.remove('hide-topbar');
+    tabbar?.classList.remove('tb-hide');
+    plus?.classList.remove('low');
+  }
+  function updateBars() {
+    frame = 0;
+    const current = Math.max(0, content.scrollTop);
+    const delta = current - last;
+    last = current;
+    if (current <= 8) { resetBars(); return; }
+    if (!delta) return;
+    travel = Math.sign(delta) === Math.sign(travel) ? travel + delta : delta;
+    if (Math.abs(travel) < 28) return;
+    topbar.classList.toggle('hide-topbar', travel > 0);
+    tabbar?.classList.toggle('tb-hide', travel > 0 && current > 140);
+    plus?.classList.toggle('low', travel > 0 && current > 140);
+  }
+  content.addEventListener('scroll', () => {
+    if (mobile.matches && !frame) frame = requestAnimationFrame(updateBars);
+  }, {passive:true});
+  content.addEventListener('nova-scroll-reset', resetBars);
+  mobile.addEventListener('change', resetBars);
+
+  function setTopbarH() {
+    const height = topbar.offsetHeight + 'px';
+    const style = document.documentElement.style;
+    if (style.getPropertyValue('--topbar-h') !== height) style.setProperty('--topbar-h', height);
+  }
   setTopbarH();
   if ('ResizeObserver' in window) new ResizeObserver(setTopbarH).observe(topbar);
-  window.addEventListener('resize', setTopbarH);
+  else window.addEventListener('resize', setTopbarH);
 })();
 // ── ANILLOS DE PROGRESO (oro = tareas, jade = hábitos de hoy, carmesí = proyectos) ──
 const RING_C = 2 * Math.PI * 42;
@@ -8813,11 +8811,7 @@ const renderDailyBriefing = (container) => {
   if (!container) return;
   const apiKey = true; // IA gratuita
   const latest = mergeBriefings(state.briefingHistory || [])[0];
-  const goToBriefingView = () => {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector('.nav-item[data-view="briefing"]')?.classList.add('active');
-    renderBriefingView(); closeSidebar(); document.getElementById('content').scrollTop = 0;
-  };
+  const goToBriefingView = () => navigateToView('briefing');
   const isToday = latest && latest.date === todayBriefStr();
   if (!latest || !isToday) {
     const before830 = (new Date().getHours() * 60 + new Date().getMinutes()) < 510;
@@ -10755,7 +10749,7 @@ initNotifications();
   const rippleSelector = '.btn,.fab,.nav-item,.cal-nav button,.day-pill,.mood-btn,.ai-chip,.ai-btn,.qa-trigger,.tb-btn,.theme-toggle,.icon-pick,.accent-swatch';
   document.addEventListener('pointerdown', e => {
     const control = e.target.closest?.(rippleSelector);
-    if (control) createRipple(control, e);
+    if (control && e.pointerType === 'mouse' && !control.closest('.nav-item')) createRipple(control, e);
   }, {passive:true});
 
   // ── 2. NAV RIPPLE ──
@@ -10764,7 +10758,7 @@ initNotifications();
       if (item._navRipple) return;
       item._navRipple = true;
       item.addEventListener('pointerdown', (e) => {
-        if (reducedMotion.matches) return;
+        if (reducedMotion.matches || e.pointerType !== 'mouse') return;
         const r = item.getBoundingClientRect();
         const rEl = document.createElement('span');
         rEl.className = 'nav-ripple';
@@ -10784,6 +10778,7 @@ initNotifications();
   // la entrada un poco antes de llegar a la vista (rootMargin).
   // (.habit-row ya no está aquí: no tiene animación de entrada y, si el observador
   //  no la "revelaba", un hábito recién creado en el móvil quedaba con opacity:0.)
+  const touchInput = matchMedia('(pointer:coarse)');
   const ENTER_SEL = '.stat-card,.note-card,.proj-full-card,.diary-card,.reminder-card,.event-item,.settings-section';
   const scrollObs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -10796,7 +10791,7 @@ initNotifications();
   }, { threshold: 0, rootMargin: '0px 0px 140px 0px' });
 
   function observeCards(root) {
-    if (reducedMotion.matches) return;
+    if (reducedMotion.matches || touchInput.matches) return;
     const candidates = [...root.querySelectorAll(ENTER_SEL)];
     if (root.matches?.(ENTER_SEL)) candidates.unshift(root);
     const els = candidates.filter(el => !el._enterBound);
@@ -10814,10 +10809,6 @@ initNotifications();
     });
   }
 
-  // ── 5. VIEW TRANSITION ──
-  // La transición de vista la hace #content.view-anim (CSS). Se quitó el
-  // fundido manual que competía con ella y dejaba el contenido en blanco ~220ms.
-
   // Observar las tarjetas nuevas en un solo lote por fotograma.
   const mainCt = document.getElementById('content');
   const added = new Set();
@@ -10833,7 +10824,7 @@ initNotifications();
     added.clear();
   }
   if (mainCt) new MutationObserver(records => {
-    if (reducedMotion.matches) return;
+    if (reducedMotion.matches || touchInput.matches) return;
     for (const record of records) for (const node of record.addedNodes) {
       if (node.nodeType === 1 && (node.childElementCount || node.matches(ENTER_SEL))) added.add(node);
     }
@@ -11058,7 +11049,11 @@ initNotifications();
    position();
    // Las tarjetas entran con transformaciones; seguir su borde hasta terminar la transición.
    let frames=0;
-   const settle=()=>{position();if(++frames<48)requestAnimationFrame(settle)};
+   const currentBadges=badges;
+   const settle=()=>{
+     if(currentBadges!==badges || !badges.length)return;
+     position();if(++frames<48)requestAnimationFrame(settle);
+   };
    requestAnimationFrame(settle);
  };
  const position=()=>{
@@ -11079,7 +11074,7 @@ initNotifications();
    if(records.some(rec=>[...rec.addedNodes,...rec.removedNodes].some(n=>n.nodeType===1&&(n.matches?.('#projFullList,.proj-full-card,.proj-notif')||n.querySelector?.('#projFullList,.proj-full-card,.proj-notif')))))schedule(true);
  });
  observer.observe(content,{childList:true,subtree:true});
- content.addEventListener('scroll',()=>schedule(),{passive:true});
+ content.addEventListener('scroll',()=>{if(badges.length)schedule()},{passive:true});
  window.addEventListener('resize',()=>schedule(),{passive:true});
  window.addEventListener('orientationchange',()=>schedule(true),{passive:true});
  schedule(true);
@@ -11097,6 +11092,7 @@ initNotifications();
  const ctx=canvas.getContext('2d',{alpha:false});
  if(!ctx)return;
  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
+ const mobile=matchMedia('(max-width:900px), (pointer:coarse)');
  /* Ruido Simplex 3D integrado para no depender de CDN o React; gradientes del
     simplex-noise original (F3=1/3, G3=1/6, escala 32). */
  const grad=[1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1];
@@ -11154,11 +11150,13 @@ initNotifications();
   return v*v*(3-2*v);
  };
  const resize=()=>{
-  const w=Math.max(1,innerWidth), h=Math.max(1,innerHeight);
-  if(width===w && height===h)return;
+  const scale=mobile.matches ? .6 : .85;
+  const w=Math.max(1,Math.round(innerWidth*scale));
+  const h=Math.max(1,Math.round(innerHeight*scale));
+  // La barra de direcciones móvil modifica el alto durante el gesto.
+  if(width===w && Math.abs(height-h)<(mobile.matches ? 90*scale : 1))return;
   width=w;height=h;
-  const count=Math.max(280,Math.min(700,Math.round(width*height/1300)));
-  /* 1x para evitar pasadas de desenfoque 4K; misma composición que el original. */
+  const count=Math.max(160,Math.min(mobile.matches ? 280 : 580,Math.round(width*height/1300)));
   canvas.width=width;canvas.height=height;
   particles=new Float32Array(count*stride);
   tick=0;
@@ -11167,7 +11165,7 @@ initNotifications();
  };
  const render=now=>{
   raf=0;
-  if(now-last<28 && !reduce.matches){raf=requestAnimationFrame(render);return}
+  if(now-last<(mobile.matches ? 48 : 32) && !reduce.matches){raf=requestAnimationFrame(render);return}
   last=now;tick++;
   ctx.globalCompositeOperation='source-over';
   ctx.filter='none';ctx.globalAlpha=1;ctx.fillStyle='#000000';
@@ -11189,7 +11187,7 @@ initNotifications();
    }
    /* Dos capas de brillo y una de mezcla aditiva, como la fuente de Aceternity. */
    ctx.save();ctx.globalCompositeOperation='lighter';
-   ctx.filter='blur(8px) brightness(200%)';ctx.drawImage(canvas,0,0);
+   if(!mobile.matches){ctx.filter='blur(8px) brightness(200%)';ctx.drawImage(canvas,0,0)}
    ctx.restore();ctx.save();ctx.globalCompositeOperation='lighter';
    ctx.filter='blur(4px) brightness(200%)';ctx.drawImage(canvas,0,0);
    ctx.restore();ctx.save();ctx.globalCompositeOperation='lighter';
@@ -11198,9 +11196,10 @@ initNotifications();
   raf=reduce.matches ? 0 : requestAnimationFrame(render);
  };
  let scrollTimer=0;
+ const touchPointers=new Set();
  const surfaces=[...document.querySelectorAll('.modal-overlay,#tabSheet,#acctPop,#moreDrawer,#novaCreateMenu')];
  function syncPlayback(){
-  const suspended=document.hidden || document.documentElement.dataset.studio || scrollTimer ||
+  const suspended=document.hidden || document.documentElement.dataset.studio || scrollTimer || touchPointers.size ||
     document.body.classList.contains('kb-open') || surfaces.some(el=>el.id==='novaCreateMenu' ? !el.hidden : el.classList.contains('open'));
   if(suspended || reduce.matches){
    cancelAnimationFrame(raf);raf=0;
@@ -11213,11 +11212,24 @@ initNotifications();
  const surfaceObserver=new MutationObserver(syncPlayback);
  for(const el of surfaces)surfaceObserver.observe(el,{attributes:true,attributeFilter:['class','hidden']});
  surfaceObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
- document.getElementById('content')?.addEventListener('scroll',()=>{
-  if(document.documentElement.dataset.studio || reduce.matches)return;
+ function pauseForInteraction(){
   cancelAnimationFrame(raf);raf=0;clearTimeout(scrollTimer);
-  scrollTimer=setTimeout(()=>{scrollTimer=0;syncPlayback()},150);
+  scrollTimer=setTimeout(()=>{scrollTimer=0;syncPlayback()},180);
+ }
+ document.getElementById('content')?.addEventListener('scroll',()=>{
+  if(!document.documentElement.dataset.studio && !reduce.matches)pauseForInteraction();
  },{passive:true});
+ document.addEventListener('pointerdown',event=>{
+  if(event.pointerType==='mouse')return;
+  touchPointers.add(event.pointerId);
+  if(raf)pauseForInteraction();
+ },{capture:true,passive:true});
+ function endTouch(event){
+  if(touchPointers.delete(event.pointerId) && !document.documentElement.dataset.studio && !reduce.matches)pauseForInteraction();
+ }
+ document.addEventListener('pointerup',endTouch,{capture:true,passive:true});
+ document.addEventListener('pointercancel',endTouch,{capture:true,passive:true});
+ window.addEventListener('blur',()=>{touchPointers.clear();syncPlayback()});
  window.addEventListener('nova-layout',syncPlayback);
  window.addEventListener('resize',syncPlayback,{passive:true});
  document.addEventListener('visibilitychange',syncPlayback);
