@@ -41,6 +41,10 @@ html[data-studio] .stats-row .stat-card,html[data-studio] .studio-column>.studio
 }
 .modal-overlay.open .modal.expand-from-card{animation:cardExpand .3s var(--nh-ease-out) both!important;will-change:auto}
 .modal-overlay{transition:opacity .2s ease!important}
+/* Ventanas cerradas: invisibles de verdad. Antes cada ventana cerrada (8+) seguía siendo una capa
+   de pantalla completa para la tarjeta gráfica aunque no se viera. */
+.modal-overlay:not(.open){visibility:hidden;transition:opacity .2s ease,visibility 0s linear .2s!important}
+.modal-overlay.open{visibility:visible;transition:opacity .2s ease,visibility 0s!important}
 /* Una tarea nueva aparece sin salirse de su renglón (antes subía 8 px dentro de un contenedor recortado) */
 @keyframes pdNew{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 .pd-task.pd-new{animation:pdNew .22s var(--nh-ease) both}
@@ -99,3 +103,28 @@ html[data-studio]:not([data-studio="agenda"]) .note-card>.nova-card-fx{display:n
   border:2px solid var(--paper,var(--bg,#0c0c14))!important;box-shadow:0 3px 10px rgba(255,59,48,.35)!important
 }
 html[data-theme="light"] #projFullList .proj-full-card>.proj-notif{border-color:#f5f6f8!important}
+
+
+/* ── 7. CELULAR: cero desenfoques (blur) salvo la barra inferior ──────────────────────────
+   Cada desenfoque es una capa extra de pantalla completa que la tarjeta gráfica repinta en cada
+   fotograma del scroll. En el celular (pantalla de muy alta resolución) se acababa la memoria
+   gráfica: el contenido se trababa o desaparecía al deslizar. El selector es a propósito muy
+   específico para ganarle a TODAS las reglas anteriores, incluidas las del tema Minimal Glass. */
+@media (max-width:900px), (pointer:coarse) and (max-width:1280px){
+  html body *:not(#tabbar):not(#nh-a#nh-b#nh-c#nh-d),
+  html body *:not(#nh-a#nh-b#nh-c#nh-d)::before,
+  html body *:not(#nh-a#nh-b#nh-c#nh-d)::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  /* Barra inferior: único vidrio, ligero */
+  #tabbar:not(#nh-a#nh-b#nh-c){-webkit-backdrop-filter:saturate(150%) blur(14px)!important;backdrop-filter:saturate(150%) blur(14px)!important}
+  /* Barra superior sin vidrio: color casi sólido para que se lea igual */
+  #topbar:not(#nh-a#nh-b#nh-c){background:rgba(12,12,22,.94)!important}
+  html[data-theme="light"] #topbar:not(#nh-a#nh-b#nh-c){background:rgba(248,248,251,.95)!important}
+  html[data-studio="light"] #topbar:not(#nh-a#nh-b#nh-c){background:rgba(245,246,248,.95)!important}
+  html[data-studio="dark"] #topbar:not(#nh-a#nh-b#nh-c){background:rgba(8,9,12,.94)!important}
+  /* Fondo del tema Minimal: del tamaño exacto de la pantalla (antes era 20% más grande) */
+  html[data-studio]:not([data-studio="agenda"]) body::before{inset:0!important}
+  html[data-studio]:not([data-studio="agenda"]) body::after{display:none!important}
+}
+/* Telones y menús cerrados: fuera del dibujo (no ocupan memoria gráfica) */
+#tabSheetScrim:not(.open),#moreScrim:not(.open),.fab-menu:not(.open){visibility:hidden;transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+:is(#tabSheetScrim,#moreScrim,.fab-menu).open{visibility:visible;transition:opacity .2s ease,transform .2s ease,visibility 0s}
