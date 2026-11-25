@@ -1,0 +1,101 @@
+/* ════════════════════════════════════════════════════════════════════
+   NOVA HUB · Movimiento y fluidez (va al final: pisa reglas anteriores)
+   · Entradas cortas y suaves, sin escalas raras ni rebotes.
+   · La ventana que se abre desde una tarjeta crece de forma proporcional
+     (antes se estiraba distinto a lo ancho y a lo alto y las tareas se veían cortadas).
+   · En el celular, nada de desenfoque en ventanas que se animan: era la causa
+     principal de parpadeos en Android (blur + animación = repintado constante).
+   ════════════════════════════════════════════════════════════════════ */
+:root{--nh-ease:cubic-bezier(.2,.8,.2,1);--nh-ease-out:cubic-bezier(.16,1,.3,1)}
+
+/* ── 1. Entrada de tarjetas: rápida, sin escala, poco desplazamiento ── */
+@keyframes nhIn{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+.note-card,.proj-full-card,.stack-card,.diary-card,.reminder-card,.habit-row,.event-item{
+  animation-name:nhIn!important;animation-duration:.26s!important;animation-timing-function:var(--nh-ease)!important;animation-fill-mode:backwards!important
+}
+/* Escalonado corto: como máximo ~0.12 s, para que no se sienta lento al cambiar de sección */
+:is(.notes-masonry,.proj-masonry)>:nth-child(1){animation-delay:0s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(2){animation-delay:.02s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(3){animation-delay:.04s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(4){animation-delay:.06s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(5){animation-delay:.08s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(6){animation-delay:.1s!important}
+:is(.notes-masonry,.proj-masonry)>:nth-child(n+7){animation-delay:.12s!important}
+/* Las reglas «sin entrada» (redibujos por datos) siguen mandando */
+.no-enter>:is(.note-card,.proj-full-card,.stack-card){animation:none!important}
+/* El globo de pendientes aparece junto con su tarjeta, no antes */
+.proj-full-card .proj-notif{animation:none!important}
+
+/* Tarjetas de estadísticas del tema Minimal: misma entrada corta */
+html[data-studio] .stats-row .stat-card,html[data-studio] .studio-column>.studio-tile{animation-duration:.3s!important}
+.stat-card .value{animation:none!important}
+
+/* ── 2. Ventanas ── */
+@keyframes modalBounce{from{opacity:0;transform:translate3d(0,14px,0) scale(.985)}to{opacity:1;transform:none}}
+@keyframes modalSoft{from{opacity:0;transform:translate3d(0,16px,0)}to{opacity:1;transform:none}}
+.modal-overlay.open .modal{animation-duration:.26s!important;animation-timing-function:var(--nh-ease-out)!important}
+/* Desde la tarjeta: se acerca y crece PROPORCIONAL (nunca se aplasta el contenido) */
+@keyframes cardExpand{
+  from{opacity:0;transform:translate3d(calc(var(--ex,0px) * .3),calc(var(--ey,0px) * .3),0) scale(.9)}
+  to{opacity:1;transform:none}
+}
+.modal-overlay.open .modal.expand-from-card{animation:cardExpand .3s var(--nh-ease-out) both!important;will-change:auto}
+.modal-overlay{transition:opacity .2s ease!important}
+/* Una tarea nueva aparece sin salirse de su renglón (antes subía 8 px dentro de un contenedor recortado) */
+@keyframes pdNew{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.pd-task.pd-new{animation:pdNew .22s var(--nh-ease) both}
+
+/* ── 3. Celular / tableta: sin desenfoque en lo que se anima ── */
+@media(max-width:900px){
+  .modal-overlay,.modal,#noteModal .modal.note-editor-modal,#projDetailModal .modal,
+  .toast,#tabSheet button,#tabSheetScrim,#moreDrawer,#acctPop,.fab-menu,.kb-menu,.stk-hint{
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important
+  }
+  /* Fondos casi opacos para que se lea igual de bien sin el desenfoque */
+  .modal-overlay{background:rgba(6,8,16,.55)!important}
+  html[data-theme="light"] .modal-overlay{background:rgba(20,24,40,.32)!important}
+  .modal,#noteModal .modal.note-editor-modal{background:#16162a!important}
+  html[data-theme="light"] .modal,html[data-theme="light"] #noteModal .modal.note-editor-modal{background:#fbfbfd!important}
+  html[data-studio="dark"] .modal,html[data-studio="dark"] #noteModal .modal.note-editor-modal{background:#1b1c21!important}
+  html[data-studio="light"] .modal,html[data-studio="light"] #noteModal .modal.note-editor-modal{background:#fbfbfd!important}
+  .toast{background:#1d1d33!important}
+  html[data-theme="light"] .toast{background:#fff!important}
+  html[data-studio="dark"] .toast{background:#24252b!important}
+  #tabSheet button{background:#1d1d33!important}
+  html[data-theme="light"] #tabSheet button{background:#fff!important}
+  html[data-studio="dark"] #tabSheet button{background:#24252b!important}
+  #moreDrawer{background:#15152a!important}
+  html[data-theme="light"] #moreDrawer{background:#f8f8fb!important}
+  html[data-studio="dark"] #moreDrawer{background:#18191d!important}
+  html[data-studio="light"] #moreDrawer{background:#f7f8fa!important}
+  .kb-menu{background:#202127!important}
+  html[data-theme="light"] .kb-menu{background:#fff!important}
+  /* Barra superior: desenfoque más ligero (se mueve al hacer scroll) */
+  #topbar{-webkit-backdrop-filter:saturate(160%) blur(14px)!important;backdrop-filter:saturate(160%) blur(14px)!important}
+  /* Ventana de proyecto: el contenido se desliza solo dentro de su área, sin arrastrar la ventana */
+  #projDetailModal .pd-body{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  /* Toques: sin retraso ni resaltado azul */
+  .pd-task,.kb-card,.note-card,.proj-full-card,.ib-item,.tb-item{-webkit-tap-highlight-color:transparent}
+}
+
+/* ── 4. Tema Minimal: sin adornos animados sobre el texto de las notas ── */
+html[data-studio]:not([data-studio="agenda"]) .note-card>.nova-card-fx{display:none!important}
+
+/* ── 5. Accesibilidad: movimiento reducido ── */
+@media(prefers-reduced-motion:reduce){
+  .note-card,.proj-full-card,.stack-card,.diary-card,.reminder-card,.habit-row,.event-item,.pd-task.pd-new,
+  .modal-overlay.open .modal,.modal-overlay.open .modal.expand-from-card{animation:none!important}
+}
+
+/* ── 6. Globo de pendientes dentro de su tarjeta (estilo notificación del celular) ──
+   Antes vivía en una capa aparte que se recolocaba en cada scroll: llegaba tarde y parpadeaba. */
+#novaBadgeLayer{display:none!important}
+#projFullList .proj-full-card>.proj-notif,
+#projFullList .proj-full-card.pinned>.proj-notif,
+.stk-grid .proj-full-card>.proj-notif{
+  display:flex!important;position:absolute;top:-8px!important;right:-8px!important;z-index:6;
+  min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  background:#ff3b30!important;color:#fff!important;font-size:.7rem;font-weight:800;line-height:1;
+  border:2px solid var(--paper,var(--bg,#0c0c14))!important;box-shadow:0 3px 10px rgba(255,59,48,.35)!important
+}
+html[data-theme="light"] #projFullList .proj-full-card>.proj-notif{border-color:#f5f6f8!important}

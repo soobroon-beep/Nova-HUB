@@ -3755,6 +3755,7 @@ try {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="liquid.css?v=1">
 <link rel="stylesheet" href="nova-flow.css?v=1">
+<link rel="stylesheet" href="motion.css?v=1">
 </head>
 <body>
 
@@ -4656,6 +4657,30 @@ function softRender(fn) {
   if (ct) ct.scrollTop = top;
 }
 
+// Termina al instante las animaciones de ENTRADA (no las infinitas) dentro de root.
+// Al volver a dibujar con datos nuevos (sincronización, Cortex, contadores) nada debe
+// desaparecer y volver a aparecer: eso era el «parpadeo» en el celular.
+function settleAnimations(root) {
+  if (!root || !document.getAnimations) return;
+  for (const a of document.getAnimations()) {
+    const t = a.effect && a.effect.target;
+    if (!t || typeof CSSAnimation === 'undefined' || !(a instanceof CSSAnimation) || !root.contains(t)) continue;
+    try { if (a.effect.getTiming().iterations !== Infinity) a.finish(); } catch (e) {}
+  }
+}
+// Redibujo por datos (no por navegación): misma posición de scroll, sin animaciones de entrada,
+// y las ventanas de detalle abiertas se ponen al día (si no estás escribiendo en ellas).
+function quietRerender(v) {
+  const ct = document.getElementById('content');
+  softRender(() => rerenderView(v));
+  settleAnimations(ct);
+  const typing = box => { const ae = document.activeElement; return !!(ae && box.contains(ae) && (ae.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))); };
+  const pd = document.getElementById('projDetailModal');
+  if (pd && pd.classList.contains('open') && !typing(pd) && !document.body.classList.contains('kb-dragging') && typeof renderProjectDetail === 'function') { renderProjectDetail(); settleAnimations(pd); }
+  const nd = document.getElementById('noteDetailModal');
+  if (nd && nd.classList.contains('open') && !typing(nd) && typeof renderNoteDetail === 'function') { renderNoteDetail(); settleAnimations(nd); }
+}
+
 // Arrastre de tarjetas (notas y proyectos):
 //  · Mantén presionada una tarjeta → se levanta y sigue tu dedo.
 //  · Suéltala sobre otra → se coloca antes o después de esa tarjeta.
@@ -5487,7 +5512,7 @@ const fb = {
     });
     if (!changed) return;
     const av = document.querySelector('.nav-item.active')?.dataset.view;
-    if (av) rerenderView(av);
+    if (av) quietRerender(av);
     updateStats && updateStats();
   },
 
@@ -5597,7 +5622,7 @@ const fb = {
       applyRemoteData(data);
       setSyncStatus('connected', 'En vivo ✓');
       if (forced) {   // otro dispositivo pidió «Guardar y actualizar todo»: se vuelve a dibujar todo y se busca versión nueva de la app
-        const av = document.querySelector('.nav-item.active')?.dataset.view; if (av) rerenderView(av);
+        const av = document.querySelector('.nav-item.active')?.dataset.view; if (av) quietRerender(av);
         try { navigator.serviceWorker && navigator.serviceWorker.getRegistration().then(r => r && r.update()); } catch (e) {}
         cloudSavedPill('🔄 Actualizado desde tu otro dispositivo');
       } else toast('🔄 Actualizado desde otro dispositivo');
@@ -5770,6 +5795,7 @@ function applyRemoteData(data) {
     }
   }
   if (data.settings && typeof data.settings === 'object') {
+    const prevSettings = _stable(state.settings);
     // preservar API key local si la nube no la tiene
     const localKey = state.settings.anthropicApiKey || '';
     state.settings = keepLocal ? { ...data.settings, ...state.settings } : { ...state.settings, ...data.settings };
@@ -5779,15 +5805,18 @@ function applyRemoteData(data) {
     }
     if (localKey && !state.settings.anthropicApiKey) state.settings.anthropicApiKey = localKey;
     localStorage.setItem('nn_settings', JSON.stringify(state.settings));
-    if (data.settings.username) applyUsername(data.settings.username);
-    window.ensureDock && window.ensureDock();
-    applyAccent(state.settings.accentColor || '#7c6af7');
-    applyAppIcon(state.settings.appIcon || 'nova');
-    changed = true;
+    // Solo si los ajustes CAMBIARON de verdad: antes cada aviso de la nube volvía a aplicar todo y redibujaba la pantalla (parpadeo)
+    if (_stable(state.settings) !== prevSettings) {
+      if (data.settings.username) applyUsername(data.settings.username);
+      window.ensureDock && window.ensureDock();
+      applyAccent(state.settings.accentColor || '#7c6af7');
+      applyAppIcon(state.settings.appIcon || 'nova');
+      changed = true;
+    }
   }
   if (!changed) return;
   const av = document.querySelector('.nav-item.active')?.dataset.view;
-  if (av) rerenderView(av);
+  if (av) quietRerender(av);
   updateStats && updateStats();
 }
 
@@ -6140,8 +6169,9 @@ const NovaStudio = (() => {
   }
   function refreshInsights() {
     const projects = document.getElementById('studioProjects'), week = document.getElementById('studioWeek');
-    if (projects) projectReport(projects);
-    if (week) weeklyReport(week);
+    // Al actualizar (no la primera vez) el anillo y las barras no se vuelven a dibujar desde cero
+    if (projects) { const had = projects.childElementCount; projectReport(projects); if (had) settleAnimations(projects); }
+    if (week) { const had = week.childElementCount; weeklyReport(week); if (had) settleAnimations(week); }
   }
   function organize(content) {
     if (!document.documentElement.dataset.studio) return;
@@ -6775,11 +6805,12 @@ const closeModal=id=>{
   }
   // Si se abrió desde una tarjeta, se encoge de vuelta hacia ella
   if(modal && m.classList.contains('open') && modal.classList.contains('expand-from-card') && modal.animate && !_reduceMotion()){
-    const cs=modal.style, g=k=>cs.getPropertyValue(k)||'0';
+    // Se encoge PROPORCIONAL hacia la tarjeta (sin aplastar el contenido)
+    const cs=modal.style, g=k=>(parseFloat(cs.getPropertyValue(k))||0)*.3;
     modal.animate([
-      {transform:'translate(0,0) scale(1,1)',opacity:1},
-      {transform:`translate(${g('--ex')},${g('--ey')}) scale(${g('--esx')},${g('--esy')})`,opacity:0}
-    ],{duration:240,easing:'cubic-bezier(.4,0,.6,1)'});
+      {transform:'none',opacity:1},
+      {transform:`translate3d(${g('--ex')}px,${g('--ey')}px,0) scale(.92)`,opacity:0}
+    ],{duration:200,easing:'cubic-bezier(.4,0,1,1)'});
   }
   m.classList.remove('open');
 };
@@ -11049,6 +11080,9 @@ initNotifications();
 
 /* Badge portal: anchored in viewport, never clipped by card animations or CSS columns. */
 (function novaBadges(){
+ // Desactivado: el globo ahora vive DENTRO de su tarjeta (motion.css). Esta capa flotante
+ // se re-posicionaba en cada scroll y se quedaba un fotograma atrás → parpadeaba en el celular.
+ return;
  const content=document.getElementById('content');if(!content)return;
  const layer=document.createElement('div');layer.id='novaBadgeLayer';
  layer.setAttribute('aria-hidden','true');document.body.appendChild(layer);
@@ -11379,7 +11413,7 @@ if ('serviceWorker' in navigator) {
 (function(){
   'use strict';
   const cur = () => document.querySelector('#sidebar .nav-item.active')?.dataset.view || 'dashboard';
-  const refresh = () => { try { rerenderView(cur()); } catch (e) {} try { updateStats(); } catch (e) {} };
+  const refresh = () => { try { quietRerender(cur()); } catch (e) {} try { updateStats(); } catch (e) {} };
   let lastId = 0; const nid = () => { let t = Date.now(); if (t <= lastId) t = lastId + 1; lastId = t; return t; }; // ids tipo fecha (como los de la app), únicos aunque cree varias cosas en el mismo milisegundo
   const iso = () => new Date().toISOString(), isoDay = () => new Date().toISOString().split('T')[0];
   const nrm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
