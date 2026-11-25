@@ -155,7 +155,7 @@
   }
 
   /* ════════ Secciones, sugerencias y «¿dónde está…?» ════════ */
-  const NAMES = {dashboard: 'Dashboard', calendar: 'Calendario', notes: 'Notas', projects: 'Proyectos', reminders: 'Recordatorios', diary: 'Diario', habits: 'Hábitos', briefing: 'Briefing diario', relax: 'Zona Relax', ai: 'IA Asistente', settings: 'Ajustes'};
+  const NAMES = {dashboard: 'Dashboard', inbox: 'Bandeja', calendar: 'Calendario', notes: 'Notas', projects: 'Proyectos', reminders: 'Recordatorios', diary: 'Diario', habits: 'Hábitos', briefing: 'Briefing diario', relax: 'Zona Relax', ai: 'IA Asistente', settings: 'Ajustes'};
   const CHIPS = {
     dashboard: [['¿Qué tengo hoy?', '¿Qué tengo hoy?'], ['Prioriza mis pendientes', 'Ayúdame a priorizar mis pendientes de hoy'], ['Plan de la semana', 'Arma un plan para mi semana con lo que tengo'], ['Anotar una idea', 'Anota una idea: ']],
     notes: [['Nueva nota', 'Anota: '], ['Resume mis notas', 'Resume mis notas más recientes'], ['Busca en mis notas', 'Busca en mis notas: '], ['Ideas para tatuajes', '¿Qué ideas de tatuajes tengo anotadas?']],
@@ -170,8 +170,8 @@
   };
   const section = () => { try { return H().view() || 'dashboard'; } catch { return 'dashboard'; } };
   const chipsHTML = list => list.map(([t, q]) => `<button type="button" data-q="${esc(q)}">${esc(t)}</button>`).join('');
-  const QUICK_CHIPS = [['📝 Nota', 'Nota: '], ['💡 Idea', 'Idea: '], ['⏰ Recordatorio', 'Recuérdame '], ['🚀 Proyecto', 'Crea el proyecto ']];
-  function setChips() { if (quickMode) { bub.querySelector('.px-chips').innerHTML = chipsHTML(QUICK_CHIPS); input.placeholder = 'Escribe o dicta lo que quieres guardar…'; return; } const sec = section(); bub.querySelector('.px-chips').innerHTML = chipsHTML(CHIPS[sec] || CHIPS.dashboard); input.placeholder = sec === 'reminders' ? 'Ej.: recuérdame mañana a las 5 llamar a…' : sec === 'projects' ? 'Ej.: agrega «comprar tintas» a Estudio…' : sec === 'notes' ? 'Ej.: anota una idea para un tatuaje…' : 'Pídeme o pregúntame algo…'; }
+  const QUICK_CHIPS = [['📥 Ver mi Bandeja', '__go:inbox']];
+  function setChips() { if (quickMode) { bub.querySelector('.px-chips').innerHTML = chipsHTML(QUICK_CHIPS); input.placeholder = 'Escribe o dicta lo que va a tu Bandeja…'; return; } const sec = section(); bub.querySelector('.px-chips').innerHTML = chipsHTML(CHIPS[sec] || CHIPS.dashboard); input.placeholder = sec === 'reminders' ? 'Ej.: recuérdame mañana a las 5 llamar a…' : sec === 'projects' ? 'Ej.: agrega «comprar tintas» a Estudio…' : sec === 'notes' ? 'Ej.: anota una idea para un tatuaje…' : 'Pídeme o pregúntame algo…'; }
   const setChipsCustom = list => { bub.querySelector('.px-chips').innerHTML = chipsHTML(list); };
 
   const SET = t => `h3:${t}`; // en Ajustes busco la sección por su título
@@ -248,7 +248,7 @@ Acciones (úsalas solo cuando el usuario pida crear, anotar, agendar, recordar, 
 {"do":"event","title":"…","date":"AAAA-MM-DD","start":"HH:MM","end":"HH:MM"} evento en el calendario
 {"do":"habit","name":"…"} hábito nuevo · {"do":"checkHabit","name":"…"} marcar hábito de hoy como hecho
 {"do":"doneTask","project":"…","title":"…"} tachar una tarea · {"do":"diary","content":"…","mood":"😊"} entrada de diario
-{"do":"go","view":"dashboard|calendar|notes|projects|reminders|diary|habits|briefing|relax|settings"} abrir una sección
+{"do":"go","view":"dashboard|inbox|calendar|notes|projects|reminders|diary|habits|briefing|relax|settings"} abrir una sección
 Cuando crees algo, en "reply" confirma en una frase qué hiciste. Si falta un dato importante (por ejemplo la hora de un recordatorio que sí importa), pregúntalo y deja "actions":[].
 Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "reply" (puedes usar viñetas con •) y deja "actions":[].`;
 
@@ -316,6 +316,12 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     if (/(:|\s)$/.test(raw) && raw.length < 40 && !raw.startsWith('__')) { input.value = raw.replace(/\s+$/, '') + ' '; input.focus(); bub.hidden = false; placeBubble(); return; } // chip a medias: termina tú la frase
     busy = true; wake(); input.value = ''; bub.classList.add('working'); big(false); status('IA de NOVA HUB');
     try {
+      // Modo guardado rápido: todo va directo a la Bandeja de entrada (sin IA, instantáneo y sin conexión)
+      if (quickMode && !text.startsWith('__') && H().capture) {
+        if (H().capture(text, 'cortex')) { mood('happy', 'thumbs'); try { navigator.vibrate && navigator.vibrate(18); } catch {} say('Listo, quedó en tu Bandeja 📥 ¿Algo más?'); setChipsCustom(QUICK_CHIPS); setTimeout(() => { if (!busy) mood('neutral', 'idle'); }, 1800); }
+        else say('Mmm, no pude guardarlo. Inténtalo otra vez.');
+        return;
+      }
       if (await routeLocal(text)) return;
       mood('thinking', 'think'); say('Déjame pensarlo…', {busy: true});
       const wasQuick = quickMode;
@@ -389,7 +395,7 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     lastAct = Date.now();
   }
   async function hide() {
-    if (!open) return; stopMic(true); open = false; ls.open = false; store(); bub.hidden = true; mood('wink', 'wave'); await sleep(REDUCED ? 0 : 450); mood('happy', 'fly');
+    if (!open) return; stopMic(true); open = false; quickMode = false; ls.open = false; store(); bub.hidden = true; mood('wink', 'wave'); await sleep(REDUCED ? 0 : 450); mood('happy', 'fly');
     { const s = AV(), pk = peekSpot(); await flyTo(pk.x - s.w / 2, pk.y - s.h * .6, 600); await flyTo(pk.x - s.w / 2, pk.y + 20, 260); }
     av.hidden = true; fab.classList.remove('on', 'out'); fab.setAttribute('aria-label', 'Llamar a Cortex'); if (M) M.pause(true);
   }
@@ -482,10 +488,10 @@ Para preguntas (¿qué tengo hoy?, resume, prioriza, busca…) responde en "repl
     stopMic(true); quickMode = true; bub.hidden = false; placeBubble(); big(false); mood('excited', 'idle'); status('guardado rápido');
     setChips();
     if (mode === 'voice') {
-      say('Te escucho 🎙️ Dime qué guardo: una nota, idea, tarea, proyecto o recordatorio. Toca el micrófono cuando termines.', {instant: true});
+      say('Te escucho 🎙️ Dime lo que quieres guardar y lo pongo en tu Bandeja. Toca el micrófono cuando termines.', {instant: true});
       autoMic = true; try { startMic(); } catch { autoMic = false; mic.classList.add('px-pulse'); }
     } else {
-      say('¿Qué guardo? Escríbelo y yo lo acomodo donde va (nota, idea, tarea, proyecto o recordatorio).', {instant: true});
+      say('¿Qué guardo? Escríbelo y lo pongo en tu Bandeja 📥', {instant: true});
       setTimeout(() => { try { input.focus(); input.click(); } catch {} }, 60);
     }
     return true;

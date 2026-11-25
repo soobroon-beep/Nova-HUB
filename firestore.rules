@@ -24,6 +24,7 @@ service cloud.firestore {
           && listOrAbsent(d, 'routines')
           && listOrAbsent(d, 'reminders')
           && listOrAbsent(d, 'diary')
+          && listOrAbsent(d, 'inbox')
           && listOrAbsent(d, 'trash')
           && listOrAbsent(d, 'fcmTokens')
           && (!('settings' in d) || d.settings is map)

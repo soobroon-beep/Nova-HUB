@@ -3754,6 +3754,7 @@ try {
 <link rel="stylesheet" href="agenda.css?v=3">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="liquid.css?v=1">
+<link rel="stylesheet" href="nova-flow.css?v=1">
 </head>
 <body>
 
@@ -3770,6 +3771,7 @@ try {
   </div>
   <div class="nav-section">Principal</div>
   <div class="nav-item active" data-view="dashboard"><span class="nav-icon"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span></span> Dashboard</div>
+  <div class="nav-item" data-view="inbox"><span class="nav-icon">📥</span> Bandeja</div>
   <div class="nav-item" data-view="calendar"><span class="nav-icon">📅</span> Calendario & Horario</div>
   <div class="nav-item" data-view="notes"><span class="nav-icon">🗒️</span> Notas</div>
   <div class="nav-item" data-view="projects"><span class="nav-icon">🚀</span> Proyectos</div>
@@ -4226,6 +4228,7 @@ const state = {
   reminders:JSON.parse(localStorage.getItem('nn_reminders')|| '[]'),
   diary:    JSON.parse(localStorage.getItem('nn_diary')    || '[]'),
   trash:    JSON.parse(localStorage.getItem('nn_trash')    || '[]'),
+  inbox:    JSON.parse(localStorage.getItem('nn_inbox')    || '[]'),
   calDate:  new Date(),
   theme:    localStorage.getItem('nn_theme') || 'dark',
   aiHistory: JSON.parse(localStorage.getItem('nn_ai_history') || '[]'),
@@ -4484,7 +4487,7 @@ const save = () => {
     if (!_quotaWarned) { _quotaWarned = true; toast('⚠️ El almacenamiento de este dispositivo está lleno. Tus datos se siguen subiendo a la nube, pero libera espacio (papelera, imágenes grandes).'); }
   } };
   put('nn_notes', state.notes); put('nn_events', state.events); put('nn_projects', state.projects); put('nn_habits', state.habits);
-  put('nn_routines', state.routines); put('nn_reminders', state.reminders); put('nn_diary', state.diary); put('nn_trash', state.trash || []);
+  put('nn_routines', state.routines); put('nn_reminders', state.reminders); put('nn_diary', state.diary); put('nn_trash', state.trash || []); put('nn_inbox', state.inbox || []);
   put('nn_ai_history', state.aiHistory.slice(-60)); put('nn_briefing_history', (state.briefingHistory || []).slice(-30)); put('nn_settings', state.settings);
   schedulePush();
 };
@@ -4875,6 +4878,7 @@ const TRASH_META = {
   event:    {icon:'📅', label:'Evento'},
   routine:  {icon:'🗓️', label:'Bloque de horario'},
   habit:    {icon:'🔥', label:'Hábito'},
+  inbox:    {icon:'📥', label:'Captura de la bandeja'},
 };
 // Mueve un elemento borrado a la papelera en vez de perderlo para siempre.
 // meta se usa solo para items que necesitan contexto extra para restaurarse (p.ej. tareas -> a qué proyecto pertenecen).
@@ -4901,6 +4905,7 @@ const trashItemName = item => {
     case 'event': return d.title || 'Evento';
     case 'routine': return d.title || 'Bloque';
     case 'habit': return d.name || 'Hábito';
+    case 'inbox': return d.text ? (d.text.slice(0, 40) + (d.text.length > 40 ? '…' : '')) : 'Captura';
     default: return 'Elemento';
   }
 };
@@ -4922,6 +4927,7 @@ const restoreFromTrash = trashId => {
     case 'event': state.events.push(item.data); break;
     case 'routine': state.routines.push(item.data); break;
     case 'habit': state.habits.push(item.data); break;
+    case 'inbox': (state.inbox = state.inbox || []).unshift(item.data); window.NovaFlow && NovaFlow.updateBadge(); break;
   }
   state.trash.splice(idx, 1);
   save(); updateStats();
@@ -4954,7 +4960,7 @@ const emptyTrash = () => {
 // ══════════════════════════════════════════════
 // RED DE SEGURIDAD DE DATOS (conteos, copia local, diagnóstico)
 // ══════════════════════════════════════════════
-const DATA_KEYS = ['notes','events','projects','habits','routines','reminders','diary','trash'];
+const DATA_KEYS = ['notes','events','projects','habits','routines','reminders','diary','inbox','trash'];
 // Los datos de ejemplo (ids 1-6 creados por seed()) no cuentan como datos reales.
 function isDemoRoutine(r) {
   if (!r || Number(r.id) !== 6 || r.title !== 'Trabajo profundo' || r.start !== '09:00' || r.end !== '12:00' || r.color !== 'var(--accent)') return false;
@@ -4997,7 +5003,7 @@ const hashMaps = src => {
   DATA_KEYS.forEach(k => { const o = {}; if (Array.isArray(src && src[k])) src[k].forEach(x => { if (x && typeof x === 'object' && _idOf(k, x) != null) o[String(_idOf(k, x))] = _ih(x); }); m[k] = o; });
   return m;
 };
-const _TRASH_TYPE_KEY = { note: 'notes', project: 'projects', reminder: 'reminders', diary: 'diary', event: 'events', routine: 'routines', habit: 'habits' };
+const _TRASH_TYPE_KEY = { note: 'notes', project: 'projects', reminder: 'reminders', diary: 'diary', event: 'events', routine: 'routines', habit: 'habits', inbox: 'inbox' };
 const mergeArray = (k, local, remote, base, cx) => {
   local = Array.isArray(local) ? local : []; remote = Array.isArray(remote) ? remote : [];
   if (!_hasIds(k, local) || !_hasIds(k, remote)) {            // sin ids: unión sin duplicados exactos (nunca se descarta nada distinto)
@@ -5714,6 +5720,7 @@ function rerenderView(v) {
   else if(v==='briefing') renderBriefingView();
   else if(v==='relax') renderRelaxView();
   else if(v==='apps') renderAppsView();
+  else if(v==='inbox' && typeof window.renderInboxView==='function') window.renderInboxView();
 }
 
 // Aplica datos recibidos de Firestore al state local y re-renderiza
@@ -7079,6 +7086,7 @@ document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar)
 
 // ── Pestañas que pueden ir en la barra inferior (s = etiqueta corta, f = nombre completo, p = icono SVG) ──
 const DOCK_META = {
+  inbox:     { s:'Bandeja',    f:'Bandeja de entrada', i:'📥', p:'M19 3H4.99c-1.11 0-1.98.89-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z' },
   calendar:  { s:'Calendario', f:'Calendario',     i:'📅', p:'M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z' },
   notes:     { s:'Notas',      f:'Notas',          i:'🗒️', p:'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z' },
   projects:  { s:'Proyectos',  f:'Proyectos',      i:'🚀', p:'M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z' },
@@ -7202,7 +7210,8 @@ const getDockTabs = () => DOCK_DEFAULT;
       projects: s.projActive ? s.projActive + (s.projActive === 1 ? ' activo' : ' activos') : '',
       reminders: s.rem ? s.rem + ' hoy' : '',
       habits: s.hTot ? s.hDone + '/' + s.hTot + ' hoy' : '',
-      calendar: s.citas ? s.citas + (s.citas === 1 ? ' cita hoy' : ' citas hoy') : ''
+      calendar: s.citas ? s.citas + (s.citas === 1 ? ' cita hoy' : ' citas hoy') : '',
+      inbox: (state.inbox || []).length ? (state.inbox.length + ' por procesar') : ''
     };
     let i = 0, cur = [];
     const closeRow = () => { if (cur.length % 3 === 1) cur[cur.length - 1].classList.add('wide'); cur = []; };
@@ -7302,6 +7311,7 @@ const getDockTabs = () => DOCK_DEFAULT;
     plus.setAttribute('aria-expanded','false'); sheet.setAttribute('aria-hidden','true');
   };
   const CTX = { calendar:'event', notes:'note', projects:'project', reminders:'reminder', habits:'habit',
+    inbox(){ const i = document.getElementById('inboxInput'); if (i) { i.focus(); i.scrollIntoView({ block:'nearest', behavior:'smooth' }); } },
     diary(){ ct && ct.scrollTo({ top:0, behavior:'smooth' }); setTimeout(() => document.getElementById('diaryBody')?.focus({ preventScroll:true }), 350); } };
   plus.addEventListener('click', () => {
     if (sheet.classList.contains('open')) { closeSheet(); return; }
@@ -9429,6 +9439,7 @@ const renderProjectDetail = () => {
     refreshProjectsBehind();
     toast('🗑️ Movido a la papelera');
   });
+  window.NovaFlow && NovaFlow.decorateDetail(box, p);   // selector Lista / Tablero (nova-flow.js)
 };
 
 const openProjectDetail = (pid) => {
@@ -10507,7 +10518,11 @@ initNotifications();
     if(voice) document.getElementById('quickAddMicBtn')?.click();
   };
 
-  if(sharedText) setTimeout(() => openQuickAdd(false), 250);
+  // Lo compartido desde otra app cae en la Bandeja de entrada
+  if(sharedText) setTimeout(() => {
+    if(window.NovaFlow && NovaFlow.capture(sharedText, 'share')){ document.querySelector('#sidebar .nav-item[data-view="inbox"]')?.click(); toast('📥 Guardado en tu Bandeja'); }
+    else openQuickAdd(false);
+  }, 250);
   else {
     // Espera a que Cortex (pixel.js) esté listo; si no carga en 8 s, usa la barra «Agregar con IA» de antes
     const t0 = Date.now();
@@ -10894,14 +10909,14 @@ initNotifications();
   const shell=document.getElementById('appShell');
   const sidebar=document.getElementById('sidebar');
   if(!shell||!sidebar||document.getElementById('novaFloatingDock'))return;
-  const views=['dashboard','calendar','notes','projects','reminders','diary','habits','briefing','relax','apps'];
+  const views=['dashboard','inbox','calendar','notes','projects','reminders','diary','habits','briefing','relax','apps'];
   const dock=document.createElement('nav');
   dock.id='novaFloatingDock';
   dock.setAttribute('aria-label','Navegación flotante de Nova Hub');
   const icon=(view)=>{const d=DOCK_META[view];if(view==='projects')return '<span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>';return d && d.p ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d.p+'"></path></svg>' : '<span class="material-symbols-outlined" aria-hidden="true">apps</span>';};
-  const labels={dashboard:'Dashboard',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',relax:'Zona Relax',apps:'Apps',ai:'IA Asistente',settings:'Ajustes'};
+  const labels={dashboard:'Dashboard',inbox:'Bandeja',calendar:'Calendario y horario',notes:'Notas',projects:'Proyectos',reminders:'Recordatorios',diary:'Diario',habits:'Hábitos',briefing:'Briefing diario',relax:'Zona Relax',apps:'Apps',ai:'IA Asistente',settings:'Ajustes'};
   const button=(act,label,svg)=>'<button class="nova-dock-item" type="button" data-dock="'+act+'" data-tip="'+label+'" aria-label="'+label+'">'+svg+'</button>';
-  dock.innerHTML=views.map((view,i)=>(i===7?'<span class="nova-dock-separator" aria-hidden="true"></span>':'')+button(view,labels[view],icon(view))).join('');
+  dock.innerHTML=views.map((view,i)=>(view==='briefing'?'<span class="nova-dock-separator" aria-hidden="true"></span>':'')+button(view,labels[view],icon(view))).join('');
   shell.insertAdjacentElement('afterend',dock);
   const pop=document.createElement('div');pop.className='nova-dock-popover';pop.hidden=true;
   pop.id='novaDockStatus';pop.setAttribute('role','status');dock.insertAdjacentElement('afterend',pop);
@@ -10983,6 +10998,7 @@ initNotifications();
  const menu=document.createElement('div');
  menu.id='novaCreateMenu';menu.hidden=true;
  const items=[
+  ['inbox','inboxNewBtn','inbox','Capturar en Bandeja'],
   ['notes','newNoteBtnView','note_add','Nueva nota'],
   ['projects','newProjBtn','create_new_folder','Nuevo proyecto'],
   ['calendar','newEventBtnView','event','Nuevo evento'],
@@ -11420,12 +11436,14 @@ if ('serviceWorker' in navigator) {
     setCfg(o) { state.settings.pixel = {...(state.settings.pixel || {}), ...o}; save(); dispatchEvent(new Event('nh-pixel-cfg')); },
     ai: () => ({key: '', provider: 'open'}), // IA gratuita de modelos abiertos (window.NovaAI)
     toast: m => toast(m),
+    capture: (text, src) => !!(window.NovaFlow && NovaFlow.capture(text, src || 'cortex')),
     apply, undo
   };
 })();
 </script>
+<script src="nova-flow.js?v=1"></script>
 <script src="voz-limpia.js"></script>
-<script src="pixel.js?bento=6"></script>
+<script src="pixel.js?bento=7"></script>
 <script type="module">
 // Núcleo del briefing (el mismo archivo que usa el servidor de avisos)
 import * as B from './worker/briefing.mjs';
